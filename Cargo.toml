@@ -7,13 +7,3 @@ build = "build/build.rs"
 
 [dependencies]
 openvr-sys = { git = "https://github.com/mickvangelderen/openvr-sys-rust", branch = "0.1.x" }
-
-[build-dependencies]
-serde = "*"
-serde_json = "*"
-serde_derive = "*"
-regex = "*"
-
-# Do I want this for tests?
-# [patch."https://github.com/mickvangelderen/openvr-sys-rust"]
-# openvr-sys = { path = "../openvr-sys-rust" }

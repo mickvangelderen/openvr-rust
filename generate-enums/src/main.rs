@@ -8,13 +8,16 @@ use serde_json;
 use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
 
 fn main() {
-    let input_file = File::open("openvr/headers/openvr_api.json").expect("Failed to open file.");
+    let input_file_path = Path::new("input/openvr_api.json");
+    let output_file_path = Path::new("output/enums.rs");
+    let input_file = File::open(&input_file_path).expect("Failed to open file.");
     let data: Root = serde_json::from_reader(input_file).expect("Failed to parse JSON.");
 
     {
-        let mut output_file = File::create("src/enums.rs").expect("Failed to open file.");
+        let mut output_file = File::create(&output_file_path).expect("Failed to open file.");
         let out = &mut output_file;
 
         let enum_name_regex = Regex::new(r"^vr::E?(?:VR)?(\w+)$").unwrap();
@@ -119,7 +122,7 @@ fn main() {
     rustfmt_cmd
         .arg("--emit")
         .arg("files")
-        .arg("src/enums.rs");
+        .arg(&output_file_path);
 
     println!("Running {:?}", &rustfmt_cmd);
 
