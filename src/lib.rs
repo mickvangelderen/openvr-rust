@@ -1,9 +1,11 @@
-use openvr_sys::* as sys;
+use openvr_sys as sys;
+
+pub mod enums;
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        assert!(true);
     }
 }
