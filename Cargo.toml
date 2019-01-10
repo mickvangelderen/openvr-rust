@@ -7,5 +7,6 @@ edition = "2018"
 [dependencies]
 openvr-sys = { git = "https://github.com/mickvangelderen/openvr-sys-rust", branch = "0.1.x" }
 
-[patch."https://github.com/mickvangelderen/openvr-sys-rust"]
-openvr-sys = { path = "../openvr-sys-rust" }
+# Do I want this for tests?
+# [patch."https://github.com/mickvangelderen/openvr-sys-rust"]
+# openvr-sys = { path = "../openvr-sys-rust" }
