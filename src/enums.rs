@@ -1,5227 +1,4845 @@
+use openvr_sys as sys;
+use std::error;
+use std::fmt;
+
+pub trait Enum: Sized {
+    type Raw: fmt::Display;
+
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>>;
+    fn into_unchecked(self) -> Unchecked<Self>;
+}
+
 #[repr(transparent)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawEye(pub u32);
+pub struct Invalid<E: Enum>(pub(crate) E::Raw);
 
-pub const Eye_Left: RawEye = RawEye(0);
-pub const Eye_Right: RawEye = RawEye(1);
+#[repr(transparent)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub struct Unchecked<E: Enum>(pub(crate) E::Raw);
 
+/// EVREye.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Eye {
-    Left = 0,
-    Right = 1,
+    /// EVREye_Eye_Left = 0.
+    Left = sys::EVREye_Eye_Left,
+    /// EVREye_Eye_Right = 1.
+    Right = sys::EVREye_Eye_Right,
 }
 
-impl Eye {
+impl Enum for Eye {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawEye) -> Option<Self> {
-        match val {
-            Eye_Left => Some(Eye::Left),
-            Eye_Right => Some(Eye::Right),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVREye_Eye_Left => Ok(Eye::Left),
+             sys::EVREye_Eye_Right => Ok(Eye::Right),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawEye> for Eye {
-    fn from(val: RawEye) -> Self {
-        Eye::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for Eye.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTextureType(pub u32);
+impl fmt::Display for Invalid<Eye> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of Eye.", self.0)
+    }
+}
 
-pub const TextureType_Invalid: RawTextureType = RawTextureType(::std::u32::MAX);
-pub const TextureType_DirectX: RawTextureType = RawTextureType(0);
-pub const TextureType_OpenGL: RawTextureType = RawTextureType(1);
-pub const TextureType_Vulkan: RawTextureType = RawTextureType(2);
-pub const TextureType_IOSurface: RawTextureType = RawTextureType(3);
-pub const TextureType_DirectX12: RawTextureType = RawTextureType(4);
-pub const TextureType_DXGISharedHandle: RawTextureType = RawTextureType(5);
-pub const TextureType_Metal: RawTextureType = RawTextureType(6);
+impl error::Error for Invalid<Eye> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of Eye."
+    }
+}
 
-#[repr(u32)]
+/// ETextureType.
+#[repr(i32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TextureType {
-    Invalid = ::std::u32::MAX,
-    DirectX = 0,
-    OpenGL = 1,
-    Vulkan = 2,
-    IOSurface = 3,
-    DirectX12 = 4,
-    DXGISharedHandle = 5,
-    Metal = 6,
+    /// ETextureType_TextureType_Invalid = -1.
+    Invalid = sys::ETextureType_TextureType_Invalid,
+    /// ETextureType_TextureType_DirectX = 0.
+    DirectX = sys::ETextureType_TextureType_DirectX,
+    /// ETextureType_TextureType_OpenGL = 1.
+    OpenGL = sys::ETextureType_TextureType_OpenGL,
+    /// ETextureType_TextureType_Vulkan = 2.
+    Vulkan = sys::ETextureType_TextureType_Vulkan,
+    /// ETextureType_TextureType_IOSurface = 3.
+    Iosurface = sys::ETextureType_TextureType_IOSurface,
+    /// ETextureType_TextureType_DirectX12 = 4.
+    DirectX12 = sys::ETextureType_TextureType_DirectX12,
+    /// ETextureType_TextureType_DXGISharedHandle = 5.
+    DxgisharedHandle = sys::ETextureType_TextureType_DXGISharedHandle,
+    /// ETextureType_TextureType_Metal = 6.
+    Metal = sys::ETextureType_TextureType_Metal,
 }
 
-impl TextureType {
+impl Enum for TextureType {
+    type Raw = i32;
+
     #[inline]
-    fn from_raw(val: RawTextureType) -> Option<Self> {
-        match val {
-            TextureType_Invalid => Some(TextureType::Invalid),
-            TextureType_DirectX => Some(TextureType::DirectX),
-            TextureType_OpenGL => Some(TextureType::OpenGL),
-            TextureType_Vulkan => Some(TextureType::Vulkan),
-            TextureType_IOSurface => Some(TextureType::IOSurface),
-            TextureType_DirectX12 => Some(TextureType::DirectX12),
-            TextureType_DXGISharedHandle => Some(TextureType::DXGISharedHandle),
-            TextureType_Metal => Some(TextureType::Metal),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETextureType_TextureType_Invalid => Ok(TextureType::Invalid),
+             sys::ETextureType_TextureType_DirectX => Ok(TextureType::DirectX),
+             sys::ETextureType_TextureType_OpenGL => Ok(TextureType::OpenGL),
+             sys::ETextureType_TextureType_Vulkan => Ok(TextureType::Vulkan),
+             sys::ETextureType_TextureType_IOSurface => Ok(TextureType::Iosurface),
+             sys::ETextureType_TextureType_DirectX12 => Ok(TextureType::DirectX12),
+             sys::ETextureType_TextureType_DXGISharedHandle => Ok(TextureType::DxgisharedHandle),
+             sys::ETextureType_TextureType_Metal => Ok(TextureType::Metal),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTextureType> for TextureType {
-    fn from(val: RawTextureType) -> Self {
-        TextureType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TextureType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawColorSpace(pub u32);
+impl fmt::Display for Invalid<TextureType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TextureType.", self.0)
+    }
+}
 
-pub const ColorSpace_Auto: RawColorSpace = RawColorSpace(0);
-pub const ColorSpace_Gamma: RawColorSpace = RawColorSpace(1);
-pub const ColorSpace_Linear: RawColorSpace = RawColorSpace(2);
+impl error::Error for Invalid<TextureType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TextureType."
+    }
+}
 
+/// EColorSpace.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ColorSpace {
-    Auto = 0,
-    Gamma = 1,
-    Linear = 2,
+    /// EColorSpace_ColorSpace_Auto = 0.
+    Auto = sys::EColorSpace_ColorSpace_Auto,
+    /// EColorSpace_ColorSpace_Gamma = 1.
+    Gamma = sys::EColorSpace_ColorSpace_Gamma,
+    /// EColorSpace_ColorSpace_Linear = 2.
+    Linear = sys::EColorSpace_ColorSpace_Linear,
 }
 
-impl ColorSpace {
+impl Enum for ColorSpace {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawColorSpace) -> Option<Self> {
-        match val {
-            ColorSpace_Auto => Some(ColorSpace::Auto),
-            ColorSpace_Gamma => Some(ColorSpace::Gamma),
-            ColorSpace_Linear => Some(ColorSpace::Linear),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EColorSpace_ColorSpace_Auto => Ok(ColorSpace::Auto),
+             sys::EColorSpace_ColorSpace_Gamma => Ok(ColorSpace::Gamma),
+             sys::EColorSpace_ColorSpace_Linear => Ok(ColorSpace::Linear),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawColorSpace> for ColorSpace {
-    fn from(val: RawColorSpace) -> Self {
-        ColorSpace::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ColorSpace.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackingResult(pub u32);
+impl fmt::Display for Invalid<ColorSpace> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ColorSpace.", self.0)
+    }
+}
 
-pub const TrackingResult_Uninitialized: RawTrackingResult = RawTrackingResult(1);
-pub const TrackingResult_Calibrating_InProgress: RawTrackingResult = RawTrackingResult(100);
-pub const TrackingResult_Calibrating_OutOfRange: RawTrackingResult = RawTrackingResult(101);
-pub const TrackingResult_Running_OK: RawTrackingResult = RawTrackingResult(200);
-pub const TrackingResult_Running_OutOfRange: RawTrackingResult = RawTrackingResult(201);
-pub const TrackingResult_Fallback_RotationOnly: RawTrackingResult = RawTrackingResult(300);
+impl error::Error for Invalid<ColorSpace> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ColorSpace."
+    }
+}
 
+/// ETrackingResult.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackingResult {
-    Uninitialized = 1,
-    Calibrating_InProgress = 100,
-    Calibrating_OutOfRange = 101,
-    Running_OK = 200,
-    Running_OutOfRange = 201,
-    Fallback_RotationOnly = 300,
+    /// ETrackingResult_TrackingResult_Uninitialized = 1.
+    Uninitialized = sys::ETrackingResult_TrackingResult_Uninitialized,
+    /// ETrackingResult_TrackingResult_Calibrating_InProgress = 100.
+    CalibratingInProgress = sys::ETrackingResult_TrackingResult_Calibrating_InProgress,
+    /// ETrackingResult_TrackingResult_Calibrating_OutOfRange = 101.
+    CalibratingOutOfRange = sys::ETrackingResult_TrackingResult_Calibrating_OutOfRange,
+    /// ETrackingResult_TrackingResult_Running_OK = 200.
+    RunningOK = sys::ETrackingResult_TrackingResult_Running_OK,
+    /// ETrackingResult_TrackingResult_Running_OutOfRange = 201.
+    RunningOutOfRange = sys::ETrackingResult_TrackingResult_Running_OutOfRange,
+    /// ETrackingResult_TrackingResult_Fallback_RotationOnly = 300.
+    FallbackRotationOnly = sys::ETrackingResult_TrackingResult_Fallback_RotationOnly,
 }
 
-impl TrackingResult {
+impl Enum for TrackingResult {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackingResult) -> Option<Self> {
-        match val {
-            TrackingResult_Uninitialized => Some(TrackingResult::Uninitialized),
-            TrackingResult_Calibrating_InProgress => Some(TrackingResult::Calibrating_InProgress),
-            TrackingResult_Calibrating_OutOfRange => Some(TrackingResult::Calibrating_OutOfRange),
-            TrackingResult_Running_OK => Some(TrackingResult::Running_OK),
-            TrackingResult_Running_OutOfRange => Some(TrackingResult::Running_OutOfRange),
-            TrackingResult_Fallback_RotationOnly => Some(TrackingResult::Fallback_RotationOnly),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETrackingResult_TrackingResult_Uninitialized => Ok(TrackingResult::Uninitialized),
+             sys::ETrackingResult_TrackingResult_Calibrating_InProgress => Ok(TrackingResult::CalibratingInProgress),
+             sys::ETrackingResult_TrackingResult_Calibrating_OutOfRange => Ok(TrackingResult::CalibratingOutOfRange),
+             sys::ETrackingResult_TrackingResult_Running_OK => Ok(TrackingResult::RunningOK),
+             sys::ETrackingResult_TrackingResult_Running_OutOfRange => Ok(TrackingResult::RunningOutOfRange),
+             sys::ETrackingResult_TrackingResult_Fallback_RotationOnly => Ok(TrackingResult::FallbackRotationOnly),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackingResult> for TrackingResult {
-    fn from(val: RawTrackingResult) -> Self {
-        TrackingResult::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackingResult.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedDeviceClass(pub u32);
+impl fmt::Display for Invalid<TrackingResult> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackingResult.", self.0)
+    }
+}
 
-pub const TrackedDeviceClass_Invalid: RawTrackedDeviceClass = RawTrackedDeviceClass(0);
-pub const TrackedDeviceClass_HMD: RawTrackedDeviceClass = RawTrackedDeviceClass(1);
-pub const TrackedDeviceClass_Controller: RawTrackedDeviceClass = RawTrackedDeviceClass(2);
-pub const TrackedDeviceClass_GenericTracker: RawTrackedDeviceClass = RawTrackedDeviceClass(3);
-pub const TrackedDeviceClass_TrackingReference: RawTrackedDeviceClass = RawTrackedDeviceClass(4);
-pub const TrackedDeviceClass_DisplayRedirect: RawTrackedDeviceClass = RawTrackedDeviceClass(5);
-pub const TrackedDeviceClass_Max: RawTrackedDeviceClass = RawTrackedDeviceClass(6);
+impl error::Error for Invalid<TrackingResult> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackingResult."
+    }
+}
 
+/// ETrackedDeviceClass.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedDeviceClass {
-    Invalid = 0,
-    HMD = 1,
-    Controller = 2,
-    GenericTracker = 3,
-    TrackingReference = 4,
-    DisplayRedirect = 5,
-    Max = 6,
+    /// ETrackedDeviceClass_TrackedDeviceClass_Invalid = 0.
+    Invalid = sys::ETrackedDeviceClass_TrackedDeviceClass_Invalid,
+    /// ETrackedDeviceClass_TrackedDeviceClass_HMD = 1.
+    Hmd = sys::ETrackedDeviceClass_TrackedDeviceClass_HMD,
+    /// ETrackedDeviceClass_TrackedDeviceClass_Controller = 2.
+    Controller = sys::ETrackedDeviceClass_TrackedDeviceClass_Controller,
+    /// ETrackedDeviceClass_TrackedDeviceClass_GenericTracker = 3.
+    GenericTracker = sys::ETrackedDeviceClass_TrackedDeviceClass_GenericTracker,
+    /// ETrackedDeviceClass_TrackedDeviceClass_TrackingReference = 4.
+    TrackingReference = sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference,
+    /// ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect = 5.
+    DisplayRedirect = sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect,
+    /// ETrackedDeviceClass_TrackedDeviceClass_Max = 6.
+    Max = sys::ETrackedDeviceClass_TrackedDeviceClass_Max,
 }
 
-impl TrackedDeviceClass {
+impl Enum for TrackedDeviceClass {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedDeviceClass) -> Option<Self> {
-        match val {
-            TrackedDeviceClass_Invalid => Some(TrackedDeviceClass::Invalid),
-            TrackedDeviceClass_HMD => Some(TrackedDeviceClass::HMD),
-            TrackedDeviceClass_Controller => Some(TrackedDeviceClass::Controller),
-            TrackedDeviceClass_GenericTracker => Some(TrackedDeviceClass::GenericTracker),
-            TrackedDeviceClass_TrackingReference => Some(TrackedDeviceClass::TrackingReference),
-            TrackedDeviceClass_DisplayRedirect => Some(TrackedDeviceClass::DisplayRedirect),
-            TrackedDeviceClass_Max => Some(TrackedDeviceClass::Max),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETrackedDeviceClass_TrackedDeviceClass_Invalid => Ok(TrackedDeviceClass::Invalid),
+             sys::ETrackedDeviceClass_TrackedDeviceClass_HMD => Ok(TrackedDeviceClass::Hmd),
+             sys::ETrackedDeviceClass_TrackedDeviceClass_Controller => Ok(TrackedDeviceClass::Controller),
+             sys::ETrackedDeviceClass_TrackedDeviceClass_GenericTracker => Ok(TrackedDeviceClass::GenericTracker),
+             sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => Ok(TrackedDeviceClass::TrackingReference),
+             sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect => Ok(TrackedDeviceClass::DisplayRedirect),
+             sys::ETrackedDeviceClass_TrackedDeviceClass_Max => Ok(TrackedDeviceClass::Max),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedDeviceClass> for TrackedDeviceClass {
-    fn from(val: RawTrackedDeviceClass) -> Self {
-        TrackedDeviceClass::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedDeviceClass.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedControllerRole(pub u32);
+impl fmt::Display for Invalid<TrackedDeviceClass> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedDeviceClass.", self.0)
+    }
+}
 
-pub const TrackedControllerRole_Invalid: RawTrackedControllerRole = RawTrackedControllerRole(0);
-pub const TrackedControllerRole_LeftHand: RawTrackedControllerRole = RawTrackedControllerRole(1);
-pub const TrackedControllerRole_RightHand: RawTrackedControllerRole = RawTrackedControllerRole(2);
-pub const TrackedControllerRole_OptOut: RawTrackedControllerRole = RawTrackedControllerRole(3);
-pub const TrackedControllerRole_Treadmill: RawTrackedControllerRole = RawTrackedControllerRole(4);
-pub const TrackedControllerRole_Max: RawTrackedControllerRole = RawTrackedControllerRole(4);
+impl error::Error for Invalid<TrackedDeviceClass> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedDeviceClass."
+    }
+}
 
+/// ETrackedControllerRole.
+/// Omitted variants:
+///  - TrackedControllerRole_Max
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedControllerRole {
-    Invalid = 0,
-    LeftHand = 1,
-    RightHand = 2,
-    OptOut = 3,
-    Treadmill = 4,
-    Max = 4,
+    /// ETrackedControllerRole_TrackedControllerRole_Invalid = 0.
+    Invalid = sys::ETrackedControllerRole_TrackedControllerRole_Invalid,
+    /// ETrackedControllerRole_TrackedControllerRole_LeftHand = 1.
+    LeftHand = sys::ETrackedControllerRole_TrackedControllerRole_LeftHand,
+    /// ETrackedControllerRole_TrackedControllerRole_RightHand = 2.
+    RightHand = sys::ETrackedControllerRole_TrackedControllerRole_RightHand,
+    /// ETrackedControllerRole_TrackedControllerRole_OptOut = 3.
+    OptOut = sys::ETrackedControllerRole_TrackedControllerRole_OptOut,
+    /// ETrackedControllerRole_TrackedControllerRole_Treadmill = 4.
+    Treadmill = sys::ETrackedControllerRole_TrackedControllerRole_Treadmill,
 }
 
-impl TrackedControllerRole {
+impl Enum for TrackedControllerRole {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedControllerRole) -> Option<Self> {
-        match val {
-            TrackedControllerRole_Invalid => Some(TrackedControllerRole::Invalid),
-            TrackedControllerRole_LeftHand => Some(TrackedControllerRole::LeftHand),
-            TrackedControllerRole_RightHand => Some(TrackedControllerRole::RightHand),
-            TrackedControllerRole_OptOut => Some(TrackedControllerRole::OptOut),
-            TrackedControllerRole_Treadmill => Some(TrackedControllerRole::Treadmill),
-            TrackedControllerRole_Max => Some(TrackedControllerRole::Max),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETrackedControllerRole_TrackedControllerRole_Invalid => Ok(TrackedControllerRole::Invalid),
+             sys::ETrackedControllerRole_TrackedControllerRole_LeftHand => Ok(TrackedControllerRole::LeftHand),
+             sys::ETrackedControllerRole_TrackedControllerRole_RightHand => Ok(TrackedControllerRole::RightHand),
+             sys::ETrackedControllerRole_TrackedControllerRole_OptOut => Ok(TrackedControllerRole::OptOut),
+             sys::ETrackedControllerRole_TrackedControllerRole_Treadmill => Ok(TrackedControllerRole::Treadmill),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedControllerRole> for TrackedControllerRole {
-    fn from(val: RawTrackedControllerRole) -> Self {
-        TrackedControllerRole::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedControllerRole.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackingUniverseOrigin(pub u32);
+impl fmt::Display for Invalid<TrackedControllerRole> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedControllerRole.", self.0)
+    }
+}
 
-pub const TrackingUniverseOrigin_TrackingUniverseSeated: RawTrackingUniverseOrigin =
-    RawTrackingUniverseOrigin(0);
-pub const TrackingUniverseOrigin_TrackingUniverseStanding: RawTrackingUniverseOrigin =
-    RawTrackingUniverseOrigin(1);
-pub const TrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated: RawTrackingUniverseOrigin =
-    RawTrackingUniverseOrigin(2);
+impl error::Error for Invalid<TrackedControllerRole> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedControllerRole."
+    }
+}
 
+/// ETrackingUniverseOrigin.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackingUniverseOrigin {
-    TrackingUniverseSeated = 0,
-    TrackingUniverseStanding = 1,
-    TrackingUniverseRawAndUncalibrated = 2,
+    /// ETrackingUniverseOrigin_TrackingUniverseSeated = 0.
+    TrackingUniverseSeated = sys::ETrackingUniverseOrigin_TrackingUniverseSeated,
+    /// ETrackingUniverseOrigin_TrackingUniverseStanding = 1.
+    TrackingUniverseStanding = sys::ETrackingUniverseOrigin_TrackingUniverseStanding,
+    /// ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated = 2.
+    TrackingUniverseRawAndUncalibrated = sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated,
 }
 
-impl TrackingUniverseOrigin {
+impl Enum for TrackingUniverseOrigin {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackingUniverseOrigin) -> Option<Self> {
-        match val {
-            TrackingUniverseOrigin_TrackingUniverseSeated => {
-                Some(TrackingUniverseOrigin::TrackingUniverseSeated)
-            }
-            TrackingUniverseOrigin_TrackingUniverseStanding => {
-                Some(TrackingUniverseOrigin::TrackingUniverseStanding)
-            }
-            TrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated => {
-                Some(TrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETrackingUniverseOrigin_TrackingUniverseSeated => Ok(TrackingUniverseOrigin::TrackingUniverseSeated),
+             sys::ETrackingUniverseOrigin_TrackingUniverseStanding => Ok(TrackingUniverseOrigin::TrackingUniverseStanding),
+             sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated => Ok(TrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackingUniverseOrigin> for TrackingUniverseOrigin {
-    fn from(val: RawTrackingUniverseOrigin) -> Self {
-        TrackingUniverseOrigin::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackingUniverseOrigin.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedDeviceProperty(pub u32);
+impl fmt::Display for Invalid<TrackingUniverseOrigin> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackingUniverseOrigin.", self.0)
+    }
+}
 
-pub const TrackedDeviceProperty_Invalid: RawTrackedDeviceProperty = RawTrackedDeviceProperty(0);
-pub const TrackedDeviceProperty_TrackingSystemName_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1000);
-pub const TrackedDeviceProperty_ModelNumber_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1001);
-pub const TrackedDeviceProperty_SerialNumber_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1002);
-pub const TrackedDeviceProperty_RenderModelName_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1003);
-pub const TrackedDeviceProperty_WillDriftInYaw_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1004);
-pub const TrackedDeviceProperty_ManufacturerName_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1005);
-pub const TrackedDeviceProperty_TrackingFirmwareVersion_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1006);
-pub const TrackedDeviceProperty_HardwareRevision_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1007);
-pub const TrackedDeviceProperty_AllWirelessDongleDescriptions_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1008);
-pub const TrackedDeviceProperty_ConnectedWirelessDongle_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1009);
-pub const TrackedDeviceProperty_DeviceIsWireless_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1010);
-pub const TrackedDeviceProperty_DeviceIsCharging_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1011);
-pub const TrackedDeviceProperty_DeviceBatteryPercentage_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1012);
-pub const TrackedDeviceProperty_StatusDisplayTransform_Matrix34: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1013);
-pub const TrackedDeviceProperty_Firmware_UpdateAvailable_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1014);
-pub const TrackedDeviceProperty_Firmware_ManualUpdate_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1015);
-pub const TrackedDeviceProperty_Firmware_ManualUpdateURL_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1016);
-pub const TrackedDeviceProperty_HardwareRevision_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1017);
-pub const TrackedDeviceProperty_FirmwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1018);
-pub const TrackedDeviceProperty_FPGAVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1019);
-pub const TrackedDeviceProperty_VRCVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1020);
-pub const TrackedDeviceProperty_RadioVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1021);
-pub const TrackedDeviceProperty_DongleVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1022);
-pub const TrackedDeviceProperty_BlockServerShutdown_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1023);
-pub const TrackedDeviceProperty_CanUnifyCoordinateSystemWithHmd_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1024);
-pub const TrackedDeviceProperty_ContainsProximitySensor_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1025);
-pub const TrackedDeviceProperty_DeviceProvidesBatteryStatus_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1026);
-pub const TrackedDeviceProperty_DeviceCanPowerOff_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1027);
-pub const TrackedDeviceProperty_Firmware_ProgrammingTarget_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1028);
-pub const TrackedDeviceProperty_DeviceClass_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1029);
-pub const TrackedDeviceProperty_HasCamera_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1030);
-pub const TrackedDeviceProperty_DriverVersion_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1031);
-pub const TrackedDeviceProperty_Firmware_ForceUpdateRequired_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1032);
-pub const TrackedDeviceProperty_ViveSystemButtonFixRequired_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1033);
-pub const TrackedDeviceProperty_ParentDriver_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1034);
-pub const TrackedDeviceProperty_ResourceRoot_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1035);
-pub const TrackedDeviceProperty_RegisteredDeviceType_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1036);
-pub const TrackedDeviceProperty_InputProfilePath_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1037);
-pub const TrackedDeviceProperty_NeverTracked_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1038);
-pub const TrackedDeviceProperty_NumCameras_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1039);
-pub const TrackedDeviceProperty_CameraFrameLayout_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1040);
-pub const TrackedDeviceProperty_CameraStreamFormat_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1041);
-pub const TrackedDeviceProperty_AdditionalDeviceSettingsPath_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1042);
-pub const TrackedDeviceProperty_Identifiable_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1043);
-pub const TrackedDeviceProperty_ReportsTimeSinceVSync_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2000);
-pub const TrackedDeviceProperty_SecondsFromVsyncToPhotons_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2001);
-pub const TrackedDeviceProperty_DisplayFrequency_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2002);
-pub const TrackedDeviceProperty_UserIpdMeters_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2003);
-pub const TrackedDeviceProperty_CurrentUniverseId_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2004);
-pub const TrackedDeviceProperty_PreviousUniverseId_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2005);
-pub const TrackedDeviceProperty_DisplayFirmwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2006);
-pub const TrackedDeviceProperty_IsOnDesktop_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2007);
-pub const TrackedDeviceProperty_DisplayMCType_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2008);
-pub const TrackedDeviceProperty_DisplayMCOffset_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2009);
-pub const TrackedDeviceProperty_DisplayMCScale_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2010);
-pub const TrackedDeviceProperty_EdidVendorID_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2011);
-pub const TrackedDeviceProperty_DisplayMCImageLeft_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2012);
-pub const TrackedDeviceProperty_DisplayMCImageRight_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2013);
-pub const TrackedDeviceProperty_DisplayGCBlackClamp_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2014);
-pub const TrackedDeviceProperty_EdidProductID_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2015);
-pub const TrackedDeviceProperty_CameraToHeadTransform_Matrix34: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2016);
-pub const TrackedDeviceProperty_DisplayGCType_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2017);
-pub const TrackedDeviceProperty_DisplayGCOffset_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2018);
-pub const TrackedDeviceProperty_DisplayGCScale_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2019);
-pub const TrackedDeviceProperty_DisplayGCPrescale_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2020);
-pub const TrackedDeviceProperty_DisplayGCImage_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2021);
-pub const TrackedDeviceProperty_LensCenterLeftU_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2022);
-pub const TrackedDeviceProperty_LensCenterLeftV_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2023);
-pub const TrackedDeviceProperty_LensCenterRightU_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2024);
-pub const TrackedDeviceProperty_LensCenterRightV_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2025);
-pub const TrackedDeviceProperty_UserHeadToEyeDepthMeters_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2026);
-pub const TrackedDeviceProperty_CameraFirmwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2027);
-pub const TrackedDeviceProperty_CameraFirmwareDescription_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2028);
-pub const TrackedDeviceProperty_DisplayFPGAVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2029);
-pub const TrackedDeviceProperty_DisplayBootloaderVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2030);
-pub const TrackedDeviceProperty_DisplayHardwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2031);
-pub const TrackedDeviceProperty_AudioFirmwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2032);
-pub const TrackedDeviceProperty_CameraCompatibilityMode_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2033);
-pub const TrackedDeviceProperty_ScreenshotHorizontalFieldOfViewDegrees_Float:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2034);
-pub const TrackedDeviceProperty_ScreenshotVerticalFieldOfViewDegrees_Float:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2035);
-pub const TrackedDeviceProperty_DisplaySuppressed_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2036);
-pub const TrackedDeviceProperty_DisplayAllowNightMode_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2037);
-pub const TrackedDeviceProperty_DisplayMCImageWidth_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2038);
-pub const TrackedDeviceProperty_DisplayMCImageHeight_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2039);
-pub const TrackedDeviceProperty_DisplayMCImageNumChannels_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2040);
-pub const TrackedDeviceProperty_DisplayMCImageData_Binary: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2041);
-pub const TrackedDeviceProperty_SecondsFromPhotonsToVblank_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2042);
-pub const TrackedDeviceProperty_DriverDirectModeSendsVsyncEvents_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2043);
-pub const TrackedDeviceProperty_DisplayDebugMode_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2044);
-pub const TrackedDeviceProperty_GraphicsAdapterLuid_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2045);
-pub const TrackedDeviceProperty_DriverProvidedChaperonePath_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2048);
-pub const TrackedDeviceProperty_ExpectedTrackingReferenceCount_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2049);
-pub const TrackedDeviceProperty_ExpectedControllerCount_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2050);
-pub const TrackedDeviceProperty_NamedIconPathControllerLeftDeviceOff_String:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2051);
-pub const TrackedDeviceProperty_NamedIconPathControllerRightDeviceOff_String:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2052);
-pub const TrackedDeviceProperty_NamedIconPathTrackingReferenceDeviceOff_String:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2053);
-pub const TrackedDeviceProperty_DoNotApplyPrediction_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2054);
-pub const TrackedDeviceProperty_CameraToHeadTransforms_Matrix34_Array: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2055);
-pub const TrackedDeviceProperty_DistortionMeshResolution_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2056);
-pub const TrackedDeviceProperty_DriverIsDrawingControllers_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2057);
-pub const TrackedDeviceProperty_DriverRequestsApplicationPause_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2058);
-pub const TrackedDeviceProperty_DriverRequestsReducedRendering_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2059);
-pub const TrackedDeviceProperty_MinimumIpdStepMeters_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2060);
-pub const TrackedDeviceProperty_AudioBridgeFirmwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2061);
-pub const TrackedDeviceProperty_ImageBridgeFirmwareVersion_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2062);
-pub const TrackedDeviceProperty_ImuToHeadTransform_Matrix34: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2063);
-pub const TrackedDeviceProperty_ImuFactoryGyroBias_Vector3: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2064);
-pub const TrackedDeviceProperty_ImuFactoryGyroScale_Vector3: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2065);
-pub const TrackedDeviceProperty_ImuFactoryAccelerometerBias_Vector3: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2066);
-pub const TrackedDeviceProperty_ImuFactoryAccelerometerScale_Vector3: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2067);
-pub const TrackedDeviceProperty_ConfigurationIncludesLighthouse20Features_Bool:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2069);
-pub const TrackedDeviceProperty_DriverRequestedMuraCorrectionMode_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(2200);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_InnerLeft_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2201);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_InnerRight_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2202);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_InnerTop_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2203);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_InnerBottom_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2204);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_OuterLeft_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2205);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_OuterRight_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2206);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_OuterTop_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2207);
-pub const TrackedDeviceProperty_DriverRequestedMuraFeather_OuterBottom_Int32:
-    RawTrackedDeviceProperty = RawTrackedDeviceProperty(2208);
-pub const TrackedDeviceProperty_AttachedDeviceId_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3000);
-pub const TrackedDeviceProperty_SupportedButtons_Uint64: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3001);
-pub const TrackedDeviceProperty_Axis0Type_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3002);
-pub const TrackedDeviceProperty_Axis1Type_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3003);
-pub const TrackedDeviceProperty_Axis2Type_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3004);
-pub const TrackedDeviceProperty_Axis3Type_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3005);
-pub const TrackedDeviceProperty_Axis4Type_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3006);
-pub const TrackedDeviceProperty_ControllerRoleHint_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(3007);
-pub const TrackedDeviceProperty_FieldOfViewLeftDegrees_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4000);
-pub const TrackedDeviceProperty_FieldOfViewRightDegrees_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4001);
-pub const TrackedDeviceProperty_FieldOfViewTopDegrees_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4002);
-pub const TrackedDeviceProperty_FieldOfViewBottomDegrees_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4003);
-pub const TrackedDeviceProperty_TrackingRangeMinimumMeters_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4004);
-pub const TrackedDeviceProperty_TrackingRangeMaximumMeters_Float: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4005);
-pub const TrackedDeviceProperty_ModeLabel_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(4006);
-pub const TrackedDeviceProperty_IconPathName_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5000);
-pub const TrackedDeviceProperty_NamedIconPathDeviceOff_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5001);
-pub const TrackedDeviceProperty_NamedIconPathDeviceSearching_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5002);
-pub const TrackedDeviceProperty_NamedIconPathDeviceSearchingAlert_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5003);
-pub const TrackedDeviceProperty_NamedIconPathDeviceReady_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5004);
-pub const TrackedDeviceProperty_NamedIconPathDeviceReadyAlert_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5005);
-pub const TrackedDeviceProperty_NamedIconPathDeviceNotReady_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5006);
-pub const TrackedDeviceProperty_NamedIconPathDeviceStandby_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5007);
-pub const TrackedDeviceProperty_NamedIconPathDeviceAlertLow_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5008);
-pub const TrackedDeviceProperty_DisplayHiddenArea_Binary_Start: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5100);
-pub const TrackedDeviceProperty_DisplayHiddenArea_Binary_End: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5150);
-pub const TrackedDeviceProperty_ParentContainer: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(5151);
-pub const TrackedDeviceProperty_UserConfigPath_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6000);
-pub const TrackedDeviceProperty_InstallPath_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6001);
-pub const TrackedDeviceProperty_HasDisplayComponent_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6002);
-pub const TrackedDeviceProperty_HasControllerComponent_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6003);
-pub const TrackedDeviceProperty_HasCameraComponent_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6004);
-pub const TrackedDeviceProperty_HasDriverDirectModeComponent_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6005);
-pub const TrackedDeviceProperty_HasVirtualDisplayComponent_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6006);
-pub const TrackedDeviceProperty_HasSpatialAnchorsSupport_Bool: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(6007);
-pub const TrackedDeviceProperty_ControllerType_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(7000);
-pub const TrackedDeviceProperty_LegacyInputProfile_String: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(7001);
-pub const TrackedDeviceProperty_ControllerHandSelectionPriority_Int32: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(7002);
-pub const TrackedDeviceProperty_VendorSpecific_Reserved_Start: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(10000);
-pub const TrackedDeviceProperty_VendorSpecific_Reserved_End: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(10999);
-pub const TrackedDeviceProperty_TrackedDeviceProperty_Max: RawTrackedDeviceProperty =
-    RawTrackedDeviceProperty(1000000);
+impl error::Error for Invalid<TrackingUniverseOrigin> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackingUniverseOrigin."
+    }
+}
 
+/// ETrackedDeviceProperty.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedDeviceProperty {
-    Invalid = 0,
-    TrackingSystemName_String = 1000,
-    ModelNumber_String = 1001,
-    SerialNumber_String = 1002,
-    RenderModelName_String = 1003,
-    WillDriftInYaw_Bool = 1004,
-    ManufacturerName_String = 1005,
-    TrackingFirmwareVersion_String = 1006,
-    HardwareRevision_String = 1007,
-    AllWirelessDongleDescriptions_String = 1008,
-    ConnectedWirelessDongle_String = 1009,
-    DeviceIsWireless_Bool = 1010,
-    DeviceIsCharging_Bool = 1011,
-    DeviceBatteryPercentage_Float = 1012,
-    StatusDisplayTransform_Matrix34 = 1013,
-    Firmware_UpdateAvailable_Bool = 1014,
-    Firmware_ManualUpdate_Bool = 1015,
-    Firmware_ManualUpdateURL_String = 1016,
-    HardwareRevision_Uint64 = 1017,
-    FirmwareVersion_Uint64 = 1018,
-    FPGAVersion_Uint64 = 1019,
-    VRCVersion_Uint64 = 1020,
-    RadioVersion_Uint64 = 1021,
-    DongleVersion_Uint64 = 1022,
-    BlockServerShutdown_Bool = 1023,
-    CanUnifyCoordinateSystemWithHmd_Bool = 1024,
-    ContainsProximitySensor_Bool = 1025,
-    DeviceProvidesBatteryStatus_Bool = 1026,
-    DeviceCanPowerOff_Bool = 1027,
-    Firmware_ProgrammingTarget_String = 1028,
-    DeviceClass_Int32 = 1029,
-    HasCamera_Bool = 1030,
-    DriverVersion_String = 1031,
-    Firmware_ForceUpdateRequired_Bool = 1032,
-    ViveSystemButtonFixRequired_Bool = 1033,
-    ParentDriver_Uint64 = 1034,
-    ResourceRoot_String = 1035,
-    RegisteredDeviceType_String = 1036,
-    InputProfilePath_String = 1037,
-    NeverTracked_Bool = 1038,
-    NumCameras_Int32 = 1039,
-    CameraFrameLayout_Int32 = 1040,
-    CameraStreamFormat_Int32 = 1041,
-    AdditionalDeviceSettingsPath_String = 1042,
-    Identifiable_Bool = 1043,
-    ReportsTimeSinceVSync_Bool = 2000,
-    SecondsFromVsyncToPhotons_Float = 2001,
-    DisplayFrequency_Float = 2002,
-    UserIpdMeters_Float = 2003,
-    CurrentUniverseId_Uint64 = 2004,
-    PreviousUniverseId_Uint64 = 2005,
-    DisplayFirmwareVersion_Uint64 = 2006,
-    IsOnDesktop_Bool = 2007,
-    DisplayMCType_Int32 = 2008,
-    DisplayMCOffset_Float = 2009,
-    DisplayMCScale_Float = 2010,
-    EdidVendorID_Int32 = 2011,
-    DisplayMCImageLeft_String = 2012,
-    DisplayMCImageRight_String = 2013,
-    DisplayGCBlackClamp_Float = 2014,
-    EdidProductID_Int32 = 2015,
-    CameraToHeadTransform_Matrix34 = 2016,
-    DisplayGCType_Int32 = 2017,
-    DisplayGCOffset_Float = 2018,
-    DisplayGCScale_Float = 2019,
-    DisplayGCPrescale_Float = 2020,
-    DisplayGCImage_String = 2021,
-    LensCenterLeftU_Float = 2022,
-    LensCenterLeftV_Float = 2023,
-    LensCenterRightU_Float = 2024,
-    LensCenterRightV_Float = 2025,
-    UserHeadToEyeDepthMeters_Float = 2026,
-    CameraFirmwareVersion_Uint64 = 2027,
-    CameraFirmwareDescription_String = 2028,
-    DisplayFPGAVersion_Uint64 = 2029,
-    DisplayBootloaderVersion_Uint64 = 2030,
-    DisplayHardwareVersion_Uint64 = 2031,
-    AudioFirmwareVersion_Uint64 = 2032,
-    CameraCompatibilityMode_Int32 = 2033,
-    ScreenshotHorizontalFieldOfViewDegrees_Float = 2034,
-    ScreenshotVerticalFieldOfViewDegrees_Float = 2035,
-    DisplaySuppressed_Bool = 2036,
-    DisplayAllowNightMode_Bool = 2037,
-    DisplayMCImageWidth_Int32 = 2038,
-    DisplayMCImageHeight_Int32 = 2039,
-    DisplayMCImageNumChannels_Int32 = 2040,
-    DisplayMCImageData_Binary = 2041,
-    SecondsFromPhotonsToVblank_Float = 2042,
-    DriverDirectModeSendsVsyncEvents_Bool = 2043,
-    DisplayDebugMode_Bool = 2044,
-    GraphicsAdapterLuid_Uint64 = 2045,
-    DriverProvidedChaperonePath_String = 2048,
-    ExpectedTrackingReferenceCount_Int32 = 2049,
-    ExpectedControllerCount_Int32 = 2050,
-    NamedIconPathControllerLeftDeviceOff_String = 2051,
-    NamedIconPathControllerRightDeviceOff_String = 2052,
-    NamedIconPathTrackingReferenceDeviceOff_String = 2053,
-    DoNotApplyPrediction_Bool = 2054,
-    CameraToHeadTransforms_Matrix34_Array = 2055,
-    DistortionMeshResolution_Int32 = 2056,
-    DriverIsDrawingControllers_Bool = 2057,
-    DriverRequestsApplicationPause_Bool = 2058,
-    DriverRequestsReducedRendering_Bool = 2059,
-    MinimumIpdStepMeters_Float = 2060,
-    AudioBridgeFirmwareVersion_Uint64 = 2061,
-    ImageBridgeFirmwareVersion_Uint64 = 2062,
-    ImuToHeadTransform_Matrix34 = 2063,
-    ImuFactoryGyroBias_Vector3 = 2064,
-    ImuFactoryGyroScale_Vector3 = 2065,
-    ImuFactoryAccelerometerBias_Vector3 = 2066,
-    ImuFactoryAccelerometerScale_Vector3 = 2067,
-    ConfigurationIncludesLighthouse20Features_Bool = 2069,
-    DriverRequestedMuraCorrectionMode_Int32 = 2200,
-    DriverRequestedMuraFeather_InnerLeft_Int32 = 2201,
-    DriverRequestedMuraFeather_InnerRight_Int32 = 2202,
-    DriverRequestedMuraFeather_InnerTop_Int32 = 2203,
-    DriverRequestedMuraFeather_InnerBottom_Int32 = 2204,
-    DriverRequestedMuraFeather_OuterLeft_Int32 = 2205,
-    DriverRequestedMuraFeather_OuterRight_Int32 = 2206,
-    DriverRequestedMuraFeather_OuterTop_Int32 = 2207,
-    DriverRequestedMuraFeather_OuterBottom_Int32 = 2208,
-    AttachedDeviceId_String = 3000,
-    SupportedButtons_Uint64 = 3001,
-    Axis0Type_Int32 = 3002,
-    Axis1Type_Int32 = 3003,
-    Axis2Type_Int32 = 3004,
-    Axis3Type_Int32 = 3005,
-    Axis4Type_Int32 = 3006,
-    ControllerRoleHint_Int32 = 3007,
-    FieldOfViewLeftDegrees_Float = 4000,
-    FieldOfViewRightDegrees_Float = 4001,
-    FieldOfViewTopDegrees_Float = 4002,
-    FieldOfViewBottomDegrees_Float = 4003,
-    TrackingRangeMinimumMeters_Float = 4004,
-    TrackingRangeMaximumMeters_Float = 4005,
-    ModeLabel_String = 4006,
-    IconPathName_String = 5000,
-    NamedIconPathDeviceOff_String = 5001,
-    NamedIconPathDeviceSearching_String = 5002,
-    NamedIconPathDeviceSearchingAlert_String = 5003,
-    NamedIconPathDeviceReady_String = 5004,
-    NamedIconPathDeviceReadyAlert_String = 5005,
-    NamedIconPathDeviceNotReady_String = 5006,
-    NamedIconPathDeviceStandby_String = 5007,
-    NamedIconPathDeviceAlertLow_String = 5008,
-    DisplayHiddenArea_Binary_Start = 5100,
-    DisplayHiddenArea_Binary_End = 5150,
-    ParentContainer = 5151,
-    UserConfigPath_String = 6000,
-    InstallPath_String = 6001,
-    HasDisplayComponent_Bool = 6002,
-    HasControllerComponent_Bool = 6003,
-    HasCameraComponent_Bool = 6004,
-    HasDriverDirectModeComponent_Bool = 6005,
-    HasVirtualDisplayComponent_Bool = 6006,
-    HasSpatialAnchorsSupport_Bool = 6007,
-    ControllerType_String = 7000,
-    LegacyInputProfile_String = 7001,
-    ControllerHandSelectionPriority_Int32 = 7002,
-    VendorSpecific_Reserved_Start = 10000,
-    VendorSpecific_Reserved_End = 10999,
-    TrackedDeviceProperty_Max = 1000000,
+    /// ETrackedDeviceProperty_Prop_Invalid = 0.
+    Invalid = sys::ETrackedDeviceProperty_Prop_Invalid,
+    /// ETrackedDeviceProperty_Prop_TrackingSystemName_String = 1000.
+    TrackingSystemNameString = sys::ETrackedDeviceProperty_Prop_TrackingSystemName_String,
+    /// ETrackedDeviceProperty_Prop_ModelNumber_String = 1001.
+    ModelNumberString = sys::ETrackedDeviceProperty_Prop_ModelNumber_String,
+    /// ETrackedDeviceProperty_Prop_SerialNumber_String = 1002.
+    SerialNumberString = sys::ETrackedDeviceProperty_Prop_SerialNumber_String,
+    /// ETrackedDeviceProperty_Prop_RenderModelName_String = 1003.
+    RenderModelNameString = sys::ETrackedDeviceProperty_Prop_RenderModelName_String,
+    /// ETrackedDeviceProperty_Prop_WillDriftInYaw_Bool = 1004.
+    WillDriftInYawBool = sys::ETrackedDeviceProperty_Prop_WillDriftInYaw_Bool,
+    /// ETrackedDeviceProperty_Prop_ManufacturerName_String = 1005.
+    ManufacturerNameString = sys::ETrackedDeviceProperty_Prop_ManufacturerName_String,
+    /// ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String = 1006.
+    TrackingFirmwareVersionString = sys::ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String,
+    /// ETrackedDeviceProperty_Prop_HardwareRevision_String = 1007.
+    HardwareRevisionString = sys::ETrackedDeviceProperty_Prop_HardwareRevision_String,
+    /// ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String = 1008.
+    AllWirelessDongleDescriptionsString = sys::ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String,
+    /// ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String = 1009.
+    ConnectedWirelessDongleString = sys::ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String,
+    /// ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool = 1010.
+    DeviceIsWirelessBool = sys::ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool,
+    /// ETrackedDeviceProperty_Prop_DeviceIsCharging_Bool = 1011.
+    DeviceIsChargingBool = sys::ETrackedDeviceProperty_Prop_DeviceIsCharging_Bool,
+    /// ETrackedDeviceProperty_Prop_DeviceBatteryPercentage_Float = 1012.
+    DeviceBatteryPercentageFloat = sys::ETrackedDeviceProperty_Prop_DeviceBatteryPercentage_Float,
+    /// ETrackedDeviceProperty_Prop_StatusDisplayTransform_Matrix34 = 1013.
+    StatusDisplayTransformMatrix34 = sys::ETrackedDeviceProperty_Prop_StatusDisplayTransform_Matrix34,
+    /// ETrackedDeviceProperty_Prop_Firmware_UpdateAvailable_Bool = 1014.
+    FirmwareUpdateAvailableBool = sys::ETrackedDeviceProperty_Prop_Firmware_UpdateAvailable_Bool,
+    /// ETrackedDeviceProperty_Prop_Firmware_ManualUpdate_Bool = 1015.
+    FirmwareManualUpdateBool = sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdate_Bool,
+    /// ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String = 1016.
+    FirmwareManualUpdateURLString = sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String,
+    /// ETrackedDeviceProperty_Prop_HardwareRevision_Uint64 = 1017.
+    HardwareRevisionUint64 = sys::ETrackedDeviceProperty_Prop_HardwareRevision_Uint64,
+    /// ETrackedDeviceProperty_Prop_FirmwareVersion_Uint64 = 1018.
+    FirmwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_FirmwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_FPGAVersion_Uint64 = 1019.
+    FpgaversionUint64 = sys::ETrackedDeviceProperty_Prop_FPGAVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_VRCVersion_Uint64 = 1020.
+    VrcversionUint64 = sys::ETrackedDeviceProperty_Prop_VRCVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_RadioVersion_Uint64 = 1021.
+    RadioVersionUint64 = sys::ETrackedDeviceProperty_Prop_RadioVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_DongleVersion_Uint64 = 1022.
+    DongleVersionUint64 = sys::ETrackedDeviceProperty_Prop_DongleVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_BlockServerShutdown_Bool = 1023.
+    BlockServerShutdownBool = sys::ETrackedDeviceProperty_Prop_BlockServerShutdown_Bool,
+    /// ETrackedDeviceProperty_Prop_CanUnifyCoordinateSystemWithHmd_Bool = 1024.
+    CanUnifyCoordinateSystemWithHmdBool = sys::ETrackedDeviceProperty_Prop_CanUnifyCoordinateSystemWithHmd_Bool,
+    /// ETrackedDeviceProperty_Prop_ContainsProximitySensor_Bool = 1025.
+    ContainsProximitySensorBool = sys::ETrackedDeviceProperty_Prop_ContainsProximitySensor_Bool,
+    /// ETrackedDeviceProperty_Prop_DeviceProvidesBatteryStatus_Bool = 1026.
+    DeviceProvidesBatteryStatusBool = sys::ETrackedDeviceProperty_Prop_DeviceProvidesBatteryStatus_Bool,
+    /// ETrackedDeviceProperty_Prop_DeviceCanPowerOff_Bool = 1027.
+    DeviceCanPowerOffBool = sys::ETrackedDeviceProperty_Prop_DeviceCanPowerOff_Bool,
+    /// ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String = 1028.
+    FirmwareProgrammingTargetString = sys::ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String,
+    /// ETrackedDeviceProperty_Prop_DeviceClass_Int32 = 1029.
+    DeviceClassInt32 = sys::ETrackedDeviceProperty_Prop_DeviceClass_Int32,
+    /// ETrackedDeviceProperty_Prop_HasCamera_Bool = 1030.
+    HasCameraBool = sys::ETrackedDeviceProperty_Prop_HasCamera_Bool,
+    /// ETrackedDeviceProperty_Prop_DriverVersion_String = 1031.
+    DriverVersionString = sys::ETrackedDeviceProperty_Prop_DriverVersion_String,
+    /// ETrackedDeviceProperty_Prop_Firmware_ForceUpdateRequired_Bool = 1032.
+    FirmwareForceUpdateRequiredBool = sys::ETrackedDeviceProperty_Prop_Firmware_ForceUpdateRequired_Bool,
+    /// ETrackedDeviceProperty_Prop_ViveSystemButtonFixRequired_Bool = 1033.
+    ViveSystemButtonFixRequiredBool = sys::ETrackedDeviceProperty_Prop_ViveSystemButtonFixRequired_Bool,
+    /// ETrackedDeviceProperty_Prop_ParentDriver_Uint64 = 1034.
+    ParentDriverUint64 = sys::ETrackedDeviceProperty_Prop_ParentDriver_Uint64,
+    /// ETrackedDeviceProperty_Prop_ResourceRoot_String = 1035.
+    ResourceRootString = sys::ETrackedDeviceProperty_Prop_ResourceRoot_String,
+    /// ETrackedDeviceProperty_Prop_RegisteredDeviceType_String = 1036.
+    RegisteredDeviceTypeString = sys::ETrackedDeviceProperty_Prop_RegisteredDeviceType_String,
+    /// ETrackedDeviceProperty_Prop_InputProfilePath_String = 1037.
+    InputProfilePathString = sys::ETrackedDeviceProperty_Prop_InputProfilePath_String,
+    /// ETrackedDeviceProperty_Prop_NeverTracked_Bool = 1038.
+    NeverTrackedBool = sys::ETrackedDeviceProperty_Prop_NeverTracked_Bool,
+    /// ETrackedDeviceProperty_Prop_NumCameras_Int32 = 1039.
+    NumCamerasInt32 = sys::ETrackedDeviceProperty_Prop_NumCameras_Int32,
+    /// ETrackedDeviceProperty_Prop_CameraFrameLayout_Int32 = 1040.
+    CameraFrameLayoutInt32 = sys::ETrackedDeviceProperty_Prop_CameraFrameLayout_Int32,
+    /// ETrackedDeviceProperty_Prop_CameraStreamFormat_Int32 = 1041.
+    CameraStreamFormatInt32 = sys::ETrackedDeviceProperty_Prop_CameraStreamFormat_Int32,
+    /// ETrackedDeviceProperty_Prop_AdditionalDeviceSettingsPath_String = 1042.
+    AdditionalDeviceSettingsPathString = sys::ETrackedDeviceProperty_Prop_AdditionalDeviceSettingsPath_String,
+    /// ETrackedDeviceProperty_Prop_Identifiable_Bool = 1043.
+    IdentifiableBool = sys::ETrackedDeviceProperty_Prop_Identifiable_Bool,
+    /// ETrackedDeviceProperty_Prop_ReportsTimeSinceVSync_Bool = 2000.
+    ReportsTimeSinceVSyncBool = sys::ETrackedDeviceProperty_Prop_ReportsTimeSinceVSync_Bool,
+    /// ETrackedDeviceProperty_Prop_SecondsFromVsyncToPhotons_Float = 2001.
+    SecondsFromVsyncToPhotonsFloat = sys::ETrackedDeviceProperty_Prop_SecondsFromVsyncToPhotons_Float,
+    /// ETrackedDeviceProperty_Prop_DisplayFrequency_Float = 2002.
+    DisplayFrequencyFloat = sys::ETrackedDeviceProperty_Prop_DisplayFrequency_Float,
+    /// ETrackedDeviceProperty_Prop_UserIpdMeters_Float = 2003.
+    UserIpdMetersFloat = sys::ETrackedDeviceProperty_Prop_UserIpdMeters_Float,
+    /// ETrackedDeviceProperty_Prop_CurrentUniverseId_Uint64 = 2004.
+    CurrentUniverseIdUint64 = sys::ETrackedDeviceProperty_Prop_CurrentUniverseId_Uint64,
+    /// ETrackedDeviceProperty_Prop_PreviousUniverseId_Uint64 = 2005.
+    PreviousUniverseIdUint64 = sys::ETrackedDeviceProperty_Prop_PreviousUniverseId_Uint64,
+    /// ETrackedDeviceProperty_Prop_DisplayFirmwareVersion_Uint64 = 2006.
+    DisplayFirmwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_DisplayFirmwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_IsOnDesktop_Bool = 2007.
+    IsOnDesktopBool = sys::ETrackedDeviceProperty_Prop_IsOnDesktop_Bool,
+    /// ETrackedDeviceProperty_Prop_DisplayMCType_Int32 = 2008.
+    DisplayMCTypeInt32 = sys::ETrackedDeviceProperty_Prop_DisplayMCType_Int32,
+    /// ETrackedDeviceProperty_Prop_DisplayMCOffset_Float = 2009.
+    DisplayMCOffsetFloat = sys::ETrackedDeviceProperty_Prop_DisplayMCOffset_Float,
+    /// ETrackedDeviceProperty_Prop_DisplayMCScale_Float = 2010.
+    DisplayMCScaleFloat = sys::ETrackedDeviceProperty_Prop_DisplayMCScale_Float,
+    /// ETrackedDeviceProperty_Prop_EdidVendorID_Int32 = 2011.
+    EdidVendorIDInt32 = sys::ETrackedDeviceProperty_Prop_EdidVendorID_Int32,
+    /// ETrackedDeviceProperty_Prop_DisplayMCImageLeft_String = 2012.
+    DisplayMCImageLeftString = sys::ETrackedDeviceProperty_Prop_DisplayMCImageLeft_String,
+    /// ETrackedDeviceProperty_Prop_DisplayMCImageRight_String = 2013.
+    DisplayMCImageRightString = sys::ETrackedDeviceProperty_Prop_DisplayMCImageRight_String,
+    /// ETrackedDeviceProperty_Prop_DisplayGCBlackClamp_Float = 2014.
+    DisplayGCBlackClampFloat = sys::ETrackedDeviceProperty_Prop_DisplayGCBlackClamp_Float,
+    /// ETrackedDeviceProperty_Prop_EdidProductID_Int32 = 2015.
+    EdidProductIDInt32 = sys::ETrackedDeviceProperty_Prop_EdidProductID_Int32,
+    /// ETrackedDeviceProperty_Prop_CameraToHeadTransform_Matrix34 = 2016.
+    CameraToHeadTransformMatrix34 = sys::ETrackedDeviceProperty_Prop_CameraToHeadTransform_Matrix34,
+    /// ETrackedDeviceProperty_Prop_DisplayGCType_Int32 = 2017.
+    DisplayGCTypeInt32 = sys::ETrackedDeviceProperty_Prop_DisplayGCType_Int32,
+    /// ETrackedDeviceProperty_Prop_DisplayGCOffset_Float = 2018.
+    DisplayGCOffsetFloat = sys::ETrackedDeviceProperty_Prop_DisplayGCOffset_Float,
+    /// ETrackedDeviceProperty_Prop_DisplayGCScale_Float = 2019.
+    DisplayGCScaleFloat = sys::ETrackedDeviceProperty_Prop_DisplayGCScale_Float,
+    /// ETrackedDeviceProperty_Prop_DisplayGCPrescale_Float = 2020.
+    DisplayGCPrescaleFloat = sys::ETrackedDeviceProperty_Prop_DisplayGCPrescale_Float,
+    /// ETrackedDeviceProperty_Prop_DisplayGCImage_String = 2021.
+    DisplayGCImageString = sys::ETrackedDeviceProperty_Prop_DisplayGCImage_String,
+    /// ETrackedDeviceProperty_Prop_LensCenterLeftU_Float = 2022.
+    LensCenterLeftUFloat = sys::ETrackedDeviceProperty_Prop_LensCenterLeftU_Float,
+    /// ETrackedDeviceProperty_Prop_LensCenterLeftV_Float = 2023.
+    LensCenterLeftVFloat = sys::ETrackedDeviceProperty_Prop_LensCenterLeftV_Float,
+    /// ETrackedDeviceProperty_Prop_LensCenterRightU_Float = 2024.
+    LensCenterRightUFloat = sys::ETrackedDeviceProperty_Prop_LensCenterRightU_Float,
+    /// ETrackedDeviceProperty_Prop_LensCenterRightV_Float = 2025.
+    LensCenterRightVFloat = sys::ETrackedDeviceProperty_Prop_LensCenterRightV_Float,
+    /// ETrackedDeviceProperty_Prop_UserHeadToEyeDepthMeters_Float = 2026.
+    UserHeadToEyeDepthMetersFloat = sys::ETrackedDeviceProperty_Prop_UserHeadToEyeDepthMeters_Float,
+    /// ETrackedDeviceProperty_Prop_CameraFirmwareVersion_Uint64 = 2027.
+    CameraFirmwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_CameraFirmwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String = 2028.
+    CameraFirmwareDescriptionString = sys::ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String,
+    /// ETrackedDeviceProperty_Prop_DisplayFPGAVersion_Uint64 = 2029.
+    DisplayFPGAVersionUint64 = sys::ETrackedDeviceProperty_Prop_DisplayFPGAVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_DisplayBootloaderVersion_Uint64 = 2030.
+    DisplayBootloaderVersionUint64 = sys::ETrackedDeviceProperty_Prop_DisplayBootloaderVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_DisplayHardwareVersion_Uint64 = 2031.
+    DisplayHardwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_DisplayHardwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_AudioFirmwareVersion_Uint64 = 2032.
+    AudioFirmwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_AudioFirmwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_CameraCompatibilityMode_Int32 = 2033.
+    CameraCompatibilityModeInt32 = sys::ETrackedDeviceProperty_Prop_CameraCompatibilityMode_Int32,
+    /// ETrackedDeviceProperty_Prop_ScreenshotHorizontalFieldOfViewDegrees_Float = 2034.
+    ScreenshotHorizontalFieldOfViewDegreesFloat = sys::ETrackedDeviceProperty_Prop_ScreenshotHorizontalFieldOfViewDegrees_Float,
+    /// ETrackedDeviceProperty_Prop_ScreenshotVerticalFieldOfViewDegrees_Float = 2035.
+    ScreenshotVerticalFieldOfViewDegreesFloat = sys::ETrackedDeviceProperty_Prop_ScreenshotVerticalFieldOfViewDegrees_Float,
+    /// ETrackedDeviceProperty_Prop_DisplaySuppressed_Bool = 2036.
+    DisplaySuppressedBool = sys::ETrackedDeviceProperty_Prop_DisplaySuppressed_Bool,
+    /// ETrackedDeviceProperty_Prop_DisplayAllowNightMode_Bool = 2037.
+    DisplayAllowNightModeBool = sys::ETrackedDeviceProperty_Prop_DisplayAllowNightMode_Bool,
+    /// ETrackedDeviceProperty_Prop_DisplayMCImageWidth_Int32 = 2038.
+    DisplayMCImageWidthInt32 = sys::ETrackedDeviceProperty_Prop_DisplayMCImageWidth_Int32,
+    /// ETrackedDeviceProperty_Prop_DisplayMCImageHeight_Int32 = 2039.
+    DisplayMCImageHeightInt32 = sys::ETrackedDeviceProperty_Prop_DisplayMCImageHeight_Int32,
+    /// ETrackedDeviceProperty_Prop_DisplayMCImageNumChannels_Int32 = 2040.
+    DisplayMCImageNumChannelsInt32 = sys::ETrackedDeviceProperty_Prop_DisplayMCImageNumChannels_Int32,
+    /// ETrackedDeviceProperty_Prop_DisplayMCImageData_Binary = 2041.
+    DisplayMCImageDataBinary = sys::ETrackedDeviceProperty_Prop_DisplayMCImageData_Binary,
+    /// ETrackedDeviceProperty_Prop_SecondsFromPhotonsToVblank_Float = 2042.
+    SecondsFromPhotonsToVblankFloat = sys::ETrackedDeviceProperty_Prop_SecondsFromPhotonsToVblank_Float,
+    /// ETrackedDeviceProperty_Prop_DriverDirectModeSendsVsyncEvents_Bool = 2043.
+    DriverDirectModeSendsVsyncEventsBool = sys::ETrackedDeviceProperty_Prop_DriverDirectModeSendsVsyncEvents_Bool,
+    /// ETrackedDeviceProperty_Prop_DisplayDebugMode_Bool = 2044.
+    DisplayDebugModeBool = sys::ETrackedDeviceProperty_Prop_DisplayDebugMode_Bool,
+    /// ETrackedDeviceProperty_Prop_GraphicsAdapterLuid_Uint64 = 2045.
+    GraphicsAdapterLuidUint64 = sys::ETrackedDeviceProperty_Prop_GraphicsAdapterLuid_Uint64,
+    /// ETrackedDeviceProperty_Prop_DriverProvidedChaperonePath_String = 2048.
+    DriverProvidedChaperonePathString = sys::ETrackedDeviceProperty_Prop_DriverProvidedChaperonePath_String,
+    /// ETrackedDeviceProperty_Prop_ExpectedTrackingReferenceCount_Int32 = 2049.
+    ExpectedTrackingReferenceCountInt32 = sys::ETrackedDeviceProperty_Prop_ExpectedTrackingReferenceCount_Int32,
+    /// ETrackedDeviceProperty_Prop_ExpectedControllerCount_Int32 = 2050.
+    ExpectedControllerCountInt32 = sys::ETrackedDeviceProperty_Prop_ExpectedControllerCount_Int32,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathControllerLeftDeviceOff_String = 2051.
+    NamedIconPathControllerLeftDeviceOffString = sys::ETrackedDeviceProperty_Prop_NamedIconPathControllerLeftDeviceOff_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathControllerRightDeviceOff_String = 2052.
+    NamedIconPathControllerRightDeviceOffString = sys::ETrackedDeviceProperty_Prop_NamedIconPathControllerRightDeviceOff_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathTrackingReferenceDeviceOff_String = 2053.
+    NamedIconPathTrackingReferenceDeviceOffString = sys::ETrackedDeviceProperty_Prop_NamedIconPathTrackingReferenceDeviceOff_String,
+    /// ETrackedDeviceProperty_Prop_DoNotApplyPrediction_Bool = 2054.
+    DoNotApplyPredictionBool = sys::ETrackedDeviceProperty_Prop_DoNotApplyPrediction_Bool,
+    /// ETrackedDeviceProperty_Prop_CameraToHeadTransforms_Matrix34_Array = 2055.
+    CameraToHeadTransformsMatrix34Array = sys::ETrackedDeviceProperty_Prop_CameraToHeadTransforms_Matrix34_Array,
+    /// ETrackedDeviceProperty_Prop_DistortionMeshResolution_Int32 = 2056.
+    DistortionMeshResolutionInt32 = sys::ETrackedDeviceProperty_Prop_DistortionMeshResolution_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverIsDrawingControllers_Bool = 2057.
+    DriverIsDrawingControllersBool = sys::ETrackedDeviceProperty_Prop_DriverIsDrawingControllers_Bool,
+    /// ETrackedDeviceProperty_Prop_DriverRequestsApplicationPause_Bool = 2058.
+    DriverRequestsApplicationPauseBool = sys::ETrackedDeviceProperty_Prop_DriverRequestsApplicationPause_Bool,
+    /// ETrackedDeviceProperty_Prop_DriverRequestsReducedRendering_Bool = 2059.
+    DriverRequestsReducedRenderingBool = sys::ETrackedDeviceProperty_Prop_DriverRequestsReducedRendering_Bool,
+    /// ETrackedDeviceProperty_Prop_MinimumIpdStepMeters_Float = 2060.
+    MinimumIpdStepMetersFloat = sys::ETrackedDeviceProperty_Prop_MinimumIpdStepMeters_Float,
+    /// ETrackedDeviceProperty_Prop_AudioBridgeFirmwareVersion_Uint64 = 2061.
+    AudioBridgeFirmwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_AudioBridgeFirmwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_ImageBridgeFirmwareVersion_Uint64 = 2062.
+    ImageBridgeFirmwareVersionUint64 = sys::ETrackedDeviceProperty_Prop_ImageBridgeFirmwareVersion_Uint64,
+    /// ETrackedDeviceProperty_Prop_ImuToHeadTransform_Matrix34 = 2063.
+    ImuToHeadTransformMatrix34 = sys::ETrackedDeviceProperty_Prop_ImuToHeadTransform_Matrix34,
+    /// ETrackedDeviceProperty_Prop_ImuFactoryGyroBias_Vector3 = 2064.
+    ImuFactoryGyroBiasVector3 = sys::ETrackedDeviceProperty_Prop_ImuFactoryGyroBias_Vector3,
+    /// ETrackedDeviceProperty_Prop_ImuFactoryGyroScale_Vector3 = 2065.
+    ImuFactoryGyroScaleVector3 = sys::ETrackedDeviceProperty_Prop_ImuFactoryGyroScale_Vector3,
+    /// ETrackedDeviceProperty_Prop_ImuFactoryAccelerometerBias_Vector3 = 2066.
+    ImuFactoryAccelerometerBiasVector3 = sys::ETrackedDeviceProperty_Prop_ImuFactoryAccelerometerBias_Vector3,
+    /// ETrackedDeviceProperty_Prop_ImuFactoryAccelerometerScale_Vector3 = 2067.
+    ImuFactoryAccelerometerScaleVector3 = sys::ETrackedDeviceProperty_Prop_ImuFactoryAccelerometerScale_Vector3,
+    /// ETrackedDeviceProperty_Prop_ConfigurationIncludesLighthouse20Features_Bool = 2069.
+    ConfigurationIncludesLighthouse20FeaturesBool = sys::ETrackedDeviceProperty_Prop_ConfigurationIncludesLighthouse20Features_Bool,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraCorrectionMode_Int32 = 2200.
+    DriverRequestedMuraCorrectionModeInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraCorrectionMode_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerLeft_Int32 = 2201.
+    DriverRequestedMuraFeatherInnerLeftInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerLeft_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerRight_Int32 = 2202.
+    DriverRequestedMuraFeatherInnerRightInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerRight_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerTop_Int32 = 2203.
+    DriverRequestedMuraFeatherInnerTopInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerTop_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerBottom_Int32 = 2204.
+    DriverRequestedMuraFeatherInnerBottomInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerBottom_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterLeft_Int32 = 2205.
+    DriverRequestedMuraFeatherOuterLeftInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterLeft_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterRight_Int32 = 2206.
+    DriverRequestedMuraFeatherOuterRightInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterRight_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterTop_Int32 = 2207.
+    DriverRequestedMuraFeatherOuterTopInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterTop_Int32,
+    /// ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterBottom_Int32 = 2208.
+    DriverRequestedMuraFeatherOuterBottomInt32 = sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterBottom_Int32,
+    /// ETrackedDeviceProperty_Prop_AttachedDeviceId_String = 3000.
+    AttachedDeviceIdString = sys::ETrackedDeviceProperty_Prop_AttachedDeviceId_String,
+    /// ETrackedDeviceProperty_Prop_SupportedButtons_Uint64 = 3001.
+    SupportedButtonsUint64 = sys::ETrackedDeviceProperty_Prop_SupportedButtons_Uint64,
+    /// ETrackedDeviceProperty_Prop_Axis0Type_Int32 = 3002.
+    Axis0TypeInt32 = sys::ETrackedDeviceProperty_Prop_Axis0Type_Int32,
+    /// ETrackedDeviceProperty_Prop_Axis1Type_Int32 = 3003.
+    Axis1TypeInt32 = sys::ETrackedDeviceProperty_Prop_Axis1Type_Int32,
+    /// ETrackedDeviceProperty_Prop_Axis2Type_Int32 = 3004.
+    Axis2TypeInt32 = sys::ETrackedDeviceProperty_Prop_Axis2Type_Int32,
+    /// ETrackedDeviceProperty_Prop_Axis3Type_Int32 = 3005.
+    Axis3TypeInt32 = sys::ETrackedDeviceProperty_Prop_Axis3Type_Int32,
+    /// ETrackedDeviceProperty_Prop_Axis4Type_Int32 = 3006.
+    Axis4TypeInt32 = sys::ETrackedDeviceProperty_Prop_Axis4Type_Int32,
+    /// ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32 = 3007.
+    ControllerRoleHintInt32 = sys::ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32,
+    /// ETrackedDeviceProperty_Prop_FieldOfViewLeftDegrees_Float = 4000.
+    FieldOfViewLeftDegreesFloat = sys::ETrackedDeviceProperty_Prop_FieldOfViewLeftDegrees_Float,
+    /// ETrackedDeviceProperty_Prop_FieldOfViewRightDegrees_Float = 4001.
+    FieldOfViewRightDegreesFloat = sys::ETrackedDeviceProperty_Prop_FieldOfViewRightDegrees_Float,
+    /// ETrackedDeviceProperty_Prop_FieldOfViewTopDegrees_Float = 4002.
+    FieldOfViewTopDegreesFloat = sys::ETrackedDeviceProperty_Prop_FieldOfViewTopDegrees_Float,
+    /// ETrackedDeviceProperty_Prop_FieldOfViewBottomDegrees_Float = 4003.
+    FieldOfViewBottomDegreesFloat = sys::ETrackedDeviceProperty_Prop_FieldOfViewBottomDegrees_Float,
+    /// ETrackedDeviceProperty_Prop_TrackingRangeMinimumMeters_Float = 4004.
+    TrackingRangeMinimumMetersFloat = sys::ETrackedDeviceProperty_Prop_TrackingRangeMinimumMeters_Float,
+    /// ETrackedDeviceProperty_Prop_TrackingRangeMaximumMeters_Float = 4005.
+    TrackingRangeMaximumMetersFloat = sys::ETrackedDeviceProperty_Prop_TrackingRangeMaximumMeters_Float,
+    /// ETrackedDeviceProperty_Prop_ModeLabel_String = 4006.
+    ModeLabelString = sys::ETrackedDeviceProperty_Prop_ModeLabel_String,
+    /// ETrackedDeviceProperty_Prop_IconPathName_String = 5000.
+    IconPathNameString = sys::ETrackedDeviceProperty_Prop_IconPathName_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceOff_String = 5001.
+    NamedIconPathDeviceOffString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceOff_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearching_String = 5002.
+    NamedIconPathDeviceSearchingString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearching_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearchingAlert_String = 5003.
+    NamedIconPathDeviceSearchingAlertString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearchingAlert_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceReady_String = 5004.
+    NamedIconPathDeviceReadyString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReady_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceReadyAlert_String = 5005.
+    NamedIconPathDeviceReadyAlertString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReadyAlert_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceNotReady_String = 5006.
+    NamedIconPathDeviceNotReadyString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceNotReady_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceStandby_String = 5007.
+    NamedIconPathDeviceStandbyString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceStandby_String,
+    /// ETrackedDeviceProperty_Prop_NamedIconPathDeviceAlertLow_String = 5008.
+    NamedIconPathDeviceAlertLowString = sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceAlertLow_String,
+    /// ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_Start = 5100.
+    DisplayHiddenAreaBinaryStart = sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_Start,
+    /// ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_End = 5150.
+    DisplayHiddenAreaBinaryEnd = sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_End,
+    /// ETrackedDeviceProperty_Prop_ParentContainer = 5151.
+    ParentContainer = sys::ETrackedDeviceProperty_Prop_ParentContainer,
+    /// ETrackedDeviceProperty_Prop_UserConfigPath_String = 6000.
+    UserConfigPathString = sys::ETrackedDeviceProperty_Prop_UserConfigPath_String,
+    /// ETrackedDeviceProperty_Prop_InstallPath_String = 6001.
+    InstallPathString = sys::ETrackedDeviceProperty_Prop_InstallPath_String,
+    /// ETrackedDeviceProperty_Prop_HasDisplayComponent_Bool = 6002.
+    HasDisplayComponentBool = sys::ETrackedDeviceProperty_Prop_HasDisplayComponent_Bool,
+    /// ETrackedDeviceProperty_Prop_HasControllerComponent_Bool = 6003.
+    HasControllerComponentBool = sys::ETrackedDeviceProperty_Prop_HasControllerComponent_Bool,
+    /// ETrackedDeviceProperty_Prop_HasCameraComponent_Bool = 6004.
+    HasCameraComponentBool = sys::ETrackedDeviceProperty_Prop_HasCameraComponent_Bool,
+    /// ETrackedDeviceProperty_Prop_HasDriverDirectModeComponent_Bool = 6005.
+    HasDriverDirectModeComponentBool = sys::ETrackedDeviceProperty_Prop_HasDriverDirectModeComponent_Bool,
+    /// ETrackedDeviceProperty_Prop_HasVirtualDisplayComponent_Bool = 6006.
+    HasVirtualDisplayComponentBool = sys::ETrackedDeviceProperty_Prop_HasVirtualDisplayComponent_Bool,
+    /// ETrackedDeviceProperty_Prop_HasSpatialAnchorsSupport_Bool = 6007.
+    HasSpatialAnchorsSupportBool = sys::ETrackedDeviceProperty_Prop_HasSpatialAnchorsSupport_Bool,
+    /// ETrackedDeviceProperty_Prop_ControllerType_String = 7000.
+    ControllerTypeString = sys::ETrackedDeviceProperty_Prop_ControllerType_String,
+    /// ETrackedDeviceProperty_Prop_LegacyInputProfile_String = 7001.
+    LegacyInputProfileString = sys::ETrackedDeviceProperty_Prop_LegacyInputProfile_String,
+    /// ETrackedDeviceProperty_Prop_ControllerHandSelectionPriority_Int32 = 7002.
+    ControllerHandSelectionPriorityInt32 = sys::ETrackedDeviceProperty_Prop_ControllerHandSelectionPriority_Int32,
+    /// ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_Start = 10000.
+    VendorSpecificReservedStart = sys::ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_Start,
+    /// ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_End = 10999.
+    VendorSpecificReservedEnd = sys::ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_End,
+    /// ETrackedDeviceProperty_Prop_TrackedDeviceProperty_Max = 1000000.
+    TrackedDevicePropertyMax = sys::ETrackedDeviceProperty_Prop_TrackedDeviceProperty_Max,
 }
 
-impl TrackedDeviceProperty {
+impl Enum for TrackedDeviceProperty {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedDeviceProperty) -> Option<Self> {
-        match val {
-            TrackedDeviceProperty_Invalid => Some(TrackedDeviceProperty::Invalid),
-            TrackedDeviceProperty_TrackingSystemName_String => {
-                Some(TrackedDeviceProperty::TrackingSystemName_String)
-            }
-            TrackedDeviceProperty_ModelNumber_String => {
-                Some(TrackedDeviceProperty::ModelNumber_String)
-            }
-            TrackedDeviceProperty_SerialNumber_String => {
-                Some(TrackedDeviceProperty::SerialNumber_String)
-            }
-            TrackedDeviceProperty_RenderModelName_String => {
-                Some(TrackedDeviceProperty::RenderModelName_String)
-            }
-            TrackedDeviceProperty_WillDriftInYaw_Bool => {
-                Some(TrackedDeviceProperty::WillDriftInYaw_Bool)
-            }
-            TrackedDeviceProperty_ManufacturerName_String => {
-                Some(TrackedDeviceProperty::ManufacturerName_String)
-            }
-            TrackedDeviceProperty_TrackingFirmwareVersion_String => {
-                Some(TrackedDeviceProperty::TrackingFirmwareVersion_String)
-            }
-            TrackedDeviceProperty_HardwareRevision_String => {
-                Some(TrackedDeviceProperty::HardwareRevision_String)
-            }
-            TrackedDeviceProperty_AllWirelessDongleDescriptions_String => {
-                Some(TrackedDeviceProperty::AllWirelessDongleDescriptions_String)
-            }
-            TrackedDeviceProperty_ConnectedWirelessDongle_String => {
-                Some(TrackedDeviceProperty::ConnectedWirelessDongle_String)
-            }
-            TrackedDeviceProperty_DeviceIsWireless_Bool => {
-                Some(TrackedDeviceProperty::DeviceIsWireless_Bool)
-            }
-            TrackedDeviceProperty_DeviceIsCharging_Bool => {
-                Some(TrackedDeviceProperty::DeviceIsCharging_Bool)
-            }
-            TrackedDeviceProperty_DeviceBatteryPercentage_Float => {
-                Some(TrackedDeviceProperty::DeviceBatteryPercentage_Float)
-            }
-            TrackedDeviceProperty_StatusDisplayTransform_Matrix34 => {
-                Some(TrackedDeviceProperty::StatusDisplayTransform_Matrix34)
-            }
-            TrackedDeviceProperty_Firmware_UpdateAvailable_Bool => {
-                Some(TrackedDeviceProperty::Firmware_UpdateAvailable_Bool)
-            }
-            TrackedDeviceProperty_Firmware_ManualUpdate_Bool => {
-                Some(TrackedDeviceProperty::Firmware_ManualUpdate_Bool)
-            }
-            TrackedDeviceProperty_Firmware_ManualUpdateURL_String => {
-                Some(TrackedDeviceProperty::Firmware_ManualUpdateURL_String)
-            }
-            TrackedDeviceProperty_HardwareRevision_Uint64 => {
-                Some(TrackedDeviceProperty::HardwareRevision_Uint64)
-            }
-            TrackedDeviceProperty_FirmwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::FirmwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_FPGAVersion_Uint64 => {
-                Some(TrackedDeviceProperty::FPGAVersion_Uint64)
-            }
-            TrackedDeviceProperty_VRCVersion_Uint64 => {
-                Some(TrackedDeviceProperty::VRCVersion_Uint64)
-            }
-            TrackedDeviceProperty_RadioVersion_Uint64 => {
-                Some(TrackedDeviceProperty::RadioVersion_Uint64)
-            }
-            TrackedDeviceProperty_DongleVersion_Uint64 => {
-                Some(TrackedDeviceProperty::DongleVersion_Uint64)
-            }
-            TrackedDeviceProperty_BlockServerShutdown_Bool => {
-                Some(TrackedDeviceProperty::BlockServerShutdown_Bool)
-            }
-            TrackedDeviceProperty_CanUnifyCoordinateSystemWithHmd_Bool => {
-                Some(TrackedDeviceProperty::CanUnifyCoordinateSystemWithHmd_Bool)
-            }
-            TrackedDeviceProperty_ContainsProximitySensor_Bool => {
-                Some(TrackedDeviceProperty::ContainsProximitySensor_Bool)
-            }
-            TrackedDeviceProperty_DeviceProvidesBatteryStatus_Bool => {
-                Some(TrackedDeviceProperty::DeviceProvidesBatteryStatus_Bool)
-            }
-            TrackedDeviceProperty_DeviceCanPowerOff_Bool => {
-                Some(TrackedDeviceProperty::DeviceCanPowerOff_Bool)
-            }
-            TrackedDeviceProperty_Firmware_ProgrammingTarget_String => {
-                Some(TrackedDeviceProperty::Firmware_ProgrammingTarget_String)
-            }
-            TrackedDeviceProperty_DeviceClass_Int32 => {
-                Some(TrackedDeviceProperty::DeviceClass_Int32)
-            }
-            TrackedDeviceProperty_HasCamera_Bool => Some(TrackedDeviceProperty::HasCamera_Bool),
-            TrackedDeviceProperty_DriverVersion_String => {
-                Some(TrackedDeviceProperty::DriverVersion_String)
-            }
-            TrackedDeviceProperty_Firmware_ForceUpdateRequired_Bool => {
-                Some(TrackedDeviceProperty::Firmware_ForceUpdateRequired_Bool)
-            }
-            TrackedDeviceProperty_ViveSystemButtonFixRequired_Bool => {
-                Some(TrackedDeviceProperty::ViveSystemButtonFixRequired_Bool)
-            }
-            TrackedDeviceProperty_ParentDriver_Uint64 => {
-                Some(TrackedDeviceProperty::ParentDriver_Uint64)
-            }
-            TrackedDeviceProperty_ResourceRoot_String => {
-                Some(TrackedDeviceProperty::ResourceRoot_String)
-            }
-            TrackedDeviceProperty_RegisteredDeviceType_String => {
-                Some(TrackedDeviceProperty::RegisteredDeviceType_String)
-            }
-            TrackedDeviceProperty_InputProfilePath_String => {
-                Some(TrackedDeviceProperty::InputProfilePath_String)
-            }
-            TrackedDeviceProperty_NeverTracked_Bool => {
-                Some(TrackedDeviceProperty::NeverTracked_Bool)
-            }
-            TrackedDeviceProperty_NumCameras_Int32 => Some(TrackedDeviceProperty::NumCameras_Int32),
-            TrackedDeviceProperty_CameraFrameLayout_Int32 => {
-                Some(TrackedDeviceProperty::CameraFrameLayout_Int32)
-            }
-            TrackedDeviceProperty_CameraStreamFormat_Int32 => {
-                Some(TrackedDeviceProperty::CameraStreamFormat_Int32)
-            }
-            TrackedDeviceProperty_AdditionalDeviceSettingsPath_String => {
-                Some(TrackedDeviceProperty::AdditionalDeviceSettingsPath_String)
-            }
-            TrackedDeviceProperty_Identifiable_Bool => {
-                Some(TrackedDeviceProperty::Identifiable_Bool)
-            }
-            TrackedDeviceProperty_ReportsTimeSinceVSync_Bool => {
-                Some(TrackedDeviceProperty::ReportsTimeSinceVSync_Bool)
-            }
-            TrackedDeviceProperty_SecondsFromVsyncToPhotons_Float => {
-                Some(TrackedDeviceProperty::SecondsFromVsyncToPhotons_Float)
-            }
-            TrackedDeviceProperty_DisplayFrequency_Float => {
-                Some(TrackedDeviceProperty::DisplayFrequency_Float)
-            }
-            TrackedDeviceProperty_UserIpdMeters_Float => {
-                Some(TrackedDeviceProperty::UserIpdMeters_Float)
-            }
-            TrackedDeviceProperty_CurrentUniverseId_Uint64 => {
-                Some(TrackedDeviceProperty::CurrentUniverseId_Uint64)
-            }
-            TrackedDeviceProperty_PreviousUniverseId_Uint64 => {
-                Some(TrackedDeviceProperty::PreviousUniverseId_Uint64)
-            }
-            TrackedDeviceProperty_DisplayFirmwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::DisplayFirmwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_IsOnDesktop_Bool => Some(TrackedDeviceProperty::IsOnDesktop_Bool),
-            TrackedDeviceProperty_DisplayMCType_Int32 => {
-                Some(TrackedDeviceProperty::DisplayMCType_Int32)
-            }
-            TrackedDeviceProperty_DisplayMCOffset_Float => {
-                Some(TrackedDeviceProperty::DisplayMCOffset_Float)
-            }
-            TrackedDeviceProperty_DisplayMCScale_Float => {
-                Some(TrackedDeviceProperty::DisplayMCScale_Float)
-            }
-            TrackedDeviceProperty_EdidVendorID_Int32 => {
-                Some(TrackedDeviceProperty::EdidVendorID_Int32)
-            }
-            TrackedDeviceProperty_DisplayMCImageLeft_String => {
-                Some(TrackedDeviceProperty::DisplayMCImageLeft_String)
-            }
-            TrackedDeviceProperty_DisplayMCImageRight_String => {
-                Some(TrackedDeviceProperty::DisplayMCImageRight_String)
-            }
-            TrackedDeviceProperty_DisplayGCBlackClamp_Float => {
-                Some(TrackedDeviceProperty::DisplayGCBlackClamp_Float)
-            }
-            TrackedDeviceProperty_EdidProductID_Int32 => {
-                Some(TrackedDeviceProperty::EdidProductID_Int32)
-            }
-            TrackedDeviceProperty_CameraToHeadTransform_Matrix34 => {
-                Some(TrackedDeviceProperty::CameraToHeadTransform_Matrix34)
-            }
-            TrackedDeviceProperty_DisplayGCType_Int32 => {
-                Some(TrackedDeviceProperty::DisplayGCType_Int32)
-            }
-            TrackedDeviceProperty_DisplayGCOffset_Float => {
-                Some(TrackedDeviceProperty::DisplayGCOffset_Float)
-            }
-            TrackedDeviceProperty_DisplayGCScale_Float => {
-                Some(TrackedDeviceProperty::DisplayGCScale_Float)
-            }
-            TrackedDeviceProperty_DisplayGCPrescale_Float => {
-                Some(TrackedDeviceProperty::DisplayGCPrescale_Float)
-            }
-            TrackedDeviceProperty_DisplayGCImage_String => {
-                Some(TrackedDeviceProperty::DisplayGCImage_String)
-            }
-            TrackedDeviceProperty_LensCenterLeftU_Float => {
-                Some(TrackedDeviceProperty::LensCenterLeftU_Float)
-            }
-            TrackedDeviceProperty_LensCenterLeftV_Float => {
-                Some(TrackedDeviceProperty::LensCenterLeftV_Float)
-            }
-            TrackedDeviceProperty_LensCenterRightU_Float => {
-                Some(TrackedDeviceProperty::LensCenterRightU_Float)
-            }
-            TrackedDeviceProperty_LensCenterRightV_Float => {
-                Some(TrackedDeviceProperty::LensCenterRightV_Float)
-            }
-            TrackedDeviceProperty_UserHeadToEyeDepthMeters_Float => {
-                Some(TrackedDeviceProperty::UserHeadToEyeDepthMeters_Float)
-            }
-            TrackedDeviceProperty_CameraFirmwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::CameraFirmwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_CameraFirmwareDescription_String => {
-                Some(TrackedDeviceProperty::CameraFirmwareDescription_String)
-            }
-            TrackedDeviceProperty_DisplayFPGAVersion_Uint64 => {
-                Some(TrackedDeviceProperty::DisplayFPGAVersion_Uint64)
-            }
-            TrackedDeviceProperty_DisplayBootloaderVersion_Uint64 => {
-                Some(TrackedDeviceProperty::DisplayBootloaderVersion_Uint64)
-            }
-            TrackedDeviceProperty_DisplayHardwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::DisplayHardwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_AudioFirmwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::AudioFirmwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_CameraCompatibilityMode_Int32 => {
-                Some(TrackedDeviceProperty::CameraCompatibilityMode_Int32)
-            }
-            TrackedDeviceProperty_ScreenshotHorizontalFieldOfViewDegrees_Float => {
-                Some(TrackedDeviceProperty::ScreenshotHorizontalFieldOfViewDegrees_Float)
-            }
-            TrackedDeviceProperty_ScreenshotVerticalFieldOfViewDegrees_Float => {
-                Some(TrackedDeviceProperty::ScreenshotVerticalFieldOfViewDegrees_Float)
-            }
-            TrackedDeviceProperty_DisplaySuppressed_Bool => {
-                Some(TrackedDeviceProperty::DisplaySuppressed_Bool)
-            }
-            TrackedDeviceProperty_DisplayAllowNightMode_Bool => {
-                Some(TrackedDeviceProperty::DisplayAllowNightMode_Bool)
-            }
-            TrackedDeviceProperty_DisplayMCImageWidth_Int32 => {
-                Some(TrackedDeviceProperty::DisplayMCImageWidth_Int32)
-            }
-            TrackedDeviceProperty_DisplayMCImageHeight_Int32 => {
-                Some(TrackedDeviceProperty::DisplayMCImageHeight_Int32)
-            }
-            TrackedDeviceProperty_DisplayMCImageNumChannels_Int32 => {
-                Some(TrackedDeviceProperty::DisplayMCImageNumChannels_Int32)
-            }
-            TrackedDeviceProperty_DisplayMCImageData_Binary => {
-                Some(TrackedDeviceProperty::DisplayMCImageData_Binary)
-            }
-            TrackedDeviceProperty_SecondsFromPhotonsToVblank_Float => {
-                Some(TrackedDeviceProperty::SecondsFromPhotonsToVblank_Float)
-            }
-            TrackedDeviceProperty_DriverDirectModeSendsVsyncEvents_Bool => {
-                Some(TrackedDeviceProperty::DriverDirectModeSendsVsyncEvents_Bool)
-            }
-            TrackedDeviceProperty_DisplayDebugMode_Bool => {
-                Some(TrackedDeviceProperty::DisplayDebugMode_Bool)
-            }
-            TrackedDeviceProperty_GraphicsAdapterLuid_Uint64 => {
-                Some(TrackedDeviceProperty::GraphicsAdapterLuid_Uint64)
-            }
-            TrackedDeviceProperty_DriverProvidedChaperonePath_String => {
-                Some(TrackedDeviceProperty::DriverProvidedChaperonePath_String)
-            }
-            TrackedDeviceProperty_ExpectedTrackingReferenceCount_Int32 => {
-                Some(TrackedDeviceProperty::ExpectedTrackingReferenceCount_Int32)
-            }
-            TrackedDeviceProperty_ExpectedControllerCount_Int32 => {
-                Some(TrackedDeviceProperty::ExpectedControllerCount_Int32)
-            }
-            TrackedDeviceProperty_NamedIconPathControllerLeftDeviceOff_String => {
-                Some(TrackedDeviceProperty::NamedIconPathControllerLeftDeviceOff_String)
-            }
-            TrackedDeviceProperty_NamedIconPathControllerRightDeviceOff_String => {
-                Some(TrackedDeviceProperty::NamedIconPathControllerRightDeviceOff_String)
-            }
-            TrackedDeviceProperty_NamedIconPathTrackingReferenceDeviceOff_String => {
-                Some(TrackedDeviceProperty::NamedIconPathTrackingReferenceDeviceOff_String)
-            }
-            TrackedDeviceProperty_DoNotApplyPrediction_Bool => {
-                Some(TrackedDeviceProperty::DoNotApplyPrediction_Bool)
-            }
-            TrackedDeviceProperty_CameraToHeadTransforms_Matrix34_Array => {
-                Some(TrackedDeviceProperty::CameraToHeadTransforms_Matrix34_Array)
-            }
-            TrackedDeviceProperty_DistortionMeshResolution_Int32 => {
-                Some(TrackedDeviceProperty::DistortionMeshResolution_Int32)
-            }
-            TrackedDeviceProperty_DriverIsDrawingControllers_Bool => {
-                Some(TrackedDeviceProperty::DriverIsDrawingControllers_Bool)
-            }
-            TrackedDeviceProperty_DriverRequestsApplicationPause_Bool => {
-                Some(TrackedDeviceProperty::DriverRequestsApplicationPause_Bool)
-            }
-            TrackedDeviceProperty_DriverRequestsReducedRendering_Bool => {
-                Some(TrackedDeviceProperty::DriverRequestsReducedRendering_Bool)
-            }
-            TrackedDeviceProperty_MinimumIpdStepMeters_Float => {
-                Some(TrackedDeviceProperty::MinimumIpdStepMeters_Float)
-            }
-            TrackedDeviceProperty_AudioBridgeFirmwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::AudioBridgeFirmwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_ImageBridgeFirmwareVersion_Uint64 => {
-                Some(TrackedDeviceProperty::ImageBridgeFirmwareVersion_Uint64)
-            }
-            TrackedDeviceProperty_ImuToHeadTransform_Matrix34 => {
-                Some(TrackedDeviceProperty::ImuToHeadTransform_Matrix34)
-            }
-            TrackedDeviceProperty_ImuFactoryGyroBias_Vector3 => {
-                Some(TrackedDeviceProperty::ImuFactoryGyroBias_Vector3)
-            }
-            TrackedDeviceProperty_ImuFactoryGyroScale_Vector3 => {
-                Some(TrackedDeviceProperty::ImuFactoryGyroScale_Vector3)
-            }
-            TrackedDeviceProperty_ImuFactoryAccelerometerBias_Vector3 => {
-                Some(TrackedDeviceProperty::ImuFactoryAccelerometerBias_Vector3)
-            }
-            TrackedDeviceProperty_ImuFactoryAccelerometerScale_Vector3 => {
-                Some(TrackedDeviceProperty::ImuFactoryAccelerometerScale_Vector3)
-            }
-            TrackedDeviceProperty_ConfigurationIncludesLighthouse20Features_Bool => {
-                Some(TrackedDeviceProperty::ConfigurationIncludesLighthouse20Features_Bool)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraCorrectionMode_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraCorrectionMode_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_InnerLeft_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_InnerLeft_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_InnerRight_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_InnerRight_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_InnerTop_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_InnerTop_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_InnerBottom_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_InnerBottom_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_OuterLeft_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_OuterLeft_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_OuterRight_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_OuterRight_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_OuterTop_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_OuterTop_Int32)
-            }
-            TrackedDeviceProperty_DriverRequestedMuraFeather_OuterBottom_Int32 => {
-                Some(TrackedDeviceProperty::DriverRequestedMuraFeather_OuterBottom_Int32)
-            }
-            TrackedDeviceProperty_AttachedDeviceId_String => {
-                Some(TrackedDeviceProperty::AttachedDeviceId_String)
-            }
-            TrackedDeviceProperty_SupportedButtons_Uint64 => {
-                Some(TrackedDeviceProperty::SupportedButtons_Uint64)
-            }
-            TrackedDeviceProperty_Axis0Type_Int32 => Some(TrackedDeviceProperty::Axis0Type_Int32),
-            TrackedDeviceProperty_Axis1Type_Int32 => Some(TrackedDeviceProperty::Axis1Type_Int32),
-            TrackedDeviceProperty_Axis2Type_Int32 => Some(TrackedDeviceProperty::Axis2Type_Int32),
-            TrackedDeviceProperty_Axis3Type_Int32 => Some(TrackedDeviceProperty::Axis3Type_Int32),
-            TrackedDeviceProperty_Axis4Type_Int32 => Some(TrackedDeviceProperty::Axis4Type_Int32),
-            TrackedDeviceProperty_ControllerRoleHint_Int32 => {
-                Some(TrackedDeviceProperty::ControllerRoleHint_Int32)
-            }
-            TrackedDeviceProperty_FieldOfViewLeftDegrees_Float => {
-                Some(TrackedDeviceProperty::FieldOfViewLeftDegrees_Float)
-            }
-            TrackedDeviceProperty_FieldOfViewRightDegrees_Float => {
-                Some(TrackedDeviceProperty::FieldOfViewRightDegrees_Float)
-            }
-            TrackedDeviceProperty_FieldOfViewTopDegrees_Float => {
-                Some(TrackedDeviceProperty::FieldOfViewTopDegrees_Float)
-            }
-            TrackedDeviceProperty_FieldOfViewBottomDegrees_Float => {
-                Some(TrackedDeviceProperty::FieldOfViewBottomDegrees_Float)
-            }
-            TrackedDeviceProperty_TrackingRangeMinimumMeters_Float => {
-                Some(TrackedDeviceProperty::TrackingRangeMinimumMeters_Float)
-            }
-            TrackedDeviceProperty_TrackingRangeMaximumMeters_Float => {
-                Some(TrackedDeviceProperty::TrackingRangeMaximumMeters_Float)
-            }
-            TrackedDeviceProperty_ModeLabel_String => Some(TrackedDeviceProperty::ModeLabel_String),
-            TrackedDeviceProperty_IconPathName_String => {
-                Some(TrackedDeviceProperty::IconPathName_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceOff_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceOff_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceSearching_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceSearching_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceSearchingAlert_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceSearchingAlert_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceReady_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceReady_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceReadyAlert_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceReadyAlert_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceNotReady_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceNotReady_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceStandby_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceStandby_String)
-            }
-            TrackedDeviceProperty_NamedIconPathDeviceAlertLow_String => {
-                Some(TrackedDeviceProperty::NamedIconPathDeviceAlertLow_String)
-            }
-            TrackedDeviceProperty_DisplayHiddenArea_Binary_Start => {
-                Some(TrackedDeviceProperty::DisplayHiddenArea_Binary_Start)
-            }
-            TrackedDeviceProperty_DisplayHiddenArea_Binary_End => {
-                Some(TrackedDeviceProperty::DisplayHiddenArea_Binary_End)
-            }
-            TrackedDeviceProperty_ParentContainer => Some(TrackedDeviceProperty::ParentContainer),
-            TrackedDeviceProperty_UserConfigPath_String => {
-                Some(TrackedDeviceProperty::UserConfigPath_String)
-            }
-            TrackedDeviceProperty_InstallPath_String => {
-                Some(TrackedDeviceProperty::InstallPath_String)
-            }
-            TrackedDeviceProperty_HasDisplayComponent_Bool => {
-                Some(TrackedDeviceProperty::HasDisplayComponent_Bool)
-            }
-            TrackedDeviceProperty_HasControllerComponent_Bool => {
-                Some(TrackedDeviceProperty::HasControllerComponent_Bool)
-            }
-            TrackedDeviceProperty_HasCameraComponent_Bool => {
-                Some(TrackedDeviceProperty::HasCameraComponent_Bool)
-            }
-            TrackedDeviceProperty_HasDriverDirectModeComponent_Bool => {
-                Some(TrackedDeviceProperty::HasDriverDirectModeComponent_Bool)
-            }
-            TrackedDeviceProperty_HasVirtualDisplayComponent_Bool => {
-                Some(TrackedDeviceProperty::HasVirtualDisplayComponent_Bool)
-            }
-            TrackedDeviceProperty_HasSpatialAnchorsSupport_Bool => {
-                Some(TrackedDeviceProperty::HasSpatialAnchorsSupport_Bool)
-            }
-            TrackedDeviceProperty_ControllerType_String => {
-                Some(TrackedDeviceProperty::ControllerType_String)
-            }
-            TrackedDeviceProperty_LegacyInputProfile_String => {
-                Some(TrackedDeviceProperty::LegacyInputProfile_String)
-            }
-            TrackedDeviceProperty_ControllerHandSelectionPriority_Int32 => {
-                Some(TrackedDeviceProperty::ControllerHandSelectionPriority_Int32)
-            }
-            TrackedDeviceProperty_VendorSpecific_Reserved_Start => {
-                Some(TrackedDeviceProperty::VendorSpecific_Reserved_Start)
-            }
-            TrackedDeviceProperty_VendorSpecific_Reserved_End => {
-                Some(TrackedDeviceProperty::VendorSpecific_Reserved_End)
-            }
-            TrackedDeviceProperty_TrackedDeviceProperty_Max => {
-                Some(TrackedDeviceProperty::TrackedDeviceProperty_Max)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETrackedDeviceProperty_Prop_Invalid => Ok(TrackedDeviceProperty::Invalid),
+             sys::ETrackedDeviceProperty_Prop_TrackingSystemName_String => Ok(TrackedDeviceProperty::TrackingSystemNameString),
+             sys::ETrackedDeviceProperty_Prop_ModelNumber_String => Ok(TrackedDeviceProperty::ModelNumberString),
+             sys::ETrackedDeviceProperty_Prop_SerialNumber_String => Ok(TrackedDeviceProperty::SerialNumberString),
+             sys::ETrackedDeviceProperty_Prop_RenderModelName_String => Ok(TrackedDeviceProperty::RenderModelNameString),
+             sys::ETrackedDeviceProperty_Prop_WillDriftInYaw_Bool => Ok(TrackedDeviceProperty::WillDriftInYawBool),
+             sys::ETrackedDeviceProperty_Prop_ManufacturerName_String => Ok(TrackedDeviceProperty::ManufacturerNameString),
+             sys::ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String => Ok(TrackedDeviceProperty::TrackingFirmwareVersionString),
+             sys::ETrackedDeviceProperty_Prop_HardwareRevision_String => Ok(TrackedDeviceProperty::HardwareRevisionString),
+             sys::ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String => Ok(TrackedDeviceProperty::AllWirelessDongleDescriptionsString),
+             sys::ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String => Ok(TrackedDeviceProperty::ConnectedWirelessDongleString),
+             sys::ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool => Ok(TrackedDeviceProperty::DeviceIsWirelessBool),
+             sys::ETrackedDeviceProperty_Prop_DeviceIsCharging_Bool => Ok(TrackedDeviceProperty::DeviceIsChargingBool),
+             sys::ETrackedDeviceProperty_Prop_DeviceBatteryPercentage_Float => Ok(TrackedDeviceProperty::DeviceBatteryPercentageFloat),
+             sys::ETrackedDeviceProperty_Prop_StatusDisplayTransform_Matrix34 => Ok(TrackedDeviceProperty::StatusDisplayTransformMatrix34),
+             sys::ETrackedDeviceProperty_Prop_Firmware_UpdateAvailable_Bool => Ok(TrackedDeviceProperty::FirmwareUpdateAvailableBool),
+             sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdate_Bool => Ok(TrackedDeviceProperty::FirmwareManualUpdateBool),
+             sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String => Ok(TrackedDeviceProperty::FirmwareManualUpdateURLString),
+             sys::ETrackedDeviceProperty_Prop_HardwareRevision_Uint64 => Ok(TrackedDeviceProperty::HardwareRevisionUint64),
+             sys::ETrackedDeviceProperty_Prop_FirmwareVersion_Uint64 => Ok(TrackedDeviceProperty::FirmwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_FPGAVersion_Uint64 => Ok(TrackedDeviceProperty::FpgaversionUint64),
+             sys::ETrackedDeviceProperty_Prop_VRCVersion_Uint64 => Ok(TrackedDeviceProperty::VrcversionUint64),
+             sys::ETrackedDeviceProperty_Prop_RadioVersion_Uint64 => Ok(TrackedDeviceProperty::RadioVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_DongleVersion_Uint64 => Ok(TrackedDeviceProperty::DongleVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_BlockServerShutdown_Bool => Ok(TrackedDeviceProperty::BlockServerShutdownBool),
+             sys::ETrackedDeviceProperty_Prop_CanUnifyCoordinateSystemWithHmd_Bool => Ok(TrackedDeviceProperty::CanUnifyCoordinateSystemWithHmdBool),
+             sys::ETrackedDeviceProperty_Prop_ContainsProximitySensor_Bool => Ok(TrackedDeviceProperty::ContainsProximitySensorBool),
+             sys::ETrackedDeviceProperty_Prop_DeviceProvidesBatteryStatus_Bool => Ok(TrackedDeviceProperty::DeviceProvidesBatteryStatusBool),
+             sys::ETrackedDeviceProperty_Prop_DeviceCanPowerOff_Bool => Ok(TrackedDeviceProperty::DeviceCanPowerOffBool),
+             sys::ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String => Ok(TrackedDeviceProperty::FirmwareProgrammingTargetString),
+             sys::ETrackedDeviceProperty_Prop_DeviceClass_Int32 => Ok(TrackedDeviceProperty::DeviceClassInt32),
+             sys::ETrackedDeviceProperty_Prop_HasCamera_Bool => Ok(TrackedDeviceProperty::HasCameraBool),
+             sys::ETrackedDeviceProperty_Prop_DriverVersion_String => Ok(TrackedDeviceProperty::DriverVersionString),
+             sys::ETrackedDeviceProperty_Prop_Firmware_ForceUpdateRequired_Bool => Ok(TrackedDeviceProperty::FirmwareForceUpdateRequiredBool),
+             sys::ETrackedDeviceProperty_Prop_ViveSystemButtonFixRequired_Bool => Ok(TrackedDeviceProperty::ViveSystemButtonFixRequiredBool),
+             sys::ETrackedDeviceProperty_Prop_ParentDriver_Uint64 => Ok(TrackedDeviceProperty::ParentDriverUint64),
+             sys::ETrackedDeviceProperty_Prop_ResourceRoot_String => Ok(TrackedDeviceProperty::ResourceRootString),
+             sys::ETrackedDeviceProperty_Prop_RegisteredDeviceType_String => Ok(TrackedDeviceProperty::RegisteredDeviceTypeString),
+             sys::ETrackedDeviceProperty_Prop_InputProfilePath_String => Ok(TrackedDeviceProperty::InputProfilePathString),
+             sys::ETrackedDeviceProperty_Prop_NeverTracked_Bool => Ok(TrackedDeviceProperty::NeverTrackedBool),
+             sys::ETrackedDeviceProperty_Prop_NumCameras_Int32 => Ok(TrackedDeviceProperty::NumCamerasInt32),
+             sys::ETrackedDeviceProperty_Prop_CameraFrameLayout_Int32 => Ok(TrackedDeviceProperty::CameraFrameLayoutInt32),
+             sys::ETrackedDeviceProperty_Prop_CameraStreamFormat_Int32 => Ok(TrackedDeviceProperty::CameraStreamFormatInt32),
+             sys::ETrackedDeviceProperty_Prop_AdditionalDeviceSettingsPath_String => Ok(TrackedDeviceProperty::AdditionalDeviceSettingsPathString),
+             sys::ETrackedDeviceProperty_Prop_Identifiable_Bool => Ok(TrackedDeviceProperty::IdentifiableBool),
+             sys::ETrackedDeviceProperty_Prop_ReportsTimeSinceVSync_Bool => Ok(TrackedDeviceProperty::ReportsTimeSinceVSyncBool),
+             sys::ETrackedDeviceProperty_Prop_SecondsFromVsyncToPhotons_Float => Ok(TrackedDeviceProperty::SecondsFromVsyncToPhotonsFloat),
+             sys::ETrackedDeviceProperty_Prop_DisplayFrequency_Float => Ok(TrackedDeviceProperty::DisplayFrequencyFloat),
+             sys::ETrackedDeviceProperty_Prop_UserIpdMeters_Float => Ok(TrackedDeviceProperty::UserIpdMetersFloat),
+             sys::ETrackedDeviceProperty_Prop_CurrentUniverseId_Uint64 => Ok(TrackedDeviceProperty::CurrentUniverseIdUint64),
+             sys::ETrackedDeviceProperty_Prop_PreviousUniverseId_Uint64 => Ok(TrackedDeviceProperty::PreviousUniverseIdUint64),
+             sys::ETrackedDeviceProperty_Prop_DisplayFirmwareVersion_Uint64 => Ok(TrackedDeviceProperty::DisplayFirmwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_IsOnDesktop_Bool => Ok(TrackedDeviceProperty::IsOnDesktopBool),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCType_Int32 => Ok(TrackedDeviceProperty::DisplayMCTypeInt32),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCOffset_Float => Ok(TrackedDeviceProperty::DisplayMCOffsetFloat),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCScale_Float => Ok(TrackedDeviceProperty::DisplayMCScaleFloat),
+             sys::ETrackedDeviceProperty_Prop_EdidVendorID_Int32 => Ok(TrackedDeviceProperty::EdidVendorIDInt32),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCImageLeft_String => Ok(TrackedDeviceProperty::DisplayMCImageLeftString),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCImageRight_String => Ok(TrackedDeviceProperty::DisplayMCImageRightString),
+             sys::ETrackedDeviceProperty_Prop_DisplayGCBlackClamp_Float => Ok(TrackedDeviceProperty::DisplayGCBlackClampFloat),
+             sys::ETrackedDeviceProperty_Prop_EdidProductID_Int32 => Ok(TrackedDeviceProperty::EdidProductIDInt32),
+             sys::ETrackedDeviceProperty_Prop_CameraToHeadTransform_Matrix34 => Ok(TrackedDeviceProperty::CameraToHeadTransformMatrix34),
+             sys::ETrackedDeviceProperty_Prop_DisplayGCType_Int32 => Ok(TrackedDeviceProperty::DisplayGCTypeInt32),
+             sys::ETrackedDeviceProperty_Prop_DisplayGCOffset_Float => Ok(TrackedDeviceProperty::DisplayGCOffsetFloat),
+             sys::ETrackedDeviceProperty_Prop_DisplayGCScale_Float => Ok(TrackedDeviceProperty::DisplayGCScaleFloat),
+             sys::ETrackedDeviceProperty_Prop_DisplayGCPrescale_Float => Ok(TrackedDeviceProperty::DisplayGCPrescaleFloat),
+             sys::ETrackedDeviceProperty_Prop_DisplayGCImage_String => Ok(TrackedDeviceProperty::DisplayGCImageString),
+             sys::ETrackedDeviceProperty_Prop_LensCenterLeftU_Float => Ok(TrackedDeviceProperty::LensCenterLeftUFloat),
+             sys::ETrackedDeviceProperty_Prop_LensCenterLeftV_Float => Ok(TrackedDeviceProperty::LensCenterLeftVFloat),
+             sys::ETrackedDeviceProperty_Prop_LensCenterRightU_Float => Ok(TrackedDeviceProperty::LensCenterRightUFloat),
+             sys::ETrackedDeviceProperty_Prop_LensCenterRightV_Float => Ok(TrackedDeviceProperty::LensCenterRightVFloat),
+             sys::ETrackedDeviceProperty_Prop_UserHeadToEyeDepthMeters_Float => Ok(TrackedDeviceProperty::UserHeadToEyeDepthMetersFloat),
+             sys::ETrackedDeviceProperty_Prop_CameraFirmwareVersion_Uint64 => Ok(TrackedDeviceProperty::CameraFirmwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String => Ok(TrackedDeviceProperty::CameraFirmwareDescriptionString),
+             sys::ETrackedDeviceProperty_Prop_DisplayFPGAVersion_Uint64 => Ok(TrackedDeviceProperty::DisplayFPGAVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_DisplayBootloaderVersion_Uint64 => Ok(TrackedDeviceProperty::DisplayBootloaderVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_DisplayHardwareVersion_Uint64 => Ok(TrackedDeviceProperty::DisplayHardwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_AudioFirmwareVersion_Uint64 => Ok(TrackedDeviceProperty::AudioFirmwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_CameraCompatibilityMode_Int32 => Ok(TrackedDeviceProperty::CameraCompatibilityModeInt32),
+             sys::ETrackedDeviceProperty_Prop_ScreenshotHorizontalFieldOfViewDegrees_Float => Ok(TrackedDeviceProperty::ScreenshotHorizontalFieldOfViewDegreesFloat),
+             sys::ETrackedDeviceProperty_Prop_ScreenshotVerticalFieldOfViewDegrees_Float => Ok(TrackedDeviceProperty::ScreenshotVerticalFieldOfViewDegreesFloat),
+             sys::ETrackedDeviceProperty_Prop_DisplaySuppressed_Bool => Ok(TrackedDeviceProperty::DisplaySuppressedBool),
+             sys::ETrackedDeviceProperty_Prop_DisplayAllowNightMode_Bool => Ok(TrackedDeviceProperty::DisplayAllowNightModeBool),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCImageWidth_Int32 => Ok(TrackedDeviceProperty::DisplayMCImageWidthInt32),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCImageHeight_Int32 => Ok(TrackedDeviceProperty::DisplayMCImageHeightInt32),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCImageNumChannels_Int32 => Ok(TrackedDeviceProperty::DisplayMCImageNumChannelsInt32),
+             sys::ETrackedDeviceProperty_Prop_DisplayMCImageData_Binary => Ok(TrackedDeviceProperty::DisplayMCImageDataBinary),
+             sys::ETrackedDeviceProperty_Prop_SecondsFromPhotonsToVblank_Float => Ok(TrackedDeviceProperty::SecondsFromPhotonsToVblankFloat),
+             sys::ETrackedDeviceProperty_Prop_DriverDirectModeSendsVsyncEvents_Bool => Ok(TrackedDeviceProperty::DriverDirectModeSendsVsyncEventsBool),
+             sys::ETrackedDeviceProperty_Prop_DisplayDebugMode_Bool => Ok(TrackedDeviceProperty::DisplayDebugModeBool),
+             sys::ETrackedDeviceProperty_Prop_GraphicsAdapterLuid_Uint64 => Ok(TrackedDeviceProperty::GraphicsAdapterLuidUint64),
+             sys::ETrackedDeviceProperty_Prop_DriverProvidedChaperonePath_String => Ok(TrackedDeviceProperty::DriverProvidedChaperonePathString),
+             sys::ETrackedDeviceProperty_Prop_ExpectedTrackingReferenceCount_Int32 => Ok(TrackedDeviceProperty::ExpectedTrackingReferenceCountInt32),
+             sys::ETrackedDeviceProperty_Prop_ExpectedControllerCount_Int32 => Ok(TrackedDeviceProperty::ExpectedControllerCountInt32),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathControllerLeftDeviceOff_String => Ok(TrackedDeviceProperty::NamedIconPathControllerLeftDeviceOffString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathControllerRightDeviceOff_String => Ok(TrackedDeviceProperty::NamedIconPathControllerRightDeviceOffString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathTrackingReferenceDeviceOff_String => Ok(TrackedDeviceProperty::NamedIconPathTrackingReferenceDeviceOffString),
+             sys::ETrackedDeviceProperty_Prop_DoNotApplyPrediction_Bool => Ok(TrackedDeviceProperty::DoNotApplyPredictionBool),
+             sys::ETrackedDeviceProperty_Prop_CameraToHeadTransforms_Matrix34_Array => Ok(TrackedDeviceProperty::CameraToHeadTransformsMatrix34Array),
+             sys::ETrackedDeviceProperty_Prop_DistortionMeshResolution_Int32 => Ok(TrackedDeviceProperty::DistortionMeshResolutionInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverIsDrawingControllers_Bool => Ok(TrackedDeviceProperty::DriverIsDrawingControllersBool),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestsApplicationPause_Bool => Ok(TrackedDeviceProperty::DriverRequestsApplicationPauseBool),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestsReducedRendering_Bool => Ok(TrackedDeviceProperty::DriverRequestsReducedRenderingBool),
+             sys::ETrackedDeviceProperty_Prop_MinimumIpdStepMeters_Float => Ok(TrackedDeviceProperty::MinimumIpdStepMetersFloat),
+             sys::ETrackedDeviceProperty_Prop_AudioBridgeFirmwareVersion_Uint64 => Ok(TrackedDeviceProperty::AudioBridgeFirmwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_ImageBridgeFirmwareVersion_Uint64 => Ok(TrackedDeviceProperty::ImageBridgeFirmwareVersionUint64),
+             sys::ETrackedDeviceProperty_Prop_ImuToHeadTransform_Matrix34 => Ok(TrackedDeviceProperty::ImuToHeadTransformMatrix34),
+             sys::ETrackedDeviceProperty_Prop_ImuFactoryGyroBias_Vector3 => Ok(TrackedDeviceProperty::ImuFactoryGyroBiasVector3),
+             sys::ETrackedDeviceProperty_Prop_ImuFactoryGyroScale_Vector3 => Ok(TrackedDeviceProperty::ImuFactoryGyroScaleVector3),
+             sys::ETrackedDeviceProperty_Prop_ImuFactoryAccelerometerBias_Vector3 => Ok(TrackedDeviceProperty::ImuFactoryAccelerometerBiasVector3),
+             sys::ETrackedDeviceProperty_Prop_ImuFactoryAccelerometerScale_Vector3 => Ok(TrackedDeviceProperty::ImuFactoryAccelerometerScaleVector3),
+             sys::ETrackedDeviceProperty_Prop_ConfigurationIncludesLighthouse20Features_Bool => Ok(TrackedDeviceProperty::ConfigurationIncludesLighthouse20FeaturesBool),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraCorrectionMode_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraCorrectionModeInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerLeft_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherInnerLeftInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerRight_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherInnerRightInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerTop_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherInnerTopInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_InnerBottom_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherInnerBottomInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterLeft_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherOuterLeftInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterRight_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherOuterRightInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterTop_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherOuterTopInt32),
+             sys::ETrackedDeviceProperty_Prop_DriverRequestedMuraFeather_OuterBottom_Int32 => Ok(TrackedDeviceProperty::DriverRequestedMuraFeatherOuterBottomInt32),
+             sys::ETrackedDeviceProperty_Prop_AttachedDeviceId_String => Ok(TrackedDeviceProperty::AttachedDeviceIdString),
+             sys::ETrackedDeviceProperty_Prop_SupportedButtons_Uint64 => Ok(TrackedDeviceProperty::SupportedButtonsUint64),
+             sys::ETrackedDeviceProperty_Prop_Axis0Type_Int32 => Ok(TrackedDeviceProperty::Axis0TypeInt32),
+             sys::ETrackedDeviceProperty_Prop_Axis1Type_Int32 => Ok(TrackedDeviceProperty::Axis1TypeInt32),
+             sys::ETrackedDeviceProperty_Prop_Axis2Type_Int32 => Ok(TrackedDeviceProperty::Axis2TypeInt32),
+             sys::ETrackedDeviceProperty_Prop_Axis3Type_Int32 => Ok(TrackedDeviceProperty::Axis3TypeInt32),
+             sys::ETrackedDeviceProperty_Prop_Axis4Type_Int32 => Ok(TrackedDeviceProperty::Axis4TypeInt32),
+             sys::ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32 => Ok(TrackedDeviceProperty::ControllerRoleHintInt32),
+             sys::ETrackedDeviceProperty_Prop_FieldOfViewLeftDegrees_Float => Ok(TrackedDeviceProperty::FieldOfViewLeftDegreesFloat),
+             sys::ETrackedDeviceProperty_Prop_FieldOfViewRightDegrees_Float => Ok(TrackedDeviceProperty::FieldOfViewRightDegreesFloat),
+             sys::ETrackedDeviceProperty_Prop_FieldOfViewTopDegrees_Float => Ok(TrackedDeviceProperty::FieldOfViewTopDegreesFloat),
+             sys::ETrackedDeviceProperty_Prop_FieldOfViewBottomDegrees_Float => Ok(TrackedDeviceProperty::FieldOfViewBottomDegreesFloat),
+             sys::ETrackedDeviceProperty_Prop_TrackingRangeMinimumMeters_Float => Ok(TrackedDeviceProperty::TrackingRangeMinimumMetersFloat),
+             sys::ETrackedDeviceProperty_Prop_TrackingRangeMaximumMeters_Float => Ok(TrackedDeviceProperty::TrackingRangeMaximumMetersFloat),
+             sys::ETrackedDeviceProperty_Prop_ModeLabel_String => Ok(TrackedDeviceProperty::ModeLabelString),
+             sys::ETrackedDeviceProperty_Prop_IconPathName_String => Ok(TrackedDeviceProperty::IconPathNameString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceOff_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceOffString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearching_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceSearchingString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearchingAlert_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceSearchingAlertString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReady_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceReadyString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReadyAlert_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceReadyAlertString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceNotReady_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceNotReadyString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceStandby_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceStandbyString),
+             sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceAlertLow_String => Ok(TrackedDeviceProperty::NamedIconPathDeviceAlertLowString),
+             sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_Start => Ok(TrackedDeviceProperty::DisplayHiddenAreaBinaryStart),
+             sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_End => Ok(TrackedDeviceProperty::DisplayHiddenAreaBinaryEnd),
+             sys::ETrackedDeviceProperty_Prop_ParentContainer => Ok(TrackedDeviceProperty::ParentContainer),
+             sys::ETrackedDeviceProperty_Prop_UserConfigPath_String => Ok(TrackedDeviceProperty::UserConfigPathString),
+             sys::ETrackedDeviceProperty_Prop_InstallPath_String => Ok(TrackedDeviceProperty::InstallPathString),
+             sys::ETrackedDeviceProperty_Prop_HasDisplayComponent_Bool => Ok(TrackedDeviceProperty::HasDisplayComponentBool),
+             sys::ETrackedDeviceProperty_Prop_HasControllerComponent_Bool => Ok(TrackedDeviceProperty::HasControllerComponentBool),
+             sys::ETrackedDeviceProperty_Prop_HasCameraComponent_Bool => Ok(TrackedDeviceProperty::HasCameraComponentBool),
+             sys::ETrackedDeviceProperty_Prop_HasDriverDirectModeComponent_Bool => Ok(TrackedDeviceProperty::HasDriverDirectModeComponentBool),
+             sys::ETrackedDeviceProperty_Prop_HasVirtualDisplayComponent_Bool => Ok(TrackedDeviceProperty::HasVirtualDisplayComponentBool),
+             sys::ETrackedDeviceProperty_Prop_HasSpatialAnchorsSupport_Bool => Ok(TrackedDeviceProperty::HasSpatialAnchorsSupportBool),
+             sys::ETrackedDeviceProperty_Prop_ControllerType_String => Ok(TrackedDeviceProperty::ControllerTypeString),
+             sys::ETrackedDeviceProperty_Prop_LegacyInputProfile_String => Ok(TrackedDeviceProperty::LegacyInputProfileString),
+             sys::ETrackedDeviceProperty_Prop_ControllerHandSelectionPriority_Int32 => Ok(TrackedDeviceProperty::ControllerHandSelectionPriorityInt32),
+             sys::ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_Start => Ok(TrackedDeviceProperty::VendorSpecificReservedStart),
+             sys::ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_End => Ok(TrackedDeviceProperty::VendorSpecificReservedEnd),
+             sys::ETrackedDeviceProperty_Prop_TrackedDeviceProperty_Max => Ok(TrackedDeviceProperty::TrackedDevicePropertyMax),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedDeviceProperty> for TrackedDeviceProperty {
-    fn from(val: RawTrackedDeviceProperty) -> Self {
-        TrackedDeviceProperty::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedDeviceProperty.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedPropertyError(pub u32);
+impl fmt::Display for Invalid<TrackedDeviceProperty> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedDeviceProperty.", self.0)
+    }
+}
 
-pub const TrackedPropertyError_Success: RawTrackedPropertyError = RawTrackedPropertyError(0);
-pub const TrackedPropertyError_WrongDataType: RawTrackedPropertyError = RawTrackedPropertyError(1);
-pub const TrackedPropertyError_WrongDeviceClass: RawTrackedPropertyError =
-    RawTrackedPropertyError(2);
-pub const TrackedPropertyError_BufferTooSmall: RawTrackedPropertyError = RawTrackedPropertyError(3);
-pub const TrackedPropertyError_UnknownProperty: RawTrackedPropertyError =
-    RawTrackedPropertyError(4);
-pub const TrackedPropertyError_InvalidDevice: RawTrackedPropertyError = RawTrackedPropertyError(5);
-pub const TrackedPropertyError_CouldNotContactServer: RawTrackedPropertyError =
-    RawTrackedPropertyError(6);
-pub const TrackedPropertyError_ValueNotProvidedByDevice: RawTrackedPropertyError =
-    RawTrackedPropertyError(7);
-pub const TrackedPropertyError_StringExceedsMaximumLength: RawTrackedPropertyError =
-    RawTrackedPropertyError(8);
-pub const TrackedPropertyError_NotYetAvailable: RawTrackedPropertyError =
-    RawTrackedPropertyError(9);
-pub const TrackedPropertyError_PermissionDenied: RawTrackedPropertyError =
-    RawTrackedPropertyError(10);
-pub const TrackedPropertyError_InvalidOperation: RawTrackedPropertyError =
-    RawTrackedPropertyError(11);
-pub const TrackedPropertyError_CannotWriteToWildcards: RawTrackedPropertyError =
-    RawTrackedPropertyError(12);
-pub const TrackedPropertyError_IPCReadFailure: RawTrackedPropertyError =
-    RawTrackedPropertyError(13);
+impl error::Error for Invalid<TrackedDeviceProperty> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedDeviceProperty."
+    }
+}
 
+/// ETrackedPropertyError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedPropertyError {
-    Success = 0,
-    WrongDataType = 1,
-    WrongDeviceClass = 2,
-    BufferTooSmall = 3,
-    UnknownProperty = 4,
-    InvalidDevice = 5,
-    CouldNotContactServer = 6,
-    ValueNotProvidedByDevice = 7,
-    StringExceedsMaximumLength = 8,
-    NotYetAvailable = 9,
-    PermissionDenied = 10,
-    InvalidOperation = 11,
-    CannotWriteToWildcards = 12,
-    IPCReadFailure = 13,
+    /// ETrackedPropertyError_TrackedProp_Success = 0.
+    Success = sys::ETrackedPropertyError_TrackedProp_Success,
+    /// ETrackedPropertyError_TrackedProp_WrongDataType = 1.
+    WrongDataType = sys::ETrackedPropertyError_TrackedProp_WrongDataType,
+    /// ETrackedPropertyError_TrackedProp_WrongDeviceClass = 2.
+    WrongDeviceClass = sys::ETrackedPropertyError_TrackedProp_WrongDeviceClass,
+    /// ETrackedPropertyError_TrackedProp_BufferTooSmall = 3.
+    BufferTooSmall = sys::ETrackedPropertyError_TrackedProp_BufferTooSmall,
+    /// ETrackedPropertyError_TrackedProp_UnknownProperty = 4.
+    UnknownProperty = sys::ETrackedPropertyError_TrackedProp_UnknownProperty,
+    /// ETrackedPropertyError_TrackedProp_InvalidDevice = 5.
+    InvalidDevice = sys::ETrackedPropertyError_TrackedProp_InvalidDevice,
+    /// ETrackedPropertyError_TrackedProp_CouldNotContactServer = 6.
+    CouldNotContactServer = sys::ETrackedPropertyError_TrackedProp_CouldNotContactServer,
+    /// ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice = 7.
+    ValueNotProvidedByDevice = sys::ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice,
+    /// ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength = 8.
+    StringExceedsMaximumLength = sys::ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength,
+    /// ETrackedPropertyError_TrackedProp_NotYetAvailable = 9.
+    NotYetAvailable = sys::ETrackedPropertyError_TrackedProp_NotYetAvailable,
+    /// ETrackedPropertyError_TrackedProp_PermissionDenied = 10.
+    PermissionDenied = sys::ETrackedPropertyError_TrackedProp_PermissionDenied,
+    /// ETrackedPropertyError_TrackedProp_InvalidOperation = 11.
+    InvalidOperation = sys::ETrackedPropertyError_TrackedProp_InvalidOperation,
+    /// ETrackedPropertyError_TrackedProp_CannotWriteToWildcards = 12.
+    CannotWriteToWildcard = sys::ETrackedPropertyError_TrackedProp_CannotWriteToWildcards,
+    /// ETrackedPropertyError_TrackedProp_IPCReadFailure = 13.
+    IpcreadFailure = sys::ETrackedPropertyError_TrackedProp_IPCReadFailure,
 }
 
-impl TrackedPropertyError {
+impl Enum for TrackedPropertyError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedPropertyError) -> Option<Self> {
-        match val {
-            TrackedPropertyError_Success => Some(TrackedPropertyError::Success),
-            TrackedPropertyError_WrongDataType => Some(TrackedPropertyError::WrongDataType),
-            TrackedPropertyError_WrongDeviceClass => Some(TrackedPropertyError::WrongDeviceClass),
-            TrackedPropertyError_BufferTooSmall => Some(TrackedPropertyError::BufferTooSmall),
-            TrackedPropertyError_UnknownProperty => Some(TrackedPropertyError::UnknownProperty),
-            TrackedPropertyError_InvalidDevice => Some(TrackedPropertyError::InvalidDevice),
-            TrackedPropertyError_CouldNotContactServer => {
-                Some(TrackedPropertyError::CouldNotContactServer)
-            }
-            TrackedPropertyError_ValueNotProvidedByDevice => {
-                Some(TrackedPropertyError::ValueNotProvidedByDevice)
-            }
-            TrackedPropertyError_StringExceedsMaximumLength => {
-                Some(TrackedPropertyError::StringExceedsMaximumLength)
-            }
-            TrackedPropertyError_NotYetAvailable => Some(TrackedPropertyError::NotYetAvailable),
-            TrackedPropertyError_PermissionDenied => Some(TrackedPropertyError::PermissionDenied),
-            TrackedPropertyError_InvalidOperation => Some(TrackedPropertyError::InvalidOperation),
-            TrackedPropertyError_CannotWriteToWildcards => {
-                Some(TrackedPropertyError::CannotWriteToWildcards)
-            }
-            TrackedPropertyError_IPCReadFailure => Some(TrackedPropertyError::IPCReadFailure),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ETrackedPropertyError_TrackedProp_Success => Ok(TrackedPropertyError::Success),
+             sys::ETrackedPropertyError_TrackedProp_WrongDataType => Ok(TrackedPropertyError::WrongDataType),
+             sys::ETrackedPropertyError_TrackedProp_WrongDeviceClass => Ok(TrackedPropertyError::WrongDeviceClass),
+             sys::ETrackedPropertyError_TrackedProp_BufferTooSmall => Ok(TrackedPropertyError::BufferTooSmall),
+             sys::ETrackedPropertyError_TrackedProp_UnknownProperty => Ok(TrackedPropertyError::UnknownProperty),
+             sys::ETrackedPropertyError_TrackedProp_InvalidDevice => Ok(TrackedPropertyError::InvalidDevice),
+             sys::ETrackedPropertyError_TrackedProp_CouldNotContactServer => Ok(TrackedPropertyError::CouldNotContactServer),
+             sys::ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice => Ok(TrackedPropertyError::ValueNotProvidedByDevice),
+             sys::ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength => Ok(TrackedPropertyError::StringExceedsMaximumLength),
+             sys::ETrackedPropertyError_TrackedProp_NotYetAvailable => Ok(TrackedPropertyError::NotYetAvailable),
+             sys::ETrackedPropertyError_TrackedProp_PermissionDenied => Ok(TrackedPropertyError::PermissionDenied),
+             sys::ETrackedPropertyError_TrackedProp_InvalidOperation => Ok(TrackedPropertyError::InvalidOperation),
+             sys::ETrackedPropertyError_TrackedProp_CannotWriteToWildcards => Ok(TrackedPropertyError::CannotWriteToWildcard),
+             sys::ETrackedPropertyError_TrackedProp_IPCReadFailure => Ok(TrackedPropertyError::IpcreadFailure),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedPropertyError> for TrackedPropertyError {
-    fn from(val: RawTrackedPropertyError) -> Self {
-        TrackedPropertyError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedPropertyError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSubmitFlags(pub u32);
-
-pub const SubmitFlags_Default: RawSubmitFlags = RawSubmitFlags(0);
-pub const SubmitFlags_LensDistortionAlreadyApplied: RawSubmitFlags = RawSubmitFlags(1);
-pub const SubmitFlags_GlRenderBuffer: RawSubmitFlags = RawSubmitFlags(2);
-pub const SubmitFlags_Reserved: RawSubmitFlags = RawSubmitFlags(4);
-pub const SubmitFlags_TextureWithPose: RawSubmitFlags = RawSubmitFlags(8);
-pub const SubmitFlags_TextureWithDepth: RawSubmitFlags = RawSubmitFlags(16);
-
-#[repr(u32)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum SubmitFlags {
-    Default = 0,
-    LensDistortionAlreadyApplied = 1,
-    GlRenderBuffer = 2,
-    Reserved = 4,
-    TextureWithPose = 8,
-    TextureWithDepth = 16,
+impl fmt::Display for Invalid<TrackedPropertyError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedPropertyError.", self.0)
+    }
 }
 
-impl SubmitFlags {
+impl error::Error for Invalid<TrackedPropertyError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedPropertyError."
+    }
+}
+
+/// EVRSubmitFlags.
+#[repr(u32)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub enum SubmitFlag {
+    /// EVRSubmitFlags_Submit_Default = 0.
+    Default = sys::EVRSubmitFlags_Submit_Default,
+    /// EVRSubmitFlags_Submit_LensDistortionAlreadyApplied = 1.
+    LensDistortionAlreadyApplied = sys::EVRSubmitFlags_Submit_LensDistortionAlreadyApplied,
+    /// EVRSubmitFlags_Submit_GlRenderBuffer = 2.
+    GlRenderBuffer = sys::EVRSubmitFlags_Submit_GlRenderBuffer,
+    /// EVRSubmitFlags_Submit_Reserved = 4.
+    Reserved = sys::EVRSubmitFlags_Submit_Reserved,
+    /// EVRSubmitFlags_Submit_TextureWithPose = 8.
+    TextureWithPose = sys::EVRSubmitFlags_Submit_TextureWithPose,
+    /// EVRSubmitFlags_Submit_TextureWithDepth = 16.
+    TextureWithDepth = sys::EVRSubmitFlags_Submit_TextureWithDepth,
+}
+
+impl Enum for SubmitFlag {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSubmitFlags) -> Option<Self> {
-        match val {
-            SubmitFlags_Default => Some(SubmitFlags::Default),
-            SubmitFlags_LensDistortionAlreadyApplied => {
-                Some(SubmitFlags::LensDistortionAlreadyApplied)
-            }
-            SubmitFlags_GlRenderBuffer => Some(SubmitFlags::GlRenderBuffer),
-            SubmitFlags_Reserved => Some(SubmitFlags::Reserved),
-            SubmitFlags_TextureWithPose => Some(SubmitFlags::TextureWithPose),
-            SubmitFlags_TextureWithDepth => Some(SubmitFlags::TextureWithDepth),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSubmitFlags_Submit_Default => Ok(SubmitFlag::Default),
+             sys::EVRSubmitFlags_Submit_LensDistortionAlreadyApplied => Ok(SubmitFlag::LensDistortionAlreadyApplied),
+             sys::EVRSubmitFlags_Submit_GlRenderBuffer => Ok(SubmitFlag::GlRenderBuffer),
+             sys::EVRSubmitFlags_Submit_Reserved => Ok(SubmitFlag::Reserved),
+             sys::EVRSubmitFlags_Submit_TextureWithPose => Ok(SubmitFlag::TextureWithPose),
+             sys::EVRSubmitFlags_Submit_TextureWithDepth => Ok(SubmitFlag::TextureWithDepth),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSubmitFlags> for SubmitFlags {
-    fn from(val: RawSubmitFlags) -> Self {
-        SubmitFlags::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SubmitFlags.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawState(pub u32);
+impl fmt::Display for Invalid<SubmitFlag> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SubmitFlag.", self.0)
+    }
+}
 
-pub const State_Undefined: RawState = RawState(::std::u32::MAX);
-pub const State_Off: RawState = RawState(0);
-pub const State_Searching: RawState = RawState(1);
-pub const State_Searching_Alert: RawState = RawState(2);
-pub const State_Ready: RawState = RawState(3);
-pub const State_Ready_Alert: RawState = RawState(4);
-pub const State_NotReady: RawState = RawState(5);
-pub const State_Standby: RawState = RawState(6);
-pub const State_Ready_Alert_Low: RawState = RawState(7);
+impl error::Error for Invalid<SubmitFlag> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SubmitFlag."
+    }
+}
 
-#[repr(u32)]
+/// EVRState.
+#[repr(i32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum State {
-    Undefined = ::std::u32::MAX,
-    Off = 0,
-    Searching = 1,
-    Searching_Alert = 2,
-    Ready = 3,
-    Ready_Alert = 4,
-    NotReady = 5,
-    Standby = 6,
-    Ready_Alert_Low = 7,
+    /// EVRState_VRState_Undefined = -1.
+    Undefined = sys::EVRState_VRState_Undefined,
+    /// EVRState_VRState_Off = 0.
+    Off = sys::EVRState_VRState_Off,
+    /// EVRState_VRState_Searching = 1.
+    Searching = sys::EVRState_VRState_Searching,
+    /// EVRState_VRState_Searching_Alert = 2.
+    SearchingAlert = sys::EVRState_VRState_Searching_Alert,
+    /// EVRState_VRState_Ready = 3.
+    Ready = sys::EVRState_VRState_Ready,
+    /// EVRState_VRState_Ready_Alert = 4.
+    ReadyAlert = sys::EVRState_VRState_Ready_Alert,
+    /// EVRState_VRState_NotReady = 5.
+    NotReady = sys::EVRState_VRState_NotReady,
+    /// EVRState_VRState_Standby = 6.
+    Standby = sys::EVRState_VRState_Standby,
+    /// EVRState_VRState_Ready_Alert_Low = 7.
+    ReadyAlertLow = sys::EVRState_VRState_Ready_Alert_Low,
 }
 
-impl State {
+impl Enum for State {
+    type Raw = i32;
+
     #[inline]
-    fn from_raw(val: RawState) -> Option<Self> {
-        match val {
-            State_Undefined => Some(State::Undefined),
-            State_Off => Some(State::Off),
-            State_Searching => Some(State::Searching),
-            State_Searching_Alert => Some(State::Searching_Alert),
-            State_Ready => Some(State::Ready),
-            State_Ready_Alert => Some(State::Ready_Alert),
-            State_NotReady => Some(State::NotReady),
-            State_Standby => Some(State::Standby),
-            State_Ready_Alert_Low => Some(State::Ready_Alert_Low),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRState_VRState_Undefined => Ok(State::Undefined),
+             sys::EVRState_VRState_Off => Ok(State::Off),
+             sys::EVRState_VRState_Searching => Ok(State::Searching),
+             sys::EVRState_VRState_Searching_Alert => Ok(State::SearchingAlert),
+             sys::EVRState_VRState_Ready => Ok(State::Ready),
+             sys::EVRState_VRState_Ready_Alert => Ok(State::ReadyAlert),
+             sys::EVRState_VRState_NotReady => Ok(State::NotReady),
+             sys::EVRState_VRState_Standby => Ok(State::Standby),
+             sys::EVRState_VRState_Ready_Alert_Low => Ok(State::ReadyAlertLow),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawState> for State {
-    fn from(val: RawState) -> Self {
-        State::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for State.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawEventType(pub u32);
+impl fmt::Display for Invalid<State> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of State.", self.0)
+    }
+}
 
-pub const EventType_None: RawEventType = RawEventType(0);
-pub const EventType_TrackedDeviceActivated: RawEventType = RawEventType(100);
-pub const EventType_TrackedDeviceDeactivated: RawEventType = RawEventType(101);
-pub const EventType_TrackedDeviceUpdated: RawEventType = RawEventType(102);
-pub const EventType_TrackedDeviceUserInteractionStarted: RawEventType = RawEventType(103);
-pub const EventType_TrackedDeviceUserInteractionEnded: RawEventType = RawEventType(104);
-pub const EventType_IpdChanged: RawEventType = RawEventType(105);
-pub const EventType_EnterStandbyMode: RawEventType = RawEventType(106);
-pub const EventType_LeaveStandbyMode: RawEventType = RawEventType(107);
-pub const EventType_TrackedDeviceRoleChanged: RawEventType = RawEventType(108);
-pub const EventType_WatchdogWakeUpRequested: RawEventType = RawEventType(109);
-pub const EventType_LensDistortionChanged: RawEventType = RawEventType(110);
-pub const EventType_PropertyChanged: RawEventType = RawEventType(111);
-pub const EventType_WirelessDisconnect: RawEventType = RawEventType(112);
-pub const EventType_WirelessReconnect: RawEventType = RawEventType(113);
-pub const EventType_ButtonPress: RawEventType = RawEventType(200);
-pub const EventType_ButtonUnpress: RawEventType = RawEventType(201);
-pub const EventType_ButtonTouch: RawEventType = RawEventType(202);
-pub const EventType_ButtonUntouch: RawEventType = RawEventType(203);
-pub const EventType_DualAnalog_Press: RawEventType = RawEventType(250);
-pub const EventType_DualAnalog_Unpress: RawEventType = RawEventType(251);
-pub const EventType_DualAnalog_Touch: RawEventType = RawEventType(252);
-pub const EventType_DualAnalog_Untouch: RawEventType = RawEventType(253);
-pub const EventType_DualAnalog_Move: RawEventType = RawEventType(254);
-pub const EventType_DualAnalog_ModeSwitch1: RawEventType = RawEventType(255);
-pub const EventType_DualAnalog_ModeSwitch2: RawEventType = RawEventType(256);
-pub const EventType_DualAnalog_Cancel: RawEventType = RawEventType(257);
-pub const EventType_MouseMove: RawEventType = RawEventType(300);
-pub const EventType_MouseButtonDown: RawEventType = RawEventType(301);
-pub const EventType_MouseButtonUp: RawEventType = RawEventType(302);
-pub const EventType_FocusEnter: RawEventType = RawEventType(303);
-pub const EventType_FocusLeave: RawEventType = RawEventType(304);
-pub const EventType_Scroll: RawEventType = RawEventType(305);
-pub const EventType_TouchPadMove: RawEventType = RawEventType(306);
-pub const EventType_OverlayFocusChanged: RawEventType = RawEventType(307);
-pub const EventType_ReloadOverlays: RawEventType = RawEventType(308);
-pub const EventType_InputFocusCaptured: RawEventType = RawEventType(400);
-pub const EventType_InputFocusReleased: RawEventType = RawEventType(401);
-pub const EventType_SceneFocusLost: RawEventType = RawEventType(402);
-pub const EventType_SceneFocusGained: RawEventType = RawEventType(403);
-pub const EventType_SceneApplicationChanged: RawEventType = RawEventType(404);
-pub const EventType_SceneFocusChanged: RawEventType = RawEventType(405);
-pub const EventType_InputFocusChanged: RawEventType = RawEventType(406);
-pub const EventType_SceneApplicationSecondaryRenderingStarted: RawEventType = RawEventType(407);
-pub const EventType_SceneApplicationUsingWrongGraphicsAdapter: RawEventType = RawEventType(408);
-pub const EventType_ActionBindingReloaded: RawEventType = RawEventType(409);
-pub const EventType_HideRenderModels: RawEventType = RawEventType(410);
-pub const EventType_ShowRenderModels: RawEventType = RawEventType(411);
-pub const EventType_ConsoleOpened: RawEventType = RawEventType(420);
-pub const EventType_ConsoleClosed: RawEventType = RawEventType(421);
-pub const EventType_OverlayShown: RawEventType = RawEventType(500);
-pub const EventType_OverlayHidden: RawEventType = RawEventType(501);
-pub const EventType_DashboardActivated: RawEventType = RawEventType(502);
-pub const EventType_DashboardDeactivated: RawEventType = RawEventType(503);
-pub const EventType_DashboardThumbSelected: RawEventType = RawEventType(504);
-pub const EventType_DashboardRequested: RawEventType = RawEventType(505);
-pub const EventType_ResetDashboard: RawEventType = RawEventType(506);
-pub const EventType_RenderToast: RawEventType = RawEventType(507);
-pub const EventType_ImageLoaded: RawEventType = RawEventType(508);
-pub const EventType_ShowKeyboard: RawEventType = RawEventType(509);
-pub const EventType_HideKeyboard: RawEventType = RawEventType(510);
-pub const EventType_OverlayGamepadFocusGained: RawEventType = RawEventType(511);
-pub const EventType_OverlayGamepadFocusLost: RawEventType = RawEventType(512);
-pub const EventType_OverlaySharedTextureChanged: RawEventType = RawEventType(513);
-pub const EventType_ScreenshotTriggered: RawEventType = RawEventType(516);
-pub const EventType_ImageFailed: RawEventType = RawEventType(517);
-pub const EventType_DashboardOverlayCreated: RawEventType = RawEventType(518);
-pub const EventType_SwitchGamepadFocus: RawEventType = RawEventType(519);
-pub const EventType_RequestScreenshot: RawEventType = RawEventType(520);
-pub const EventType_ScreenshotTaken: RawEventType = RawEventType(521);
-pub const EventType_ScreenshotFailed: RawEventType = RawEventType(522);
-pub const EventType_SubmitScreenshotToDashboard: RawEventType = RawEventType(523);
-pub const EventType_ScreenshotProgressToDashboard: RawEventType = RawEventType(524);
-pub const EventType_PrimaryDashboardDeviceChanged: RawEventType = RawEventType(525);
-pub const EventType_RoomViewShown: RawEventType = RawEventType(526);
-pub const EventType_RoomViewHidden: RawEventType = RawEventType(527);
-pub const EventType_ShowUI: RawEventType = RawEventType(528);
-pub const EventType_Notification_Shown: RawEventType = RawEventType(600);
-pub const EventType_Notification_Hidden: RawEventType = RawEventType(601);
-pub const EventType_Notification_BeginInteraction: RawEventType = RawEventType(602);
-pub const EventType_Notification_Destroyed: RawEventType = RawEventType(603);
-pub const EventType_Quit: RawEventType = RawEventType(700);
-pub const EventType_ProcessQuit: RawEventType = RawEventType(701);
-pub const EventType_QuitAborted_UserPrompt: RawEventType = RawEventType(702);
-pub const EventType_QuitAcknowledged: RawEventType = RawEventType(703);
-pub const EventType_DriverRequestedQuit: RawEventType = RawEventType(704);
-pub const EventType_ChaperoneDataHasChanged: RawEventType = RawEventType(800);
-pub const EventType_ChaperoneUniverseHasChanged: RawEventType = RawEventType(801);
-pub const EventType_ChaperoneTempDataHasChanged: RawEventType = RawEventType(802);
-pub const EventType_ChaperoneSettingsHaveChanged: RawEventType = RawEventType(803);
-pub const EventType_SeatedZeroPoseReset: RawEventType = RawEventType(804);
-pub const EventType_ChaperoneFlushCache: RawEventType = RawEventType(805);
-pub const EventType_AudioSettingsHaveChanged: RawEventType = RawEventType(820);
-pub const EventType_BackgroundSettingHasChanged: RawEventType = RawEventType(850);
-pub const EventType_CameraSettingsHaveChanged: RawEventType = RawEventType(851);
-pub const EventType_ReprojectionSettingHasChanged: RawEventType = RawEventType(852);
-pub const EventType_ModelSkinSettingsHaveChanged: RawEventType = RawEventType(853);
-pub const EventType_EnvironmentSettingsHaveChanged: RawEventType = RawEventType(854);
-pub const EventType_PowerSettingsHaveChanged: RawEventType = RawEventType(855);
-pub const EventType_EnableHomeAppSettingsHaveChanged: RawEventType = RawEventType(856);
-pub const EventType_SteamVRSectionSettingChanged: RawEventType = RawEventType(857);
-pub const EventType_LighthouseSectionSettingChanged: RawEventType = RawEventType(858);
-pub const EventType_NullSectionSettingChanged: RawEventType = RawEventType(859);
-pub const EventType_UserInterfaceSectionSettingChanged: RawEventType = RawEventType(860);
-pub const EventType_NotificationsSectionSettingChanged: RawEventType = RawEventType(861);
-pub const EventType_KeyboardSectionSettingChanged: RawEventType = RawEventType(862);
-pub const EventType_PerfSectionSettingChanged: RawEventType = RawEventType(863);
-pub const EventType_DashboardSectionSettingChanged: RawEventType = RawEventType(864);
-pub const EventType_WebInterfaceSectionSettingChanged: RawEventType = RawEventType(865);
-pub const EventType_TrackersSectionSettingChanged: RawEventType = RawEventType(866);
-pub const EventType_LastKnownSectionSettingChanged: RawEventType = RawEventType(867);
-pub const EventType_StatusUpdate: RawEventType = RawEventType(900);
-pub const EventType_WebInterface_InstallDriverCompleted: RawEventType = RawEventType(950);
-pub const EventType_MCImageUpdated: RawEventType = RawEventType(1000);
-pub const EventType_FirmwareUpdateStarted: RawEventType = RawEventType(1100);
-pub const EventType_FirmwareUpdateFinished: RawEventType = RawEventType(1101);
-pub const EventType_KeyboardClosed: RawEventType = RawEventType(1200);
-pub const EventType_KeyboardCharInput: RawEventType = RawEventType(1201);
-pub const EventType_KeyboardDone: RawEventType = RawEventType(1202);
-pub const EventType_ApplicationTransitionStarted: RawEventType = RawEventType(1300);
-pub const EventType_ApplicationTransitionAborted: RawEventType = RawEventType(1301);
-pub const EventType_ApplicationTransitionNewAppStarted: RawEventType = RawEventType(1302);
-pub const EventType_ApplicationListUpdated: RawEventType = RawEventType(1303);
-pub const EventType_ApplicationMimeTypeLoad: RawEventType = RawEventType(1304);
-pub const EventType_ApplicationTransitionNewAppLaunchComplete: RawEventType = RawEventType(1305);
-pub const EventType_ProcessConnected: RawEventType = RawEventType(1306);
-pub const EventType_ProcessDisconnected: RawEventType = RawEventType(1307);
-pub const EventType_Compositor_MirrorWindowShown: RawEventType = RawEventType(1400);
-pub const EventType_Compositor_MirrorWindowHidden: RawEventType = RawEventType(1401);
-pub const EventType_Compositor_ChaperoneBoundsShown: RawEventType = RawEventType(1410);
-pub const EventType_Compositor_ChaperoneBoundsHidden: RawEventType = RawEventType(1411);
-pub const EventType_TrackedCamera_StartVideoStream: RawEventType = RawEventType(1500);
-pub const EventType_TrackedCamera_StopVideoStream: RawEventType = RawEventType(1501);
-pub const EventType_TrackedCamera_PauseVideoStream: RawEventType = RawEventType(1502);
-pub const EventType_TrackedCamera_ResumeVideoStream: RawEventType = RawEventType(1503);
-pub const EventType_TrackedCamera_EditingSurface: RawEventType = RawEventType(1550);
-pub const EventType_PerformanceTest_EnableCapture: RawEventType = RawEventType(1600);
-pub const EventType_PerformanceTest_DisableCapture: RawEventType = RawEventType(1601);
-pub const EventType_PerformanceTest_FidelityLevel: RawEventType = RawEventType(1602);
-pub const EventType_MessageOverlay_Closed: RawEventType = RawEventType(1650);
-pub const EventType_MessageOverlayCloseRequested: RawEventType = RawEventType(1651);
-pub const EventType_Input_HapticVibration: RawEventType = RawEventType(1700);
-pub const EventType_Input_BindingLoadFailed: RawEventType = RawEventType(1701);
-pub const EventType_Input_BindingLoadSuccessful: RawEventType = RawEventType(1702);
-pub const EventType_Input_ActionManifestReloaded: RawEventType = RawEventType(1703);
-pub const EventType_Input_ActionManifestLoadFailed: RawEventType = RawEventType(1704);
-pub const EventType_Input_ProgressUpdate: RawEventType = RawEventType(1705);
-pub const EventType_Input_TrackerActivated: RawEventType = RawEventType(1706);
-pub const EventType_SpatialAnchors_PoseUpdated: RawEventType = RawEventType(1800);
-pub const EventType_SpatialAnchors_DescriptorUpdated: RawEventType = RawEventType(1801);
-pub const EventType_SpatialAnchors_RequestPoseUpdate: RawEventType = RawEventType(1802);
-pub const EventType_SpatialAnchors_RequestDescriptorUpdate: RawEventType = RawEventType(1803);
-pub const EventType_VendorSpecific_Reserved_Start: RawEventType = RawEventType(10000);
-pub const EventType_VendorSpecific_Reserved_End: RawEventType = RawEventType(19999);
+impl error::Error for Invalid<State> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of State."
+    }
+}
 
+/// EVREventType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum EventType {
-    None = 0,
-    TrackedDeviceActivated = 100,
-    TrackedDeviceDeactivated = 101,
-    TrackedDeviceUpdated = 102,
-    TrackedDeviceUserInteractionStarted = 103,
-    TrackedDeviceUserInteractionEnded = 104,
-    IpdChanged = 105,
-    EnterStandbyMode = 106,
-    LeaveStandbyMode = 107,
-    TrackedDeviceRoleChanged = 108,
-    WatchdogWakeUpRequested = 109,
-    LensDistortionChanged = 110,
-    PropertyChanged = 111,
-    WirelessDisconnect = 112,
-    WirelessReconnect = 113,
-    ButtonPress = 200,
-    ButtonUnpress = 201,
-    ButtonTouch = 202,
-    ButtonUntouch = 203,
-    DualAnalog_Press = 250,
-    DualAnalog_Unpress = 251,
-    DualAnalog_Touch = 252,
-    DualAnalog_Untouch = 253,
-    DualAnalog_Move = 254,
-    DualAnalog_ModeSwitch1 = 255,
-    DualAnalog_ModeSwitch2 = 256,
-    DualAnalog_Cancel = 257,
-    MouseMove = 300,
-    MouseButtonDown = 301,
-    MouseButtonUp = 302,
-    FocusEnter = 303,
-    FocusLeave = 304,
-    Scroll = 305,
-    TouchPadMove = 306,
-    OverlayFocusChanged = 307,
-    ReloadOverlays = 308,
-    InputFocusCaptured = 400,
-    InputFocusReleased = 401,
-    SceneFocusLost = 402,
-    SceneFocusGained = 403,
-    SceneApplicationChanged = 404,
-    SceneFocusChanged = 405,
-    InputFocusChanged = 406,
-    SceneApplicationSecondaryRenderingStarted = 407,
-    SceneApplicationUsingWrongGraphicsAdapter = 408,
-    ActionBindingReloaded = 409,
-    HideRenderModels = 410,
-    ShowRenderModels = 411,
-    ConsoleOpened = 420,
-    ConsoleClosed = 421,
-    OverlayShown = 500,
-    OverlayHidden = 501,
-    DashboardActivated = 502,
-    DashboardDeactivated = 503,
-    DashboardThumbSelected = 504,
-    DashboardRequested = 505,
-    ResetDashboard = 506,
-    RenderToast = 507,
-    ImageLoaded = 508,
-    ShowKeyboard = 509,
-    HideKeyboard = 510,
-    OverlayGamepadFocusGained = 511,
-    OverlayGamepadFocusLost = 512,
-    OverlaySharedTextureChanged = 513,
-    ScreenshotTriggered = 516,
-    ImageFailed = 517,
-    DashboardOverlayCreated = 518,
-    SwitchGamepadFocus = 519,
-    RequestScreenshot = 520,
-    ScreenshotTaken = 521,
-    ScreenshotFailed = 522,
-    SubmitScreenshotToDashboard = 523,
-    ScreenshotProgressToDashboard = 524,
-    PrimaryDashboardDeviceChanged = 525,
-    RoomViewShown = 526,
-    RoomViewHidden = 527,
-    ShowUI = 528,
-    Notification_Shown = 600,
-    Notification_Hidden = 601,
-    Notification_BeginInteraction = 602,
-    Notification_Destroyed = 603,
-    Quit = 700,
-    ProcessQuit = 701,
-    QuitAborted_UserPrompt = 702,
-    QuitAcknowledged = 703,
-    DriverRequestedQuit = 704,
-    ChaperoneDataHasChanged = 800,
-    ChaperoneUniverseHasChanged = 801,
-    ChaperoneTempDataHasChanged = 802,
-    ChaperoneSettingsHaveChanged = 803,
-    SeatedZeroPoseReset = 804,
-    ChaperoneFlushCache = 805,
-    AudioSettingsHaveChanged = 820,
-    BackgroundSettingHasChanged = 850,
-    CameraSettingsHaveChanged = 851,
-    ReprojectionSettingHasChanged = 852,
-    ModelSkinSettingsHaveChanged = 853,
-    EnvironmentSettingsHaveChanged = 854,
-    PowerSettingsHaveChanged = 855,
-    EnableHomeAppSettingsHaveChanged = 856,
-    SteamVRSectionSettingChanged = 857,
-    LighthouseSectionSettingChanged = 858,
-    NullSectionSettingChanged = 859,
-    UserInterfaceSectionSettingChanged = 860,
-    NotificationsSectionSettingChanged = 861,
-    KeyboardSectionSettingChanged = 862,
-    PerfSectionSettingChanged = 863,
-    DashboardSectionSettingChanged = 864,
-    WebInterfaceSectionSettingChanged = 865,
-    TrackersSectionSettingChanged = 866,
-    LastKnownSectionSettingChanged = 867,
-    StatusUpdate = 900,
-    WebInterface_InstallDriverCompleted = 950,
-    MCImageUpdated = 1000,
-    FirmwareUpdateStarted = 1100,
-    FirmwareUpdateFinished = 1101,
-    KeyboardClosed = 1200,
-    KeyboardCharInput = 1201,
-    KeyboardDone = 1202,
-    ApplicationTransitionStarted = 1300,
-    ApplicationTransitionAborted = 1301,
-    ApplicationTransitionNewAppStarted = 1302,
-    ApplicationListUpdated = 1303,
-    ApplicationMimeTypeLoad = 1304,
-    ApplicationTransitionNewAppLaunchComplete = 1305,
-    ProcessConnected = 1306,
-    ProcessDisconnected = 1307,
-    Compositor_MirrorWindowShown = 1400,
-    Compositor_MirrorWindowHidden = 1401,
-    Compositor_ChaperoneBoundsShown = 1410,
-    Compositor_ChaperoneBoundsHidden = 1411,
-    TrackedCamera_StartVideoStream = 1500,
-    TrackedCamera_StopVideoStream = 1501,
-    TrackedCamera_PauseVideoStream = 1502,
-    TrackedCamera_ResumeVideoStream = 1503,
-    TrackedCamera_EditingSurface = 1550,
-    PerformanceTest_EnableCapture = 1600,
-    PerformanceTest_DisableCapture = 1601,
-    PerformanceTest_FidelityLevel = 1602,
-    MessageOverlay_Closed = 1650,
-    MessageOverlayCloseRequested = 1651,
-    Input_HapticVibration = 1700,
-    Input_BindingLoadFailed = 1701,
-    Input_BindingLoadSuccessful = 1702,
-    Input_ActionManifestReloaded = 1703,
-    Input_ActionManifestLoadFailed = 1704,
-    Input_ProgressUpdate = 1705,
-    Input_TrackerActivated = 1706,
-    SpatialAnchors_PoseUpdated = 1800,
-    SpatialAnchors_DescriptorUpdated = 1801,
-    SpatialAnchors_RequestPoseUpdate = 1802,
-    SpatialAnchors_RequestDescriptorUpdate = 1803,
-    VendorSpecific_Reserved_Start = 10000,
-    VendorSpecific_Reserved_End = 19999,
+    /// EVREventType_VREvent_None = 0.
+    None = sys::EVREventType_VREvent_None,
+    /// EVREventType_VREvent_TrackedDeviceActivated = 100.
+    TrackedDeviceActivated = sys::EVREventType_VREvent_TrackedDeviceActivated,
+    /// EVREventType_VREvent_TrackedDeviceDeactivated = 101.
+    TrackedDeviceDeactivated = sys::EVREventType_VREvent_TrackedDeviceDeactivated,
+    /// EVREventType_VREvent_TrackedDeviceUpdated = 102.
+    TrackedDeviceUpdated = sys::EVREventType_VREvent_TrackedDeviceUpdated,
+    /// EVREventType_VREvent_TrackedDeviceUserInteractionStarted = 103.
+    TrackedDeviceUserInteractionStarted = sys::EVREventType_VREvent_TrackedDeviceUserInteractionStarted,
+    /// EVREventType_VREvent_TrackedDeviceUserInteractionEnded = 104.
+    TrackedDeviceUserInteractionEnded = sys::EVREventType_VREvent_TrackedDeviceUserInteractionEnded,
+    /// EVREventType_VREvent_IpdChanged = 105.
+    IpdChanged = sys::EVREventType_VREvent_IpdChanged,
+    /// EVREventType_VREvent_EnterStandbyMode = 106.
+    EnterStandbyMode = sys::EVREventType_VREvent_EnterStandbyMode,
+    /// EVREventType_VREvent_LeaveStandbyMode = 107.
+    LeaveStandbyMode = sys::EVREventType_VREvent_LeaveStandbyMode,
+    /// EVREventType_VREvent_TrackedDeviceRoleChanged = 108.
+    TrackedDeviceRoleChanged = sys::EVREventType_VREvent_TrackedDeviceRoleChanged,
+    /// EVREventType_VREvent_WatchdogWakeUpRequested = 109.
+    WatchdogWakeUpRequested = sys::EVREventType_VREvent_WatchdogWakeUpRequested,
+    /// EVREventType_VREvent_LensDistortionChanged = 110.
+    LensDistortionChanged = sys::EVREventType_VREvent_LensDistortionChanged,
+    /// EVREventType_VREvent_PropertyChanged = 111.
+    PropertyChanged = sys::EVREventType_VREvent_PropertyChanged,
+    /// EVREventType_VREvent_WirelessDisconnect = 112.
+    WirelessDisconnect = sys::EVREventType_VREvent_WirelessDisconnect,
+    /// EVREventType_VREvent_WirelessReconnect = 113.
+    WirelessReconnect = sys::EVREventType_VREvent_WirelessReconnect,
+    /// EVREventType_VREvent_ButtonPress = 200.
+    ButtonPress = sys::EVREventType_VREvent_ButtonPress,
+    /// EVREventType_VREvent_ButtonUnpress = 201.
+    ButtonUnpress = sys::EVREventType_VREvent_ButtonUnpress,
+    /// EVREventType_VREvent_ButtonTouch = 202.
+    ButtonTouch = sys::EVREventType_VREvent_ButtonTouch,
+    /// EVREventType_VREvent_ButtonUntouch = 203.
+    ButtonUntouch = sys::EVREventType_VREvent_ButtonUntouch,
+    /// EVREventType_VREvent_DualAnalog_Press = 250.
+    DualAnalogPress = sys::EVREventType_VREvent_DualAnalog_Press,
+    /// EVREventType_VREvent_DualAnalog_Unpress = 251.
+    DualAnalogUnpress = sys::EVREventType_VREvent_DualAnalog_Unpress,
+    /// EVREventType_VREvent_DualAnalog_Touch = 252.
+    DualAnalogTouch = sys::EVREventType_VREvent_DualAnalog_Touch,
+    /// EVREventType_VREvent_DualAnalog_Untouch = 253.
+    DualAnalogUntouch = sys::EVREventType_VREvent_DualAnalog_Untouch,
+    /// EVREventType_VREvent_DualAnalog_Move = 254.
+    DualAnalogMove = sys::EVREventType_VREvent_DualAnalog_Move,
+    /// EVREventType_VREvent_DualAnalog_ModeSwitch1 = 255.
+    DualAnalogModeSwitch1 = sys::EVREventType_VREvent_DualAnalog_ModeSwitch1,
+    /// EVREventType_VREvent_DualAnalog_ModeSwitch2 = 256.
+    DualAnalogModeSwitch2 = sys::EVREventType_VREvent_DualAnalog_ModeSwitch2,
+    /// EVREventType_VREvent_DualAnalog_Cancel = 257.
+    DualAnalogCancel = sys::EVREventType_VREvent_DualAnalog_Cancel,
+    /// EVREventType_VREvent_MouseMove = 300.
+    MouseMove = sys::EVREventType_VREvent_MouseMove,
+    /// EVREventType_VREvent_MouseButtonDown = 301.
+    MouseButtonDown = sys::EVREventType_VREvent_MouseButtonDown,
+    /// EVREventType_VREvent_MouseButtonUp = 302.
+    MouseButtonUp = sys::EVREventType_VREvent_MouseButtonUp,
+    /// EVREventType_VREvent_FocusEnter = 303.
+    FocusEnter = sys::EVREventType_VREvent_FocusEnter,
+    /// EVREventType_VREvent_FocusLeave = 304.
+    FocusLeave = sys::EVREventType_VREvent_FocusLeave,
+    /// EVREventType_VREvent_Scroll = 305.
+    Scroll = sys::EVREventType_VREvent_Scroll,
+    /// EVREventType_VREvent_TouchPadMove = 306.
+    TouchPadMove = sys::EVREventType_VREvent_TouchPadMove,
+    /// EVREventType_VREvent_OverlayFocusChanged = 307.
+    OverlayFocusChanged = sys::EVREventType_VREvent_OverlayFocusChanged,
+    /// EVREventType_VREvent_ReloadOverlays = 308.
+    ReloadOverlay = sys::EVREventType_VREvent_ReloadOverlays,
+    /// EVREventType_VREvent_InputFocusCaptured = 400.
+    InputFocusCaptured = sys::EVREventType_VREvent_InputFocusCaptured,
+    /// EVREventType_VREvent_InputFocusReleased = 401.
+    InputFocusReleased = sys::EVREventType_VREvent_InputFocusReleased,
+    /// EVREventType_VREvent_SceneFocusLost = 402.
+    SceneFocusLost = sys::EVREventType_VREvent_SceneFocusLost,
+    /// EVREventType_VREvent_SceneFocusGained = 403.
+    SceneFocusGained = sys::EVREventType_VREvent_SceneFocusGained,
+    /// EVREventType_VREvent_SceneApplicationChanged = 404.
+    SceneApplicationChanged = sys::EVREventType_VREvent_SceneApplicationChanged,
+    /// EVREventType_VREvent_SceneFocusChanged = 405.
+    SceneFocusChanged = sys::EVREventType_VREvent_SceneFocusChanged,
+    /// EVREventType_VREvent_InputFocusChanged = 406.
+    InputFocusChanged = sys::EVREventType_VREvent_InputFocusChanged,
+    /// EVREventType_VREvent_SceneApplicationSecondaryRenderingStarted = 407.
+    SceneApplicationSecondaryRenderingStarted = sys::EVREventType_VREvent_SceneApplicationSecondaryRenderingStarted,
+    /// EVREventType_VREvent_SceneApplicationUsingWrongGraphicsAdapter = 408.
+    SceneApplicationUsingWrongGraphicsAdapter = sys::EVREventType_VREvent_SceneApplicationUsingWrongGraphicsAdapter,
+    /// EVREventType_VREvent_ActionBindingReloaded = 409.
+    ActionBindingReloaded = sys::EVREventType_VREvent_ActionBindingReloaded,
+    /// EVREventType_VREvent_HideRenderModels = 410.
+    HideRenderModel = sys::EVREventType_VREvent_HideRenderModels,
+    /// EVREventType_VREvent_ShowRenderModels = 411.
+    ShowRenderModel = sys::EVREventType_VREvent_ShowRenderModels,
+    /// EVREventType_VREvent_ConsoleOpened = 420.
+    ConsoleOpened = sys::EVREventType_VREvent_ConsoleOpened,
+    /// EVREventType_VREvent_ConsoleClosed = 421.
+    ConsoleClosed = sys::EVREventType_VREvent_ConsoleClosed,
+    /// EVREventType_VREvent_OverlayShown = 500.
+    OverlayShown = sys::EVREventType_VREvent_OverlayShown,
+    /// EVREventType_VREvent_OverlayHidden = 501.
+    OverlayHidden = sys::EVREventType_VREvent_OverlayHidden,
+    /// EVREventType_VREvent_DashboardActivated = 502.
+    DashboardActivated = sys::EVREventType_VREvent_DashboardActivated,
+    /// EVREventType_VREvent_DashboardDeactivated = 503.
+    DashboardDeactivated = sys::EVREventType_VREvent_DashboardDeactivated,
+    /// EVREventType_VREvent_DashboardThumbSelected = 504.
+    DashboardThumbSelected = sys::EVREventType_VREvent_DashboardThumbSelected,
+    /// EVREventType_VREvent_DashboardRequested = 505.
+    DashboardRequested = sys::EVREventType_VREvent_DashboardRequested,
+    /// EVREventType_VREvent_ResetDashboard = 506.
+    ResetDashboard = sys::EVREventType_VREvent_ResetDashboard,
+    /// EVREventType_VREvent_RenderToast = 507.
+    RenderToast = sys::EVREventType_VREvent_RenderToast,
+    /// EVREventType_VREvent_ImageLoaded = 508.
+    ImageLoaded = sys::EVREventType_VREvent_ImageLoaded,
+    /// EVREventType_VREvent_ShowKeyboard = 509.
+    ShowKeyboard = sys::EVREventType_VREvent_ShowKeyboard,
+    /// EVREventType_VREvent_HideKeyboard = 510.
+    HideKeyboard = sys::EVREventType_VREvent_HideKeyboard,
+    /// EVREventType_VREvent_OverlayGamepadFocusGained = 511.
+    OverlayGamepadFocusGained = sys::EVREventType_VREvent_OverlayGamepadFocusGained,
+    /// EVREventType_VREvent_OverlayGamepadFocusLost = 512.
+    OverlayGamepadFocusLost = sys::EVREventType_VREvent_OverlayGamepadFocusLost,
+    /// EVREventType_VREvent_OverlaySharedTextureChanged = 513.
+    OverlaySharedTextureChanged = sys::EVREventType_VREvent_OverlaySharedTextureChanged,
+    /// EVREventType_VREvent_ScreenshotTriggered = 516.
+    ScreenshotTriggered = sys::EVREventType_VREvent_ScreenshotTriggered,
+    /// EVREventType_VREvent_ImageFailed = 517.
+    ImageFailed = sys::EVREventType_VREvent_ImageFailed,
+    /// EVREventType_VREvent_DashboardOverlayCreated = 518.
+    DashboardOverlayCreated = sys::EVREventType_VREvent_DashboardOverlayCreated,
+    /// EVREventType_VREvent_SwitchGamepadFocus = 519.
+    SwitchGamepadFocu = sys::EVREventType_VREvent_SwitchGamepadFocus,
+    /// EVREventType_VREvent_RequestScreenshot = 520.
+    RequestScreenshot = sys::EVREventType_VREvent_RequestScreenshot,
+    /// EVREventType_VREvent_ScreenshotTaken = 521.
+    ScreenshotTaken = sys::EVREventType_VREvent_ScreenshotTaken,
+    /// EVREventType_VREvent_ScreenshotFailed = 522.
+    ScreenshotFailed = sys::EVREventType_VREvent_ScreenshotFailed,
+    /// EVREventType_VREvent_SubmitScreenshotToDashboard = 523.
+    SubmitScreenshotToDashboard = sys::EVREventType_VREvent_SubmitScreenshotToDashboard,
+    /// EVREventType_VREvent_ScreenshotProgressToDashboard = 524.
+    ScreenshotProgressToDashboard = sys::EVREventType_VREvent_ScreenshotProgressToDashboard,
+    /// EVREventType_VREvent_PrimaryDashboardDeviceChanged = 525.
+    PrimaryDashboardDeviceChanged = sys::EVREventType_VREvent_PrimaryDashboardDeviceChanged,
+    /// EVREventType_VREvent_RoomViewShown = 526.
+    RoomViewShown = sys::EVREventType_VREvent_RoomViewShown,
+    /// EVREventType_VREvent_RoomViewHidden = 527.
+    RoomViewHidden = sys::EVREventType_VREvent_RoomViewHidden,
+    /// EVREventType_VREvent_ShowUI = 528.
+    ShowUI = sys::EVREventType_VREvent_ShowUI,
+    /// EVREventType_VREvent_Notification_Shown = 600.
+    NotificationShown = sys::EVREventType_VREvent_Notification_Shown,
+    /// EVREventType_VREvent_Notification_Hidden = 601.
+    NotificationHidden = sys::EVREventType_VREvent_Notification_Hidden,
+    /// EVREventType_VREvent_Notification_BeginInteraction = 602.
+    NotificationBeginInteraction = sys::EVREventType_VREvent_Notification_BeginInteraction,
+    /// EVREventType_VREvent_Notification_Destroyed = 603.
+    NotificationDestroyed = sys::EVREventType_VREvent_Notification_Destroyed,
+    /// EVREventType_VREvent_Quit = 700.
+    Quit = sys::EVREventType_VREvent_Quit,
+    /// EVREventType_VREvent_ProcessQuit = 701.
+    ProcessQuit = sys::EVREventType_VREvent_ProcessQuit,
+    /// EVREventType_VREvent_QuitAborted_UserPrompt = 702.
+    QuitAbortedUserPrompt = sys::EVREventType_VREvent_QuitAborted_UserPrompt,
+    /// EVREventType_VREvent_QuitAcknowledged = 703.
+    QuitAcknowledged = sys::EVREventType_VREvent_QuitAcknowledged,
+    /// EVREventType_VREvent_DriverRequestedQuit = 704.
+    DriverRequestedQuit = sys::EVREventType_VREvent_DriverRequestedQuit,
+    /// EVREventType_VREvent_ChaperoneDataHasChanged = 800.
+    ChaperoneDataHasChanged = sys::EVREventType_VREvent_ChaperoneDataHasChanged,
+    /// EVREventType_VREvent_ChaperoneUniverseHasChanged = 801.
+    ChaperoneUniverseHasChanged = sys::EVREventType_VREvent_ChaperoneUniverseHasChanged,
+    /// EVREventType_VREvent_ChaperoneTempDataHasChanged = 802.
+    ChaperoneTempDataHasChanged = sys::EVREventType_VREvent_ChaperoneTempDataHasChanged,
+    /// EVREventType_VREvent_ChaperoneSettingsHaveChanged = 803.
+    ChaperoneSettingsHaveChanged = sys::EVREventType_VREvent_ChaperoneSettingsHaveChanged,
+    /// EVREventType_VREvent_SeatedZeroPoseReset = 804.
+    SeatedZeroPoseReset = sys::EVREventType_VREvent_SeatedZeroPoseReset,
+    /// EVREventType_VREvent_ChaperoneFlushCache = 805.
+    ChaperoneFlushCache = sys::EVREventType_VREvent_ChaperoneFlushCache,
+    /// EVREventType_VREvent_AudioSettingsHaveChanged = 820.
+    AudioSettingsHaveChanged = sys::EVREventType_VREvent_AudioSettingsHaveChanged,
+    /// EVREventType_VREvent_BackgroundSettingHasChanged = 850.
+    BackgroundSettingHasChanged = sys::EVREventType_VREvent_BackgroundSettingHasChanged,
+    /// EVREventType_VREvent_CameraSettingsHaveChanged = 851.
+    CameraSettingsHaveChanged = sys::EVREventType_VREvent_CameraSettingsHaveChanged,
+    /// EVREventType_VREvent_ReprojectionSettingHasChanged = 852.
+    ReprojectionSettingHasChanged = sys::EVREventType_VREvent_ReprojectionSettingHasChanged,
+    /// EVREventType_VREvent_ModelSkinSettingsHaveChanged = 853.
+    ModelSkinSettingsHaveChanged = sys::EVREventType_VREvent_ModelSkinSettingsHaveChanged,
+    /// EVREventType_VREvent_EnvironmentSettingsHaveChanged = 854.
+    EnvironmentSettingsHaveChanged = sys::EVREventType_VREvent_EnvironmentSettingsHaveChanged,
+    /// EVREventType_VREvent_PowerSettingsHaveChanged = 855.
+    PowerSettingsHaveChanged = sys::EVREventType_VREvent_PowerSettingsHaveChanged,
+    /// EVREventType_VREvent_EnableHomeAppSettingsHaveChanged = 856.
+    EnableHomeAppSettingsHaveChanged = sys::EVREventType_VREvent_EnableHomeAppSettingsHaveChanged,
+    /// EVREventType_VREvent_SteamVRSectionSettingChanged = 857.
+    SteamVRSectionSettingChanged = sys::EVREventType_VREvent_SteamVRSectionSettingChanged,
+    /// EVREventType_VREvent_LighthouseSectionSettingChanged = 858.
+    LighthouseSectionSettingChanged = sys::EVREventType_VREvent_LighthouseSectionSettingChanged,
+    /// EVREventType_VREvent_NullSectionSettingChanged = 859.
+    NullSectionSettingChanged = sys::EVREventType_VREvent_NullSectionSettingChanged,
+    /// EVREventType_VREvent_UserInterfaceSectionSettingChanged = 860.
+    UserInterfaceSectionSettingChanged = sys::EVREventType_VREvent_UserInterfaceSectionSettingChanged,
+    /// EVREventType_VREvent_NotificationsSectionSettingChanged = 861.
+    NotificationsSectionSettingChanged = sys::EVREventType_VREvent_NotificationsSectionSettingChanged,
+    /// EVREventType_VREvent_KeyboardSectionSettingChanged = 862.
+    KeyboardSectionSettingChanged = sys::EVREventType_VREvent_KeyboardSectionSettingChanged,
+    /// EVREventType_VREvent_PerfSectionSettingChanged = 863.
+    PerfSectionSettingChanged = sys::EVREventType_VREvent_PerfSectionSettingChanged,
+    /// EVREventType_VREvent_DashboardSectionSettingChanged = 864.
+    DashboardSectionSettingChanged = sys::EVREventType_VREvent_DashboardSectionSettingChanged,
+    /// EVREventType_VREvent_WebInterfaceSectionSettingChanged = 865.
+    WebInterfaceSectionSettingChanged = sys::EVREventType_VREvent_WebInterfaceSectionSettingChanged,
+    /// EVREventType_VREvent_TrackersSectionSettingChanged = 866.
+    TrackersSectionSettingChanged = sys::EVREventType_VREvent_TrackersSectionSettingChanged,
+    /// EVREventType_VREvent_LastKnownSectionSettingChanged = 867.
+    LastKnownSectionSettingChanged = sys::EVREventType_VREvent_LastKnownSectionSettingChanged,
+    /// EVREventType_VREvent_StatusUpdate = 900.
+    StatusUpdate = sys::EVREventType_VREvent_StatusUpdate,
+    /// EVREventType_VREvent_WebInterface_InstallDriverCompleted = 950.
+    WebInterfaceInstallDriverCompleted = sys::EVREventType_VREvent_WebInterface_InstallDriverCompleted,
+    /// EVREventType_VREvent_MCImageUpdated = 1000.
+    McimageUpdated = sys::EVREventType_VREvent_MCImageUpdated,
+    /// EVREventType_VREvent_FirmwareUpdateStarted = 1100.
+    FirmwareUpdateStarted = sys::EVREventType_VREvent_FirmwareUpdateStarted,
+    /// EVREventType_VREvent_FirmwareUpdateFinished = 1101.
+    FirmwareUpdateFinished = sys::EVREventType_VREvent_FirmwareUpdateFinished,
+    /// EVREventType_VREvent_KeyboardClosed = 1200.
+    KeyboardClosed = sys::EVREventType_VREvent_KeyboardClosed,
+    /// EVREventType_VREvent_KeyboardCharInput = 1201.
+    KeyboardCharInput = sys::EVREventType_VREvent_KeyboardCharInput,
+    /// EVREventType_VREvent_KeyboardDone = 1202.
+    KeyboardDone = sys::EVREventType_VREvent_KeyboardDone,
+    /// EVREventType_VREvent_ApplicationTransitionStarted = 1300.
+    ApplicationTransitionStarted = sys::EVREventType_VREvent_ApplicationTransitionStarted,
+    /// EVREventType_VREvent_ApplicationTransitionAborted = 1301.
+    ApplicationTransitionAborted = sys::EVREventType_VREvent_ApplicationTransitionAborted,
+    /// EVREventType_VREvent_ApplicationTransitionNewAppStarted = 1302.
+    ApplicationTransitionNewAppStarted = sys::EVREventType_VREvent_ApplicationTransitionNewAppStarted,
+    /// EVREventType_VREvent_ApplicationListUpdated = 1303.
+    ApplicationListUpdated = sys::EVREventType_VREvent_ApplicationListUpdated,
+    /// EVREventType_VREvent_ApplicationMimeTypeLoad = 1304.
+    ApplicationMimeTypeLoad = sys::EVREventType_VREvent_ApplicationMimeTypeLoad,
+    /// EVREventType_VREvent_ApplicationTransitionNewAppLaunchComplete = 1305.
+    ApplicationTransitionNewAppLaunchComplete = sys::EVREventType_VREvent_ApplicationTransitionNewAppLaunchComplete,
+    /// EVREventType_VREvent_ProcessConnected = 1306.
+    ProcessConnected = sys::EVREventType_VREvent_ProcessConnected,
+    /// EVREventType_VREvent_ProcessDisconnected = 1307.
+    ProcessDisconnected = sys::EVREventType_VREvent_ProcessDisconnected,
+    /// EVREventType_VREvent_Compositor_MirrorWindowShown = 1400.
+    CompositorMirrorWindowShown = sys::EVREventType_VREvent_Compositor_MirrorWindowShown,
+    /// EVREventType_VREvent_Compositor_MirrorWindowHidden = 1401.
+    CompositorMirrorWindowHidden = sys::EVREventType_VREvent_Compositor_MirrorWindowHidden,
+    /// EVREventType_VREvent_Compositor_ChaperoneBoundsShown = 1410.
+    CompositorChaperoneBoundsShown = sys::EVREventType_VREvent_Compositor_ChaperoneBoundsShown,
+    /// EVREventType_VREvent_Compositor_ChaperoneBoundsHidden = 1411.
+    CompositorChaperoneBoundsHidden = sys::EVREventType_VREvent_Compositor_ChaperoneBoundsHidden,
+    /// EVREventType_VREvent_TrackedCamera_StartVideoStream = 1500.
+    TrackedCameraStartVideoStream = sys::EVREventType_VREvent_TrackedCamera_StartVideoStream,
+    /// EVREventType_VREvent_TrackedCamera_StopVideoStream = 1501.
+    TrackedCameraStopVideoStream = sys::EVREventType_VREvent_TrackedCamera_StopVideoStream,
+    /// EVREventType_VREvent_TrackedCamera_PauseVideoStream = 1502.
+    TrackedCameraPauseVideoStream = sys::EVREventType_VREvent_TrackedCamera_PauseVideoStream,
+    /// EVREventType_VREvent_TrackedCamera_ResumeVideoStream = 1503.
+    TrackedCameraResumeVideoStream = sys::EVREventType_VREvent_TrackedCamera_ResumeVideoStream,
+    /// EVREventType_VREvent_TrackedCamera_EditingSurface = 1550.
+    TrackedCameraEditingSurface = sys::EVREventType_VREvent_TrackedCamera_EditingSurface,
+    /// EVREventType_VREvent_PerformanceTest_EnableCapture = 1600.
+    PerformanceTestEnableCapture = sys::EVREventType_VREvent_PerformanceTest_EnableCapture,
+    /// EVREventType_VREvent_PerformanceTest_DisableCapture = 1601.
+    PerformanceTestDisableCapture = sys::EVREventType_VREvent_PerformanceTest_DisableCapture,
+    /// EVREventType_VREvent_PerformanceTest_FidelityLevel = 1602.
+    PerformanceTestFidelityLevel = sys::EVREventType_VREvent_PerformanceTest_FidelityLevel,
+    /// EVREventType_VREvent_MessageOverlay_Closed = 1650.
+    MessageOverlayClosed = sys::EVREventType_VREvent_MessageOverlay_Closed,
+    /// EVREventType_VREvent_MessageOverlayCloseRequested = 1651.
+    MessageOverlayCloseRequested = sys::EVREventType_VREvent_MessageOverlayCloseRequested,
+    /// EVREventType_VREvent_Input_HapticVibration = 1700.
+    InputHapticVibration = sys::EVREventType_VREvent_Input_HapticVibration,
+    /// EVREventType_VREvent_Input_BindingLoadFailed = 1701.
+    InputBindingLoadFailed = sys::EVREventType_VREvent_Input_BindingLoadFailed,
+    /// EVREventType_VREvent_Input_BindingLoadSuccessful = 1702.
+    InputBindingLoadSuccessful = sys::EVREventType_VREvent_Input_BindingLoadSuccessful,
+    /// EVREventType_VREvent_Input_ActionManifestReloaded = 1703.
+    InputActionManifestReloaded = sys::EVREventType_VREvent_Input_ActionManifestReloaded,
+    /// EVREventType_VREvent_Input_ActionManifestLoadFailed = 1704.
+    InputActionManifestLoadFailed = sys::EVREventType_VREvent_Input_ActionManifestLoadFailed,
+    /// EVREventType_VREvent_Input_ProgressUpdate = 1705.
+    InputProgressUpdate = sys::EVREventType_VREvent_Input_ProgressUpdate,
+    /// EVREventType_VREvent_Input_TrackerActivated = 1706.
+    InputTrackerActivated = sys::EVREventType_VREvent_Input_TrackerActivated,
+    /// EVREventType_VREvent_SpatialAnchors_PoseUpdated = 1800.
+    SpatialAnchorsPoseUpdated = sys::EVREventType_VREvent_SpatialAnchors_PoseUpdated,
+    /// EVREventType_VREvent_SpatialAnchors_DescriptorUpdated = 1801.
+    SpatialAnchorsDescriptorUpdated = sys::EVREventType_VREvent_SpatialAnchors_DescriptorUpdated,
+    /// EVREventType_VREvent_SpatialAnchors_RequestPoseUpdate = 1802.
+    SpatialAnchorsRequestPoseUpdate = sys::EVREventType_VREvent_SpatialAnchors_RequestPoseUpdate,
+    /// EVREventType_VREvent_SpatialAnchors_RequestDescriptorUpdate = 1803.
+    SpatialAnchorsRequestDescriptorUpdate = sys::EVREventType_VREvent_SpatialAnchors_RequestDescriptorUpdate,
+    /// EVREventType_VREvent_VendorSpecific_Reserved_Start = 10000.
+    VendorSpecificReservedStart = sys::EVREventType_VREvent_VendorSpecific_Reserved_Start,
+    /// EVREventType_VREvent_VendorSpecific_Reserved_End = 19999.
+    VendorSpecificReservedEnd = sys::EVREventType_VREvent_VendorSpecific_Reserved_End,
 }
 
-impl EventType {
+impl Enum for EventType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawEventType) -> Option<Self> {
-        match val {
-            EventType_None => Some(EventType::None),
-            EventType_TrackedDeviceActivated => Some(EventType::TrackedDeviceActivated),
-            EventType_TrackedDeviceDeactivated => Some(EventType::TrackedDeviceDeactivated),
-            EventType_TrackedDeviceUpdated => Some(EventType::TrackedDeviceUpdated),
-            EventType_TrackedDeviceUserInteractionStarted => {
-                Some(EventType::TrackedDeviceUserInteractionStarted)
-            }
-            EventType_TrackedDeviceUserInteractionEnded => {
-                Some(EventType::TrackedDeviceUserInteractionEnded)
-            }
-            EventType_IpdChanged => Some(EventType::IpdChanged),
-            EventType_EnterStandbyMode => Some(EventType::EnterStandbyMode),
-            EventType_LeaveStandbyMode => Some(EventType::LeaveStandbyMode),
-            EventType_TrackedDeviceRoleChanged => Some(EventType::TrackedDeviceRoleChanged),
-            EventType_WatchdogWakeUpRequested => Some(EventType::WatchdogWakeUpRequested),
-            EventType_LensDistortionChanged => Some(EventType::LensDistortionChanged),
-            EventType_PropertyChanged => Some(EventType::PropertyChanged),
-            EventType_WirelessDisconnect => Some(EventType::WirelessDisconnect),
-            EventType_WirelessReconnect => Some(EventType::WirelessReconnect),
-            EventType_ButtonPress => Some(EventType::ButtonPress),
-            EventType_ButtonUnpress => Some(EventType::ButtonUnpress),
-            EventType_ButtonTouch => Some(EventType::ButtonTouch),
-            EventType_ButtonUntouch => Some(EventType::ButtonUntouch),
-            EventType_DualAnalog_Press => Some(EventType::DualAnalog_Press),
-            EventType_DualAnalog_Unpress => Some(EventType::DualAnalog_Unpress),
-            EventType_DualAnalog_Touch => Some(EventType::DualAnalog_Touch),
-            EventType_DualAnalog_Untouch => Some(EventType::DualAnalog_Untouch),
-            EventType_DualAnalog_Move => Some(EventType::DualAnalog_Move),
-            EventType_DualAnalog_ModeSwitch1 => Some(EventType::DualAnalog_ModeSwitch1),
-            EventType_DualAnalog_ModeSwitch2 => Some(EventType::DualAnalog_ModeSwitch2),
-            EventType_DualAnalog_Cancel => Some(EventType::DualAnalog_Cancel),
-            EventType_MouseMove => Some(EventType::MouseMove),
-            EventType_MouseButtonDown => Some(EventType::MouseButtonDown),
-            EventType_MouseButtonUp => Some(EventType::MouseButtonUp),
-            EventType_FocusEnter => Some(EventType::FocusEnter),
-            EventType_FocusLeave => Some(EventType::FocusLeave),
-            EventType_Scroll => Some(EventType::Scroll),
-            EventType_TouchPadMove => Some(EventType::TouchPadMove),
-            EventType_OverlayFocusChanged => Some(EventType::OverlayFocusChanged),
-            EventType_ReloadOverlays => Some(EventType::ReloadOverlays),
-            EventType_InputFocusCaptured => Some(EventType::InputFocusCaptured),
-            EventType_InputFocusReleased => Some(EventType::InputFocusReleased),
-            EventType_SceneFocusLost => Some(EventType::SceneFocusLost),
-            EventType_SceneFocusGained => Some(EventType::SceneFocusGained),
-            EventType_SceneApplicationChanged => Some(EventType::SceneApplicationChanged),
-            EventType_SceneFocusChanged => Some(EventType::SceneFocusChanged),
-            EventType_InputFocusChanged => Some(EventType::InputFocusChanged),
-            EventType_SceneApplicationSecondaryRenderingStarted => {
-                Some(EventType::SceneApplicationSecondaryRenderingStarted)
-            }
-            EventType_SceneApplicationUsingWrongGraphicsAdapter => {
-                Some(EventType::SceneApplicationUsingWrongGraphicsAdapter)
-            }
-            EventType_ActionBindingReloaded => Some(EventType::ActionBindingReloaded),
-            EventType_HideRenderModels => Some(EventType::HideRenderModels),
-            EventType_ShowRenderModels => Some(EventType::ShowRenderModels),
-            EventType_ConsoleOpened => Some(EventType::ConsoleOpened),
-            EventType_ConsoleClosed => Some(EventType::ConsoleClosed),
-            EventType_OverlayShown => Some(EventType::OverlayShown),
-            EventType_OverlayHidden => Some(EventType::OverlayHidden),
-            EventType_DashboardActivated => Some(EventType::DashboardActivated),
-            EventType_DashboardDeactivated => Some(EventType::DashboardDeactivated),
-            EventType_DashboardThumbSelected => Some(EventType::DashboardThumbSelected),
-            EventType_DashboardRequested => Some(EventType::DashboardRequested),
-            EventType_ResetDashboard => Some(EventType::ResetDashboard),
-            EventType_RenderToast => Some(EventType::RenderToast),
-            EventType_ImageLoaded => Some(EventType::ImageLoaded),
-            EventType_ShowKeyboard => Some(EventType::ShowKeyboard),
-            EventType_HideKeyboard => Some(EventType::HideKeyboard),
-            EventType_OverlayGamepadFocusGained => Some(EventType::OverlayGamepadFocusGained),
-            EventType_OverlayGamepadFocusLost => Some(EventType::OverlayGamepadFocusLost),
-            EventType_OverlaySharedTextureChanged => Some(EventType::OverlaySharedTextureChanged),
-            EventType_ScreenshotTriggered => Some(EventType::ScreenshotTriggered),
-            EventType_ImageFailed => Some(EventType::ImageFailed),
-            EventType_DashboardOverlayCreated => Some(EventType::DashboardOverlayCreated),
-            EventType_SwitchGamepadFocus => Some(EventType::SwitchGamepadFocus),
-            EventType_RequestScreenshot => Some(EventType::RequestScreenshot),
-            EventType_ScreenshotTaken => Some(EventType::ScreenshotTaken),
-            EventType_ScreenshotFailed => Some(EventType::ScreenshotFailed),
-            EventType_SubmitScreenshotToDashboard => Some(EventType::SubmitScreenshotToDashboard),
-            EventType_ScreenshotProgressToDashboard => {
-                Some(EventType::ScreenshotProgressToDashboard)
-            }
-            EventType_PrimaryDashboardDeviceChanged => {
-                Some(EventType::PrimaryDashboardDeviceChanged)
-            }
-            EventType_RoomViewShown => Some(EventType::RoomViewShown),
-            EventType_RoomViewHidden => Some(EventType::RoomViewHidden),
-            EventType_ShowUI => Some(EventType::ShowUI),
-            EventType_Notification_Shown => Some(EventType::Notification_Shown),
-            EventType_Notification_Hidden => Some(EventType::Notification_Hidden),
-            EventType_Notification_BeginInteraction => {
-                Some(EventType::Notification_BeginInteraction)
-            }
-            EventType_Notification_Destroyed => Some(EventType::Notification_Destroyed),
-            EventType_Quit => Some(EventType::Quit),
-            EventType_ProcessQuit => Some(EventType::ProcessQuit),
-            EventType_QuitAborted_UserPrompt => Some(EventType::QuitAborted_UserPrompt),
-            EventType_QuitAcknowledged => Some(EventType::QuitAcknowledged),
-            EventType_DriverRequestedQuit => Some(EventType::DriverRequestedQuit),
-            EventType_ChaperoneDataHasChanged => Some(EventType::ChaperoneDataHasChanged),
-            EventType_ChaperoneUniverseHasChanged => Some(EventType::ChaperoneUniverseHasChanged),
-            EventType_ChaperoneTempDataHasChanged => Some(EventType::ChaperoneTempDataHasChanged),
-            EventType_ChaperoneSettingsHaveChanged => Some(EventType::ChaperoneSettingsHaveChanged),
-            EventType_SeatedZeroPoseReset => Some(EventType::SeatedZeroPoseReset),
-            EventType_ChaperoneFlushCache => Some(EventType::ChaperoneFlushCache),
-            EventType_AudioSettingsHaveChanged => Some(EventType::AudioSettingsHaveChanged),
-            EventType_BackgroundSettingHasChanged => Some(EventType::BackgroundSettingHasChanged),
-            EventType_CameraSettingsHaveChanged => Some(EventType::CameraSettingsHaveChanged),
-            EventType_ReprojectionSettingHasChanged => {
-                Some(EventType::ReprojectionSettingHasChanged)
-            }
-            EventType_ModelSkinSettingsHaveChanged => Some(EventType::ModelSkinSettingsHaveChanged),
-            EventType_EnvironmentSettingsHaveChanged => {
-                Some(EventType::EnvironmentSettingsHaveChanged)
-            }
-            EventType_PowerSettingsHaveChanged => Some(EventType::PowerSettingsHaveChanged),
-            EventType_EnableHomeAppSettingsHaveChanged => {
-                Some(EventType::EnableHomeAppSettingsHaveChanged)
-            }
-            EventType_SteamVRSectionSettingChanged => Some(EventType::SteamVRSectionSettingChanged),
-            EventType_LighthouseSectionSettingChanged => {
-                Some(EventType::LighthouseSectionSettingChanged)
-            }
-            EventType_NullSectionSettingChanged => Some(EventType::NullSectionSettingChanged),
-            EventType_UserInterfaceSectionSettingChanged => {
-                Some(EventType::UserInterfaceSectionSettingChanged)
-            }
-            EventType_NotificationsSectionSettingChanged => {
-                Some(EventType::NotificationsSectionSettingChanged)
-            }
-            EventType_KeyboardSectionSettingChanged => {
-                Some(EventType::KeyboardSectionSettingChanged)
-            }
-            EventType_PerfSectionSettingChanged => Some(EventType::PerfSectionSettingChanged),
-            EventType_DashboardSectionSettingChanged => {
-                Some(EventType::DashboardSectionSettingChanged)
-            }
-            EventType_WebInterfaceSectionSettingChanged => {
-                Some(EventType::WebInterfaceSectionSettingChanged)
-            }
-            EventType_TrackersSectionSettingChanged => {
-                Some(EventType::TrackersSectionSettingChanged)
-            }
-            EventType_LastKnownSectionSettingChanged => {
-                Some(EventType::LastKnownSectionSettingChanged)
-            }
-            EventType_StatusUpdate => Some(EventType::StatusUpdate),
-            EventType_WebInterface_InstallDriverCompleted => {
-                Some(EventType::WebInterface_InstallDriverCompleted)
-            }
-            EventType_MCImageUpdated => Some(EventType::MCImageUpdated),
-            EventType_FirmwareUpdateStarted => Some(EventType::FirmwareUpdateStarted),
-            EventType_FirmwareUpdateFinished => Some(EventType::FirmwareUpdateFinished),
-            EventType_KeyboardClosed => Some(EventType::KeyboardClosed),
-            EventType_KeyboardCharInput => Some(EventType::KeyboardCharInput),
-            EventType_KeyboardDone => Some(EventType::KeyboardDone),
-            EventType_ApplicationTransitionStarted => Some(EventType::ApplicationTransitionStarted),
-            EventType_ApplicationTransitionAborted => Some(EventType::ApplicationTransitionAborted),
-            EventType_ApplicationTransitionNewAppStarted => {
-                Some(EventType::ApplicationTransitionNewAppStarted)
-            }
-            EventType_ApplicationListUpdated => Some(EventType::ApplicationListUpdated),
-            EventType_ApplicationMimeTypeLoad => Some(EventType::ApplicationMimeTypeLoad),
-            EventType_ApplicationTransitionNewAppLaunchComplete => {
-                Some(EventType::ApplicationTransitionNewAppLaunchComplete)
-            }
-            EventType_ProcessConnected => Some(EventType::ProcessConnected),
-            EventType_ProcessDisconnected => Some(EventType::ProcessDisconnected),
-            EventType_Compositor_MirrorWindowShown => Some(EventType::Compositor_MirrorWindowShown),
-            EventType_Compositor_MirrorWindowHidden => {
-                Some(EventType::Compositor_MirrorWindowHidden)
-            }
-            EventType_Compositor_ChaperoneBoundsShown => {
-                Some(EventType::Compositor_ChaperoneBoundsShown)
-            }
-            EventType_Compositor_ChaperoneBoundsHidden => {
-                Some(EventType::Compositor_ChaperoneBoundsHidden)
-            }
-            EventType_TrackedCamera_StartVideoStream => {
-                Some(EventType::TrackedCamera_StartVideoStream)
-            }
-            EventType_TrackedCamera_StopVideoStream => {
-                Some(EventType::TrackedCamera_StopVideoStream)
-            }
-            EventType_TrackedCamera_PauseVideoStream => {
-                Some(EventType::TrackedCamera_PauseVideoStream)
-            }
-            EventType_TrackedCamera_ResumeVideoStream => {
-                Some(EventType::TrackedCamera_ResumeVideoStream)
-            }
-            EventType_TrackedCamera_EditingSurface => Some(EventType::TrackedCamera_EditingSurface),
-            EventType_PerformanceTest_EnableCapture => {
-                Some(EventType::PerformanceTest_EnableCapture)
-            }
-            EventType_PerformanceTest_DisableCapture => {
-                Some(EventType::PerformanceTest_DisableCapture)
-            }
-            EventType_PerformanceTest_FidelityLevel => {
-                Some(EventType::PerformanceTest_FidelityLevel)
-            }
-            EventType_MessageOverlay_Closed => Some(EventType::MessageOverlay_Closed),
-            EventType_MessageOverlayCloseRequested => Some(EventType::MessageOverlayCloseRequested),
-            EventType_Input_HapticVibration => Some(EventType::Input_HapticVibration),
-            EventType_Input_BindingLoadFailed => Some(EventType::Input_BindingLoadFailed),
-            EventType_Input_BindingLoadSuccessful => Some(EventType::Input_BindingLoadSuccessful),
-            EventType_Input_ActionManifestReloaded => Some(EventType::Input_ActionManifestReloaded),
-            EventType_Input_ActionManifestLoadFailed => {
-                Some(EventType::Input_ActionManifestLoadFailed)
-            }
-            EventType_Input_ProgressUpdate => Some(EventType::Input_ProgressUpdate),
-            EventType_Input_TrackerActivated => Some(EventType::Input_TrackerActivated),
-            EventType_SpatialAnchors_PoseUpdated => Some(EventType::SpatialAnchors_PoseUpdated),
-            EventType_SpatialAnchors_DescriptorUpdated => {
-                Some(EventType::SpatialAnchors_DescriptorUpdated)
-            }
-            EventType_SpatialAnchors_RequestPoseUpdate => {
-                Some(EventType::SpatialAnchors_RequestPoseUpdate)
-            }
-            EventType_SpatialAnchors_RequestDescriptorUpdate => {
-                Some(EventType::SpatialAnchors_RequestDescriptorUpdate)
-            }
-            EventType_VendorSpecific_Reserved_Start => {
-                Some(EventType::VendorSpecific_Reserved_Start)
-            }
-            EventType_VendorSpecific_Reserved_End => Some(EventType::VendorSpecific_Reserved_End),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVREventType_VREvent_None => Ok(EventType::None),
+             sys::EVREventType_VREvent_TrackedDeviceActivated => Ok(EventType::TrackedDeviceActivated),
+             sys::EVREventType_VREvent_TrackedDeviceDeactivated => Ok(EventType::TrackedDeviceDeactivated),
+             sys::EVREventType_VREvent_TrackedDeviceUpdated => Ok(EventType::TrackedDeviceUpdated),
+             sys::EVREventType_VREvent_TrackedDeviceUserInteractionStarted => Ok(EventType::TrackedDeviceUserInteractionStarted),
+             sys::EVREventType_VREvent_TrackedDeviceUserInteractionEnded => Ok(EventType::TrackedDeviceUserInteractionEnded),
+             sys::EVREventType_VREvent_IpdChanged => Ok(EventType::IpdChanged),
+             sys::EVREventType_VREvent_EnterStandbyMode => Ok(EventType::EnterStandbyMode),
+             sys::EVREventType_VREvent_LeaveStandbyMode => Ok(EventType::LeaveStandbyMode),
+             sys::EVREventType_VREvent_TrackedDeviceRoleChanged => Ok(EventType::TrackedDeviceRoleChanged),
+             sys::EVREventType_VREvent_WatchdogWakeUpRequested => Ok(EventType::WatchdogWakeUpRequested),
+             sys::EVREventType_VREvent_LensDistortionChanged => Ok(EventType::LensDistortionChanged),
+             sys::EVREventType_VREvent_PropertyChanged => Ok(EventType::PropertyChanged),
+             sys::EVREventType_VREvent_WirelessDisconnect => Ok(EventType::WirelessDisconnect),
+             sys::EVREventType_VREvent_WirelessReconnect => Ok(EventType::WirelessReconnect),
+             sys::EVREventType_VREvent_ButtonPress => Ok(EventType::ButtonPress),
+             sys::EVREventType_VREvent_ButtonUnpress => Ok(EventType::ButtonUnpress),
+             sys::EVREventType_VREvent_ButtonTouch => Ok(EventType::ButtonTouch),
+             sys::EVREventType_VREvent_ButtonUntouch => Ok(EventType::ButtonUntouch),
+             sys::EVREventType_VREvent_DualAnalog_Press => Ok(EventType::DualAnalogPress),
+             sys::EVREventType_VREvent_DualAnalog_Unpress => Ok(EventType::DualAnalogUnpress),
+             sys::EVREventType_VREvent_DualAnalog_Touch => Ok(EventType::DualAnalogTouch),
+             sys::EVREventType_VREvent_DualAnalog_Untouch => Ok(EventType::DualAnalogUntouch),
+             sys::EVREventType_VREvent_DualAnalog_Move => Ok(EventType::DualAnalogMove),
+             sys::EVREventType_VREvent_DualAnalog_ModeSwitch1 => Ok(EventType::DualAnalogModeSwitch1),
+             sys::EVREventType_VREvent_DualAnalog_ModeSwitch2 => Ok(EventType::DualAnalogModeSwitch2),
+             sys::EVREventType_VREvent_DualAnalog_Cancel => Ok(EventType::DualAnalogCancel),
+             sys::EVREventType_VREvent_MouseMove => Ok(EventType::MouseMove),
+             sys::EVREventType_VREvent_MouseButtonDown => Ok(EventType::MouseButtonDown),
+             sys::EVREventType_VREvent_MouseButtonUp => Ok(EventType::MouseButtonUp),
+             sys::EVREventType_VREvent_FocusEnter => Ok(EventType::FocusEnter),
+             sys::EVREventType_VREvent_FocusLeave => Ok(EventType::FocusLeave),
+             sys::EVREventType_VREvent_Scroll => Ok(EventType::Scroll),
+             sys::EVREventType_VREvent_TouchPadMove => Ok(EventType::TouchPadMove),
+             sys::EVREventType_VREvent_OverlayFocusChanged => Ok(EventType::OverlayFocusChanged),
+             sys::EVREventType_VREvent_ReloadOverlays => Ok(EventType::ReloadOverlay),
+             sys::EVREventType_VREvent_InputFocusCaptured => Ok(EventType::InputFocusCaptured),
+             sys::EVREventType_VREvent_InputFocusReleased => Ok(EventType::InputFocusReleased),
+             sys::EVREventType_VREvent_SceneFocusLost => Ok(EventType::SceneFocusLost),
+             sys::EVREventType_VREvent_SceneFocusGained => Ok(EventType::SceneFocusGained),
+             sys::EVREventType_VREvent_SceneApplicationChanged => Ok(EventType::SceneApplicationChanged),
+             sys::EVREventType_VREvent_SceneFocusChanged => Ok(EventType::SceneFocusChanged),
+             sys::EVREventType_VREvent_InputFocusChanged => Ok(EventType::InputFocusChanged),
+             sys::EVREventType_VREvent_SceneApplicationSecondaryRenderingStarted => Ok(EventType::SceneApplicationSecondaryRenderingStarted),
+             sys::EVREventType_VREvent_SceneApplicationUsingWrongGraphicsAdapter => Ok(EventType::SceneApplicationUsingWrongGraphicsAdapter),
+             sys::EVREventType_VREvent_ActionBindingReloaded => Ok(EventType::ActionBindingReloaded),
+             sys::EVREventType_VREvent_HideRenderModels => Ok(EventType::HideRenderModel),
+             sys::EVREventType_VREvent_ShowRenderModels => Ok(EventType::ShowRenderModel),
+             sys::EVREventType_VREvent_ConsoleOpened => Ok(EventType::ConsoleOpened),
+             sys::EVREventType_VREvent_ConsoleClosed => Ok(EventType::ConsoleClosed),
+             sys::EVREventType_VREvent_OverlayShown => Ok(EventType::OverlayShown),
+             sys::EVREventType_VREvent_OverlayHidden => Ok(EventType::OverlayHidden),
+             sys::EVREventType_VREvent_DashboardActivated => Ok(EventType::DashboardActivated),
+             sys::EVREventType_VREvent_DashboardDeactivated => Ok(EventType::DashboardDeactivated),
+             sys::EVREventType_VREvent_DashboardThumbSelected => Ok(EventType::DashboardThumbSelected),
+             sys::EVREventType_VREvent_DashboardRequested => Ok(EventType::DashboardRequested),
+             sys::EVREventType_VREvent_ResetDashboard => Ok(EventType::ResetDashboard),
+             sys::EVREventType_VREvent_RenderToast => Ok(EventType::RenderToast),
+             sys::EVREventType_VREvent_ImageLoaded => Ok(EventType::ImageLoaded),
+             sys::EVREventType_VREvent_ShowKeyboard => Ok(EventType::ShowKeyboard),
+             sys::EVREventType_VREvent_HideKeyboard => Ok(EventType::HideKeyboard),
+             sys::EVREventType_VREvent_OverlayGamepadFocusGained => Ok(EventType::OverlayGamepadFocusGained),
+             sys::EVREventType_VREvent_OverlayGamepadFocusLost => Ok(EventType::OverlayGamepadFocusLost),
+             sys::EVREventType_VREvent_OverlaySharedTextureChanged => Ok(EventType::OverlaySharedTextureChanged),
+             sys::EVREventType_VREvent_ScreenshotTriggered => Ok(EventType::ScreenshotTriggered),
+             sys::EVREventType_VREvent_ImageFailed => Ok(EventType::ImageFailed),
+             sys::EVREventType_VREvent_DashboardOverlayCreated => Ok(EventType::DashboardOverlayCreated),
+             sys::EVREventType_VREvent_SwitchGamepadFocus => Ok(EventType::SwitchGamepadFocu),
+             sys::EVREventType_VREvent_RequestScreenshot => Ok(EventType::RequestScreenshot),
+             sys::EVREventType_VREvent_ScreenshotTaken => Ok(EventType::ScreenshotTaken),
+             sys::EVREventType_VREvent_ScreenshotFailed => Ok(EventType::ScreenshotFailed),
+             sys::EVREventType_VREvent_SubmitScreenshotToDashboard => Ok(EventType::SubmitScreenshotToDashboard),
+             sys::EVREventType_VREvent_ScreenshotProgressToDashboard => Ok(EventType::ScreenshotProgressToDashboard),
+             sys::EVREventType_VREvent_PrimaryDashboardDeviceChanged => Ok(EventType::PrimaryDashboardDeviceChanged),
+             sys::EVREventType_VREvent_RoomViewShown => Ok(EventType::RoomViewShown),
+             sys::EVREventType_VREvent_RoomViewHidden => Ok(EventType::RoomViewHidden),
+             sys::EVREventType_VREvent_ShowUI => Ok(EventType::ShowUI),
+             sys::EVREventType_VREvent_Notification_Shown => Ok(EventType::NotificationShown),
+             sys::EVREventType_VREvent_Notification_Hidden => Ok(EventType::NotificationHidden),
+             sys::EVREventType_VREvent_Notification_BeginInteraction => Ok(EventType::NotificationBeginInteraction),
+             sys::EVREventType_VREvent_Notification_Destroyed => Ok(EventType::NotificationDestroyed),
+             sys::EVREventType_VREvent_Quit => Ok(EventType::Quit),
+             sys::EVREventType_VREvent_ProcessQuit => Ok(EventType::ProcessQuit),
+             sys::EVREventType_VREvent_QuitAborted_UserPrompt => Ok(EventType::QuitAbortedUserPrompt),
+             sys::EVREventType_VREvent_QuitAcknowledged => Ok(EventType::QuitAcknowledged),
+             sys::EVREventType_VREvent_DriverRequestedQuit => Ok(EventType::DriverRequestedQuit),
+             sys::EVREventType_VREvent_ChaperoneDataHasChanged => Ok(EventType::ChaperoneDataHasChanged),
+             sys::EVREventType_VREvent_ChaperoneUniverseHasChanged => Ok(EventType::ChaperoneUniverseHasChanged),
+             sys::EVREventType_VREvent_ChaperoneTempDataHasChanged => Ok(EventType::ChaperoneTempDataHasChanged),
+             sys::EVREventType_VREvent_ChaperoneSettingsHaveChanged => Ok(EventType::ChaperoneSettingsHaveChanged),
+             sys::EVREventType_VREvent_SeatedZeroPoseReset => Ok(EventType::SeatedZeroPoseReset),
+             sys::EVREventType_VREvent_ChaperoneFlushCache => Ok(EventType::ChaperoneFlushCache),
+             sys::EVREventType_VREvent_AudioSettingsHaveChanged => Ok(EventType::AudioSettingsHaveChanged),
+             sys::EVREventType_VREvent_BackgroundSettingHasChanged => Ok(EventType::BackgroundSettingHasChanged),
+             sys::EVREventType_VREvent_CameraSettingsHaveChanged => Ok(EventType::CameraSettingsHaveChanged),
+             sys::EVREventType_VREvent_ReprojectionSettingHasChanged => Ok(EventType::ReprojectionSettingHasChanged),
+             sys::EVREventType_VREvent_ModelSkinSettingsHaveChanged => Ok(EventType::ModelSkinSettingsHaveChanged),
+             sys::EVREventType_VREvent_EnvironmentSettingsHaveChanged => Ok(EventType::EnvironmentSettingsHaveChanged),
+             sys::EVREventType_VREvent_PowerSettingsHaveChanged => Ok(EventType::PowerSettingsHaveChanged),
+             sys::EVREventType_VREvent_EnableHomeAppSettingsHaveChanged => Ok(EventType::EnableHomeAppSettingsHaveChanged),
+             sys::EVREventType_VREvent_SteamVRSectionSettingChanged => Ok(EventType::SteamVRSectionSettingChanged),
+             sys::EVREventType_VREvent_LighthouseSectionSettingChanged => Ok(EventType::LighthouseSectionSettingChanged),
+             sys::EVREventType_VREvent_NullSectionSettingChanged => Ok(EventType::NullSectionSettingChanged),
+             sys::EVREventType_VREvent_UserInterfaceSectionSettingChanged => Ok(EventType::UserInterfaceSectionSettingChanged),
+             sys::EVREventType_VREvent_NotificationsSectionSettingChanged => Ok(EventType::NotificationsSectionSettingChanged),
+             sys::EVREventType_VREvent_KeyboardSectionSettingChanged => Ok(EventType::KeyboardSectionSettingChanged),
+             sys::EVREventType_VREvent_PerfSectionSettingChanged => Ok(EventType::PerfSectionSettingChanged),
+             sys::EVREventType_VREvent_DashboardSectionSettingChanged => Ok(EventType::DashboardSectionSettingChanged),
+             sys::EVREventType_VREvent_WebInterfaceSectionSettingChanged => Ok(EventType::WebInterfaceSectionSettingChanged),
+             sys::EVREventType_VREvent_TrackersSectionSettingChanged => Ok(EventType::TrackersSectionSettingChanged),
+             sys::EVREventType_VREvent_LastKnownSectionSettingChanged => Ok(EventType::LastKnownSectionSettingChanged),
+             sys::EVREventType_VREvent_StatusUpdate => Ok(EventType::StatusUpdate),
+             sys::EVREventType_VREvent_WebInterface_InstallDriverCompleted => Ok(EventType::WebInterfaceInstallDriverCompleted),
+             sys::EVREventType_VREvent_MCImageUpdated => Ok(EventType::McimageUpdated),
+             sys::EVREventType_VREvent_FirmwareUpdateStarted => Ok(EventType::FirmwareUpdateStarted),
+             sys::EVREventType_VREvent_FirmwareUpdateFinished => Ok(EventType::FirmwareUpdateFinished),
+             sys::EVREventType_VREvent_KeyboardClosed => Ok(EventType::KeyboardClosed),
+             sys::EVREventType_VREvent_KeyboardCharInput => Ok(EventType::KeyboardCharInput),
+             sys::EVREventType_VREvent_KeyboardDone => Ok(EventType::KeyboardDone),
+             sys::EVREventType_VREvent_ApplicationTransitionStarted => Ok(EventType::ApplicationTransitionStarted),
+             sys::EVREventType_VREvent_ApplicationTransitionAborted => Ok(EventType::ApplicationTransitionAborted),
+             sys::EVREventType_VREvent_ApplicationTransitionNewAppStarted => Ok(EventType::ApplicationTransitionNewAppStarted),
+             sys::EVREventType_VREvent_ApplicationListUpdated => Ok(EventType::ApplicationListUpdated),
+             sys::EVREventType_VREvent_ApplicationMimeTypeLoad => Ok(EventType::ApplicationMimeTypeLoad),
+             sys::EVREventType_VREvent_ApplicationTransitionNewAppLaunchComplete => Ok(EventType::ApplicationTransitionNewAppLaunchComplete),
+             sys::EVREventType_VREvent_ProcessConnected => Ok(EventType::ProcessConnected),
+             sys::EVREventType_VREvent_ProcessDisconnected => Ok(EventType::ProcessDisconnected),
+             sys::EVREventType_VREvent_Compositor_MirrorWindowShown => Ok(EventType::CompositorMirrorWindowShown),
+             sys::EVREventType_VREvent_Compositor_MirrorWindowHidden => Ok(EventType::CompositorMirrorWindowHidden),
+             sys::EVREventType_VREvent_Compositor_ChaperoneBoundsShown => Ok(EventType::CompositorChaperoneBoundsShown),
+             sys::EVREventType_VREvent_Compositor_ChaperoneBoundsHidden => Ok(EventType::CompositorChaperoneBoundsHidden),
+             sys::EVREventType_VREvent_TrackedCamera_StartVideoStream => Ok(EventType::TrackedCameraStartVideoStream),
+             sys::EVREventType_VREvent_TrackedCamera_StopVideoStream => Ok(EventType::TrackedCameraStopVideoStream),
+             sys::EVREventType_VREvent_TrackedCamera_PauseVideoStream => Ok(EventType::TrackedCameraPauseVideoStream),
+             sys::EVREventType_VREvent_TrackedCamera_ResumeVideoStream => Ok(EventType::TrackedCameraResumeVideoStream),
+             sys::EVREventType_VREvent_TrackedCamera_EditingSurface => Ok(EventType::TrackedCameraEditingSurface),
+             sys::EVREventType_VREvent_PerformanceTest_EnableCapture => Ok(EventType::PerformanceTestEnableCapture),
+             sys::EVREventType_VREvent_PerformanceTest_DisableCapture => Ok(EventType::PerformanceTestDisableCapture),
+             sys::EVREventType_VREvent_PerformanceTest_FidelityLevel => Ok(EventType::PerformanceTestFidelityLevel),
+             sys::EVREventType_VREvent_MessageOverlay_Closed => Ok(EventType::MessageOverlayClosed),
+             sys::EVREventType_VREvent_MessageOverlayCloseRequested => Ok(EventType::MessageOverlayCloseRequested),
+             sys::EVREventType_VREvent_Input_HapticVibration => Ok(EventType::InputHapticVibration),
+             sys::EVREventType_VREvent_Input_BindingLoadFailed => Ok(EventType::InputBindingLoadFailed),
+             sys::EVREventType_VREvent_Input_BindingLoadSuccessful => Ok(EventType::InputBindingLoadSuccessful),
+             sys::EVREventType_VREvent_Input_ActionManifestReloaded => Ok(EventType::InputActionManifestReloaded),
+             sys::EVREventType_VREvent_Input_ActionManifestLoadFailed => Ok(EventType::InputActionManifestLoadFailed),
+             sys::EVREventType_VREvent_Input_ProgressUpdate => Ok(EventType::InputProgressUpdate),
+             sys::EVREventType_VREvent_Input_TrackerActivated => Ok(EventType::InputTrackerActivated),
+             sys::EVREventType_VREvent_SpatialAnchors_PoseUpdated => Ok(EventType::SpatialAnchorsPoseUpdated),
+             sys::EVREventType_VREvent_SpatialAnchors_DescriptorUpdated => Ok(EventType::SpatialAnchorsDescriptorUpdated),
+             sys::EVREventType_VREvent_SpatialAnchors_RequestPoseUpdate => Ok(EventType::SpatialAnchorsRequestPoseUpdate),
+             sys::EVREventType_VREvent_SpatialAnchors_RequestDescriptorUpdate => Ok(EventType::SpatialAnchorsRequestDescriptorUpdate),
+             sys::EVREventType_VREvent_VendorSpecific_Reserved_Start => Ok(EventType::VendorSpecificReservedStart),
+             sys::EVREventType_VREvent_VendorSpecific_Reserved_End => Ok(EventType::VendorSpecificReservedEnd),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawEventType> for EventType {
-    fn from(val: RawEventType) -> Self {
-        EventType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for EventType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawDeviceActivityLevel(pub u32);
+impl fmt::Display for Invalid<EventType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of EventType.", self.0)
+    }
+}
 
-pub const DeviceActivityLevel_EDeviceActivityLevel_Unknown: RawDeviceActivityLevel =
-    RawDeviceActivityLevel(::std::u32::MAX);
-pub const DeviceActivityLevel_EDeviceActivityLevel_Idle: RawDeviceActivityLevel =
-    RawDeviceActivityLevel(0);
-pub const DeviceActivityLevel_EDeviceActivityLevel_UserInteraction: RawDeviceActivityLevel =
-    RawDeviceActivityLevel(1);
-pub const DeviceActivityLevel_EDeviceActivityLevel_UserInteraction_Timeout: RawDeviceActivityLevel =
-    RawDeviceActivityLevel(2);
-pub const DeviceActivityLevel_EDeviceActivityLevel_Standby: RawDeviceActivityLevel =
-    RawDeviceActivityLevel(3);
+impl error::Error for Invalid<EventType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of EventType."
+    }
+}
 
-#[repr(u32)]
+/// EDeviceActivityLevel.
+#[repr(i32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DeviceActivityLevel {
-    EDeviceActivityLevel_Unknown = ::std::u32::MAX,
-    EDeviceActivityLevel_Idle = 0,
-    EDeviceActivityLevel_UserInteraction = 1,
-    EDeviceActivityLevel_UserInteraction_Timeout = 2,
-    EDeviceActivityLevel_Standby = 3,
+    /// EDeviceActivityLevel_k_EDeviceActivityLevel_Unknown = -1.
+    EdeviceActivityLevelUnknown = sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Unknown,
+    /// EDeviceActivityLevel_k_EDeviceActivityLevel_Idle = 0.
+    EdeviceActivityLevelIdle = sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Idle,
+    /// EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction = 1.
+    EdeviceActivityLevelUserInteraction = sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction,
+    /// EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction_Timeout = 2.
+    EdeviceActivityLevelUserInteractionTimeout = sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction_Timeout,
+    /// EDeviceActivityLevel_k_EDeviceActivityLevel_Standby = 3.
+    EdeviceActivityLevelStandby = sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Standby,
 }
 
-impl DeviceActivityLevel {
+impl Enum for DeviceActivityLevel {
+    type Raw = i32;
+
     #[inline]
-    fn from_raw(val: RawDeviceActivityLevel) -> Option<Self> {
-        match val {
-            DeviceActivityLevel_EDeviceActivityLevel_Unknown => {
-                Some(DeviceActivityLevel::EDeviceActivityLevel_Unknown)
-            }
-            DeviceActivityLevel_EDeviceActivityLevel_Idle => {
-                Some(DeviceActivityLevel::EDeviceActivityLevel_Idle)
-            }
-            DeviceActivityLevel_EDeviceActivityLevel_UserInteraction => {
-                Some(DeviceActivityLevel::EDeviceActivityLevel_UserInteraction)
-            }
-            DeviceActivityLevel_EDeviceActivityLevel_UserInteraction_Timeout => {
-                Some(DeviceActivityLevel::EDeviceActivityLevel_UserInteraction_Timeout)
-            }
-            DeviceActivityLevel_EDeviceActivityLevel_Standby => {
-                Some(DeviceActivityLevel::EDeviceActivityLevel_Standby)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Unknown => Ok(DeviceActivityLevel::EdeviceActivityLevelUnknown),
+             sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Idle => Ok(DeviceActivityLevel::EdeviceActivityLevelIdle),
+             sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction => Ok(DeviceActivityLevel::EdeviceActivityLevelUserInteraction),
+             sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction_Timeout => Ok(DeviceActivityLevel::EdeviceActivityLevelUserInteractionTimeout),
+             sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Standby => Ok(DeviceActivityLevel::EdeviceActivityLevelStandby),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawDeviceActivityLevel> for DeviceActivityLevel {
-    fn from(val: RawDeviceActivityLevel) -> Self {
-        DeviceActivityLevel::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for DeviceActivityLevel.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawButtonId(pub u32);
+impl fmt::Display for Invalid<DeviceActivityLevel> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of DeviceActivityLevel.", self.0)
+    }
+}
 
-pub const ButtonId_EButton_System: RawButtonId = RawButtonId(0);
-pub const ButtonId_EButton_ApplicationMenu: RawButtonId = RawButtonId(1);
-pub const ButtonId_EButton_Grip: RawButtonId = RawButtonId(2);
-pub const ButtonId_EButton_DPad_Left: RawButtonId = RawButtonId(3);
-pub const ButtonId_EButton_DPad_Up: RawButtonId = RawButtonId(4);
-pub const ButtonId_EButton_DPad_Right: RawButtonId = RawButtonId(5);
-pub const ButtonId_EButton_DPad_Down: RawButtonId = RawButtonId(6);
-pub const ButtonId_EButton_A: RawButtonId = RawButtonId(7);
-pub const ButtonId_EButton_ProximitySensor: RawButtonId = RawButtonId(31);
-pub const ButtonId_EButton_Axis0: RawButtonId = RawButtonId(32);
-pub const ButtonId_EButton_Axis1: RawButtonId = RawButtonId(33);
-pub const ButtonId_EButton_Axis2: RawButtonId = RawButtonId(34);
-pub const ButtonId_EButton_Axis3: RawButtonId = RawButtonId(35);
-pub const ButtonId_EButton_Axis4: RawButtonId = RawButtonId(36);
-pub const ButtonId_EButton_SteamVR_Touchpad: RawButtonId = RawButtonId(32);
-pub const ButtonId_EButton_SteamVR_Trigger: RawButtonId = RawButtonId(33);
-pub const ButtonId_EButton_Dashboard_Back: RawButtonId = RawButtonId(2);
-pub const ButtonId_EButton_Knuckles_A: RawButtonId = RawButtonId(2);
-pub const ButtonId_EButton_Knuckles_B: RawButtonId = RawButtonId(1);
-pub const ButtonId_EButton_Knuckles_JoyStick: RawButtonId = RawButtonId(35);
-pub const ButtonId_EButton_Max: RawButtonId = RawButtonId(64);
+impl error::Error for Invalid<DeviceActivityLevel> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of DeviceActivityLevel."
+    }
+}
 
+/// EVRButtonId.
+/// Omitted variants:
+///  - k_EButton_SteamVR_Touchpad
+///  - k_EButton_SteamVR_Trigger
+///  - k_EButton_Dashboard_Back
+///  - k_EButton_Knuckles_A
+///  - k_EButton_Knuckles_B
+///  - k_EButton_Knuckles_JoyStick
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ButtonId {
-    EButton_System = 0,
-    EButton_ApplicationMenu = 1,
-    EButton_Grip = 2,
-    EButton_DPad_Left = 3,
-    EButton_DPad_Up = 4,
-    EButton_DPad_Right = 5,
-    EButton_DPad_Down = 6,
-    EButton_A = 7,
-    EButton_ProximitySensor = 31,
-    EButton_Axis0 = 32,
-    EButton_Axis1 = 33,
-    EButton_Axis2 = 34,
-    EButton_Axis3 = 35,
-    EButton_Axis4 = 36,
-    EButton_SteamVR_Touchpad = 32,
-    EButton_SteamVR_Trigger = 33,
-    EButton_Dashboard_Back = 2,
-    EButton_Knuckles_A = 2,
-    EButton_Knuckles_B = 1,
-    EButton_Knuckles_JoyStick = 35,
-    EButton_Max = 64,
+    /// EVRButtonId_k_EButton_System = 0.
+    EbuttonSystem = sys::EVRButtonId_k_EButton_System,
+    /// EVRButtonId_k_EButton_ApplicationMenu = 1.
+    EbuttonApplicationMenu = sys::EVRButtonId_k_EButton_ApplicationMenu,
+    /// EVRButtonId_k_EButton_Grip = 2.
+    EbuttonGrip = sys::EVRButtonId_k_EButton_Grip,
+    /// EVRButtonId_k_EButton_DPad_Left = 3.
+    EbuttonDPadLeft = sys::EVRButtonId_k_EButton_DPad_Left,
+    /// EVRButtonId_k_EButton_DPad_Up = 4.
+    EbuttonDPadUp = sys::EVRButtonId_k_EButton_DPad_Up,
+    /// EVRButtonId_k_EButton_DPad_Right = 5.
+    EbuttonDPadRight = sys::EVRButtonId_k_EButton_DPad_Right,
+    /// EVRButtonId_k_EButton_DPad_Down = 6.
+    EbuttonDPadDown = sys::EVRButtonId_k_EButton_DPad_Down,
+    /// EVRButtonId_k_EButton_A = 7.
+    EbuttonA = sys::EVRButtonId_k_EButton_A,
+    /// EVRButtonId_k_EButton_ProximitySensor = 31.
+    EbuttonProximitySensor = sys::EVRButtonId_k_EButton_ProximitySensor,
+    /// EVRButtonId_k_EButton_Axis0 = 32.
+    EbuttonAxis0 = sys::EVRButtonId_k_EButton_Axis0,
+    /// EVRButtonId_k_EButton_Axis1 = 33.
+    EbuttonAxis1 = sys::EVRButtonId_k_EButton_Axis1,
+    /// EVRButtonId_k_EButton_Axis2 = 34.
+    EbuttonAxis2 = sys::EVRButtonId_k_EButton_Axis2,
+    /// EVRButtonId_k_EButton_Axis3 = 35.
+    EbuttonAxis3 = sys::EVRButtonId_k_EButton_Axis3,
+    /// EVRButtonId_k_EButton_Axis4 = 36.
+    EbuttonAxis4 = sys::EVRButtonId_k_EButton_Axis4,
+    /// EVRButtonId_k_EButton_Max = 64.
+    EbuttonMax = sys::EVRButtonId_k_EButton_Max,
 }
 
-impl ButtonId {
+impl Enum for ButtonId {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawButtonId) -> Option<Self> {
-        match val {
-            ButtonId_EButton_System => Some(ButtonId::EButton_System),
-            ButtonId_EButton_ApplicationMenu => Some(ButtonId::EButton_ApplicationMenu),
-            ButtonId_EButton_Grip => Some(ButtonId::EButton_Grip),
-            ButtonId_EButton_DPad_Left => Some(ButtonId::EButton_DPad_Left),
-            ButtonId_EButton_DPad_Up => Some(ButtonId::EButton_DPad_Up),
-            ButtonId_EButton_DPad_Right => Some(ButtonId::EButton_DPad_Right),
-            ButtonId_EButton_DPad_Down => Some(ButtonId::EButton_DPad_Down),
-            ButtonId_EButton_A => Some(ButtonId::EButton_A),
-            ButtonId_EButton_ProximitySensor => Some(ButtonId::EButton_ProximitySensor),
-            ButtonId_EButton_Axis0 => Some(ButtonId::EButton_Axis0),
-            ButtonId_EButton_Axis1 => Some(ButtonId::EButton_Axis1),
-            ButtonId_EButton_Axis2 => Some(ButtonId::EButton_Axis2),
-            ButtonId_EButton_Axis3 => Some(ButtonId::EButton_Axis3),
-            ButtonId_EButton_Axis4 => Some(ButtonId::EButton_Axis4),
-            ButtonId_EButton_SteamVR_Touchpad => Some(ButtonId::EButton_SteamVR_Touchpad),
-            ButtonId_EButton_SteamVR_Trigger => Some(ButtonId::EButton_SteamVR_Trigger),
-            ButtonId_EButton_Dashboard_Back => Some(ButtonId::EButton_Dashboard_Back),
-            ButtonId_EButton_Knuckles_A => Some(ButtonId::EButton_Knuckles_A),
-            ButtonId_EButton_Knuckles_B => Some(ButtonId::EButton_Knuckles_B),
-            ButtonId_EButton_Knuckles_JoyStick => Some(ButtonId::EButton_Knuckles_JoyStick),
-            ButtonId_EButton_Max => Some(ButtonId::EButton_Max),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRButtonId_k_EButton_System => Ok(ButtonId::EbuttonSystem),
+             sys::EVRButtonId_k_EButton_ApplicationMenu => Ok(ButtonId::EbuttonApplicationMenu),
+             sys::EVRButtonId_k_EButton_Grip => Ok(ButtonId::EbuttonGrip),
+             sys::EVRButtonId_k_EButton_DPad_Left => Ok(ButtonId::EbuttonDPadLeft),
+             sys::EVRButtonId_k_EButton_DPad_Up => Ok(ButtonId::EbuttonDPadUp),
+             sys::EVRButtonId_k_EButton_DPad_Right => Ok(ButtonId::EbuttonDPadRight),
+             sys::EVRButtonId_k_EButton_DPad_Down => Ok(ButtonId::EbuttonDPadDown),
+             sys::EVRButtonId_k_EButton_A => Ok(ButtonId::EbuttonA),
+             sys::EVRButtonId_k_EButton_ProximitySensor => Ok(ButtonId::EbuttonProximitySensor),
+             sys::EVRButtonId_k_EButton_Axis0 => Ok(ButtonId::EbuttonAxis0),
+             sys::EVRButtonId_k_EButton_Axis1 => Ok(ButtonId::EbuttonAxis1),
+             sys::EVRButtonId_k_EButton_Axis2 => Ok(ButtonId::EbuttonAxis2),
+             sys::EVRButtonId_k_EButton_Axis3 => Ok(ButtonId::EbuttonAxis3),
+             sys::EVRButtonId_k_EButton_Axis4 => Ok(ButtonId::EbuttonAxis4),
+             sys::EVRButtonId_k_EButton_Max => Ok(ButtonId::EbuttonMax),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawButtonId> for ButtonId {
-    fn from(val: RawButtonId) -> Self {
-        ButtonId::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ButtonId.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawMouseButton(pub u32);
+impl fmt::Display for Invalid<ButtonId> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ButtonId.", self.0)
+    }
+}
 
-pub const MouseButton_Left: RawMouseButton = RawMouseButton(1);
-pub const MouseButton_Right: RawMouseButton = RawMouseButton(2);
-pub const MouseButton_Middle: RawMouseButton = RawMouseButton(4);
+impl error::Error for Invalid<ButtonId> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ButtonId."
+    }
+}
 
+/// EVRMouseButton.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum MouseButton {
-    Left = 1,
-    Right = 2,
-    Middle = 4,
+    /// EVRMouseButton_VRMouseButton_Left = 1.
+    Left = sys::EVRMouseButton_VRMouseButton_Left,
+    /// EVRMouseButton_VRMouseButton_Right = 2.
+    Right = sys::EVRMouseButton_VRMouseButton_Right,
+    /// EVRMouseButton_VRMouseButton_Middle = 4.
+    Middle = sys::EVRMouseButton_VRMouseButton_Middle,
 }
 
-impl MouseButton {
+impl Enum for MouseButton {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawMouseButton) -> Option<Self> {
-        match val {
-            MouseButton_Left => Some(MouseButton::Left),
-            MouseButton_Right => Some(MouseButton::Right),
-            MouseButton_Middle => Some(MouseButton::Middle),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRMouseButton_VRMouseButton_Left => Ok(MouseButton::Left),
+             sys::EVRMouseButton_VRMouseButton_Right => Ok(MouseButton::Right),
+             sys::EVRMouseButton_VRMouseButton_Middle => Ok(MouseButton::Middle),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawMouseButton> for MouseButton {
-    fn from(val: RawMouseButton) -> Self {
-        MouseButton::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for MouseButton.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawDualAnalogWhich(pub u32);
+impl fmt::Display for Invalid<MouseButton> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of MouseButton.", self.0)
+    }
+}
 
-pub const DualAnalogWhich_EDualAnalog_Left: RawDualAnalogWhich = RawDualAnalogWhich(0);
-pub const DualAnalogWhich_EDualAnalog_Right: RawDualAnalogWhich = RawDualAnalogWhich(1);
+impl error::Error for Invalid<MouseButton> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of MouseButton."
+    }
+}
 
+/// EDualAnalogWhich.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DualAnalogWhich {
-    EDualAnalog_Left = 0,
-    EDualAnalog_Right = 1,
+    /// EDualAnalogWhich_k_EDualAnalog_Left = 0.
+    EdualAnalogLeft = sys::EDualAnalogWhich_k_EDualAnalog_Left,
+    /// EDualAnalogWhich_k_EDualAnalog_Right = 1.
+    EdualAnalogRight = sys::EDualAnalogWhich_k_EDualAnalog_Right,
 }
 
-impl DualAnalogWhich {
+impl Enum for DualAnalogWhich {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawDualAnalogWhich) -> Option<Self> {
-        match val {
-            DualAnalogWhich_EDualAnalog_Left => Some(DualAnalogWhich::EDualAnalog_Left),
-            DualAnalogWhich_EDualAnalog_Right => Some(DualAnalogWhich::EDualAnalog_Right),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EDualAnalogWhich_k_EDualAnalog_Left => Ok(DualAnalogWhich::EdualAnalogLeft),
+             sys::EDualAnalogWhich_k_EDualAnalog_Right => Ok(DualAnalogWhich::EdualAnalogRight),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawDualAnalogWhich> for DualAnalogWhich {
-    fn from(val: RawDualAnalogWhich) -> Self {
-        DualAnalogWhich::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for DualAnalogWhich.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawShowUIType(pub u32);
+impl fmt::Display for Invalid<DualAnalogWhich> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of DualAnalogWhich.", self.0)
+    }
+}
 
-pub const ShowUIType_ControllerBinding: RawShowUIType = RawShowUIType(0);
-pub const ShowUIType_ManageTrackers: RawShowUIType = RawShowUIType(1);
-pub const ShowUIType_QuickStart: RawShowUIType = RawShowUIType(2);
+impl error::Error for Invalid<DualAnalogWhich> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of DualAnalogWhich."
+    }
+}
 
+/// EShowUIType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ShowUIType {
-    ControllerBinding = 0,
-    ManageTrackers = 1,
-    QuickStart = 2,
+    /// EShowUIType_ShowUI_ControllerBinding = 0.
+    ControllerBinding = sys::EShowUIType_ShowUI_ControllerBinding,
+    /// EShowUIType_ShowUI_ManageTrackers = 1.
+    ManageTracker = sys::EShowUIType_ShowUI_ManageTrackers,
+    /// EShowUIType_ShowUI_QuickStart = 2.
+    QuickStart = sys::EShowUIType_ShowUI_QuickStart,
 }
 
-impl ShowUIType {
+impl Enum for ShowUIType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawShowUIType) -> Option<Self> {
-        match val {
-            ShowUIType_ControllerBinding => Some(ShowUIType::ControllerBinding),
-            ShowUIType_ManageTrackers => Some(ShowUIType::ManageTrackers),
-            ShowUIType_QuickStart => Some(ShowUIType::QuickStart),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EShowUIType_ShowUI_ControllerBinding => Ok(ShowUIType::ControllerBinding),
+             sys::EShowUIType_ShowUI_ManageTrackers => Ok(ShowUIType::ManageTracker),
+             sys::EShowUIType_ShowUI_QuickStart => Ok(ShowUIType::QuickStart),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawShowUIType> for ShowUIType {
-    fn from(val: RawShowUIType) -> Self {
-        ShowUIType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ShowUIType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawInputError(pub u32);
+impl fmt::Display for Invalid<ShowUIType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ShowUIType.", self.0)
+    }
+}
 
-pub const InputError_None: RawInputError = RawInputError(0);
-pub const InputError_NameNotFound: RawInputError = RawInputError(1);
-pub const InputError_WrongType: RawInputError = RawInputError(2);
-pub const InputError_InvalidHandle: RawInputError = RawInputError(3);
-pub const InputError_InvalidParam: RawInputError = RawInputError(4);
-pub const InputError_NoSteam: RawInputError = RawInputError(5);
-pub const InputError_MaxCapacityReached: RawInputError = RawInputError(6);
-pub const InputError_IPCError: RawInputError = RawInputError(7);
-pub const InputError_NoActiveActionSet: RawInputError = RawInputError(8);
-pub const InputError_InvalidDevice: RawInputError = RawInputError(9);
-pub const InputError_InvalidSkeleton: RawInputError = RawInputError(10);
-pub const InputError_InvalidBoneCount: RawInputError = RawInputError(11);
-pub const InputError_InvalidCompressedData: RawInputError = RawInputError(12);
-pub const InputError_NoData: RawInputError = RawInputError(13);
-pub const InputError_BufferTooSmall: RawInputError = RawInputError(14);
-pub const InputError_MismatchedActionManifest: RawInputError = RawInputError(15);
-pub const InputError_MissingSkeletonData: RawInputError = RawInputError(16);
-pub const InputError_InvalidBoneIndex: RawInputError = RawInputError(17);
+impl error::Error for Invalid<ShowUIType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ShowUIType."
+    }
+}
 
+/// EVRInputError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum InputError {
-    None = 0,
-    NameNotFound = 1,
-    WrongType = 2,
-    InvalidHandle = 3,
-    InvalidParam = 4,
-    NoSteam = 5,
-    MaxCapacityReached = 6,
-    IPCError = 7,
-    NoActiveActionSet = 8,
-    InvalidDevice = 9,
-    InvalidSkeleton = 10,
-    InvalidBoneCount = 11,
-    InvalidCompressedData = 12,
-    NoData = 13,
-    BufferTooSmall = 14,
-    MismatchedActionManifest = 15,
-    MissingSkeletonData = 16,
-    InvalidBoneIndex = 17,
+    /// EVRInputError_VRInputError_None = 0.
+    None = sys::EVRInputError_VRInputError_None,
+    /// EVRInputError_VRInputError_NameNotFound = 1.
+    NameNotFound = sys::EVRInputError_VRInputError_NameNotFound,
+    /// EVRInputError_VRInputError_WrongType = 2.
+    WrongType = sys::EVRInputError_VRInputError_WrongType,
+    /// EVRInputError_VRInputError_InvalidHandle = 3.
+    InvalidHandle = sys::EVRInputError_VRInputError_InvalidHandle,
+    /// EVRInputError_VRInputError_InvalidParam = 4.
+    InvalidParam = sys::EVRInputError_VRInputError_InvalidParam,
+    /// EVRInputError_VRInputError_NoSteam = 5.
+    NoSteam = sys::EVRInputError_VRInputError_NoSteam,
+    /// EVRInputError_VRInputError_MaxCapacityReached = 6.
+    MaxCapacityReached = sys::EVRInputError_VRInputError_MaxCapacityReached,
+    /// EVRInputError_VRInputError_IPCError = 7.
+    Ipcerror = sys::EVRInputError_VRInputError_IPCError,
+    /// EVRInputError_VRInputError_NoActiveActionSet = 8.
+    NoActiveActionSet = sys::EVRInputError_VRInputError_NoActiveActionSet,
+    /// EVRInputError_VRInputError_InvalidDevice = 9.
+    InvalidDevice = sys::EVRInputError_VRInputError_InvalidDevice,
+    /// EVRInputError_VRInputError_InvalidSkeleton = 10.
+    InvalidSkeleton = sys::EVRInputError_VRInputError_InvalidSkeleton,
+    /// EVRInputError_VRInputError_InvalidBoneCount = 11.
+    InvalidBoneCount = sys::EVRInputError_VRInputError_InvalidBoneCount,
+    /// EVRInputError_VRInputError_InvalidCompressedData = 12.
+    InvalidCompressedDaum = sys::EVRInputError_VRInputError_InvalidCompressedData,
+    /// EVRInputError_VRInputError_NoData = 13.
+    NoDaum = sys::EVRInputError_VRInputError_NoData,
+    /// EVRInputError_VRInputError_BufferTooSmall = 14.
+    BufferTooSmall = sys::EVRInputError_VRInputError_BufferTooSmall,
+    /// EVRInputError_VRInputError_MismatchedActionManifest = 15.
+    MismatchedActionManifest = sys::EVRInputError_VRInputError_MismatchedActionManifest,
+    /// EVRInputError_VRInputError_MissingSkeletonData = 16.
+    MissingSkeletonDaum = sys::EVRInputError_VRInputError_MissingSkeletonData,
+    /// EVRInputError_VRInputError_InvalidBoneIndex = 17.
+    InvalidBoneIndex = sys::EVRInputError_VRInputError_InvalidBoneIndex,
 }
 
-impl InputError {
+impl Enum for InputError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawInputError) -> Option<Self> {
-        match val {
-            InputError_None => Some(InputError::None),
-            InputError_NameNotFound => Some(InputError::NameNotFound),
-            InputError_WrongType => Some(InputError::WrongType),
-            InputError_InvalidHandle => Some(InputError::InvalidHandle),
-            InputError_InvalidParam => Some(InputError::InvalidParam),
-            InputError_NoSteam => Some(InputError::NoSteam),
-            InputError_MaxCapacityReached => Some(InputError::MaxCapacityReached),
-            InputError_IPCError => Some(InputError::IPCError),
-            InputError_NoActiveActionSet => Some(InputError::NoActiveActionSet),
-            InputError_InvalidDevice => Some(InputError::InvalidDevice),
-            InputError_InvalidSkeleton => Some(InputError::InvalidSkeleton),
-            InputError_InvalidBoneCount => Some(InputError::InvalidBoneCount),
-            InputError_InvalidCompressedData => Some(InputError::InvalidCompressedData),
-            InputError_NoData => Some(InputError::NoData),
-            InputError_BufferTooSmall => Some(InputError::BufferTooSmall),
-            InputError_MismatchedActionManifest => Some(InputError::MismatchedActionManifest),
-            InputError_MissingSkeletonData => Some(InputError::MissingSkeletonData),
-            InputError_InvalidBoneIndex => Some(InputError::InvalidBoneIndex),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRInputError_VRInputError_None => Ok(InputError::None),
+             sys::EVRInputError_VRInputError_NameNotFound => Ok(InputError::NameNotFound),
+             sys::EVRInputError_VRInputError_WrongType => Ok(InputError::WrongType),
+             sys::EVRInputError_VRInputError_InvalidHandle => Ok(InputError::InvalidHandle),
+             sys::EVRInputError_VRInputError_InvalidParam => Ok(InputError::InvalidParam),
+             sys::EVRInputError_VRInputError_NoSteam => Ok(InputError::NoSteam),
+             sys::EVRInputError_VRInputError_MaxCapacityReached => Ok(InputError::MaxCapacityReached),
+             sys::EVRInputError_VRInputError_IPCError => Ok(InputError::Ipcerror),
+             sys::EVRInputError_VRInputError_NoActiveActionSet => Ok(InputError::NoActiveActionSet),
+             sys::EVRInputError_VRInputError_InvalidDevice => Ok(InputError::InvalidDevice),
+             sys::EVRInputError_VRInputError_InvalidSkeleton => Ok(InputError::InvalidSkeleton),
+             sys::EVRInputError_VRInputError_InvalidBoneCount => Ok(InputError::InvalidBoneCount),
+             sys::EVRInputError_VRInputError_InvalidCompressedData => Ok(InputError::InvalidCompressedDaum),
+             sys::EVRInputError_VRInputError_NoData => Ok(InputError::NoDaum),
+             sys::EVRInputError_VRInputError_BufferTooSmall => Ok(InputError::BufferTooSmall),
+             sys::EVRInputError_VRInputError_MismatchedActionManifest => Ok(InputError::MismatchedActionManifest),
+             sys::EVRInputError_VRInputError_MissingSkeletonData => Ok(InputError::MissingSkeletonDaum),
+             sys::EVRInputError_VRInputError_InvalidBoneIndex => Ok(InputError::InvalidBoneIndex),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawInputError> for InputError {
-    fn from(val: RawInputError) -> Self {
-        InputError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for InputError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSpatialAnchorError(pub u32);
+impl fmt::Display for Invalid<InputError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of InputError.", self.0)
+    }
+}
 
-pub const SpatialAnchorError_Success: RawSpatialAnchorError = RawSpatialAnchorError(0);
-pub const SpatialAnchorError_Internal: RawSpatialAnchorError = RawSpatialAnchorError(1);
-pub const SpatialAnchorError_UnknownHandle: RawSpatialAnchorError = RawSpatialAnchorError(2);
-pub const SpatialAnchorError_ArrayTooSmall: RawSpatialAnchorError = RawSpatialAnchorError(3);
-pub const SpatialAnchorError_InvalidDescriptorChar: RawSpatialAnchorError =
-    RawSpatialAnchorError(4);
-pub const SpatialAnchorError_NotYetAvailable: RawSpatialAnchorError = RawSpatialAnchorError(5);
-pub const SpatialAnchorError_NotAvailableInThisUniverse: RawSpatialAnchorError =
-    RawSpatialAnchorError(6);
-pub const SpatialAnchorError_PermanentlyUnavailable: RawSpatialAnchorError =
-    RawSpatialAnchorError(7);
-pub const SpatialAnchorError_WrongDriver: RawSpatialAnchorError = RawSpatialAnchorError(8);
-pub const SpatialAnchorError_DescriptorTooLong: RawSpatialAnchorError = RawSpatialAnchorError(9);
-pub const SpatialAnchorError_Unknown: RawSpatialAnchorError = RawSpatialAnchorError(10);
-pub const SpatialAnchorError_NoRoomCalibration: RawSpatialAnchorError = RawSpatialAnchorError(11);
-pub const SpatialAnchorError_InvalidArgument: RawSpatialAnchorError = RawSpatialAnchorError(12);
-pub const SpatialAnchorError_UnknownDriver: RawSpatialAnchorError = RawSpatialAnchorError(13);
+impl error::Error for Invalid<InputError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of InputError."
+    }
+}
 
+/// EVRSpatialAnchorError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum SpatialAnchorError {
-    Success = 0,
-    Internal = 1,
-    UnknownHandle = 2,
-    ArrayTooSmall = 3,
-    InvalidDescriptorChar = 4,
-    NotYetAvailable = 5,
-    NotAvailableInThisUniverse = 6,
-    PermanentlyUnavailable = 7,
-    WrongDriver = 8,
-    DescriptorTooLong = 9,
-    Unknown = 10,
-    NoRoomCalibration = 11,
-    InvalidArgument = 12,
-    UnknownDriver = 13,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_Success = 0.
+    Success = sys::EVRSpatialAnchorError_VRSpatialAnchorError_Success,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_Internal = 1.
+    Internal = sys::EVRSpatialAnchorError_VRSpatialAnchorError_Internal,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_UnknownHandle = 2.
+    UnknownHandle = sys::EVRSpatialAnchorError_VRSpatialAnchorError_UnknownHandle,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_ArrayTooSmall = 3.
+    ArrayTooSmall = sys::EVRSpatialAnchorError_VRSpatialAnchorError_ArrayTooSmall,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_InvalidDescriptorChar = 4.
+    InvalidDescriptorChar = sys::EVRSpatialAnchorError_VRSpatialAnchorError_InvalidDescriptorChar,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_NotYetAvailable = 5.
+    NotYetAvailable = sys::EVRSpatialAnchorError_VRSpatialAnchorError_NotYetAvailable,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_NotAvailableInThisUniverse = 6.
+    NotAvailableInThisUniverse = sys::EVRSpatialAnchorError_VRSpatialAnchorError_NotAvailableInThisUniverse,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_PermanentlyUnavailable = 7.
+    PermanentlyUnavailable = sys::EVRSpatialAnchorError_VRSpatialAnchorError_PermanentlyUnavailable,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_WrongDriver = 8.
+    WrongDriver = sys::EVRSpatialAnchorError_VRSpatialAnchorError_WrongDriver,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_DescriptorTooLong = 9.
+    DescriptorTooLong = sys::EVRSpatialAnchorError_VRSpatialAnchorError_DescriptorTooLong,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_Unknown = 10.
+    Unknown = sys::EVRSpatialAnchorError_VRSpatialAnchorError_Unknown,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_NoRoomCalibration = 11.
+    NoRoomCalibration = sys::EVRSpatialAnchorError_VRSpatialAnchorError_NoRoomCalibration,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_InvalidArgument = 12.
+    InvalidArgument = sys::EVRSpatialAnchorError_VRSpatialAnchorError_InvalidArgument,
+    /// EVRSpatialAnchorError_VRSpatialAnchorError_UnknownDriver = 13.
+    UnknownDriver = sys::EVRSpatialAnchorError_VRSpatialAnchorError_UnknownDriver,
 }
 
-impl SpatialAnchorError {
+impl Enum for SpatialAnchorError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSpatialAnchorError) -> Option<Self> {
-        match val {
-            SpatialAnchorError_Success => Some(SpatialAnchorError::Success),
-            SpatialAnchorError_Internal => Some(SpatialAnchorError::Internal),
-            SpatialAnchorError_UnknownHandle => Some(SpatialAnchorError::UnknownHandle),
-            SpatialAnchorError_ArrayTooSmall => Some(SpatialAnchorError::ArrayTooSmall),
-            SpatialAnchorError_InvalidDescriptorChar => {
-                Some(SpatialAnchorError::InvalidDescriptorChar)
-            }
-            SpatialAnchorError_NotYetAvailable => Some(SpatialAnchorError::NotYetAvailable),
-            SpatialAnchorError_NotAvailableInThisUniverse => {
-                Some(SpatialAnchorError::NotAvailableInThisUniverse)
-            }
-            SpatialAnchorError_PermanentlyUnavailable => {
-                Some(SpatialAnchorError::PermanentlyUnavailable)
-            }
-            SpatialAnchorError_WrongDriver => Some(SpatialAnchorError::WrongDriver),
-            SpatialAnchorError_DescriptorTooLong => Some(SpatialAnchorError::DescriptorTooLong),
-            SpatialAnchorError_Unknown => Some(SpatialAnchorError::Unknown),
-            SpatialAnchorError_NoRoomCalibration => Some(SpatialAnchorError::NoRoomCalibration),
-            SpatialAnchorError_InvalidArgument => Some(SpatialAnchorError::InvalidArgument),
-            SpatialAnchorError_UnknownDriver => Some(SpatialAnchorError::UnknownDriver),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_Success => Ok(SpatialAnchorError::Success),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_Internal => Ok(SpatialAnchorError::Internal),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_UnknownHandle => Ok(SpatialAnchorError::UnknownHandle),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_ArrayTooSmall => Ok(SpatialAnchorError::ArrayTooSmall),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_InvalidDescriptorChar => Ok(SpatialAnchorError::InvalidDescriptorChar),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_NotYetAvailable => Ok(SpatialAnchorError::NotYetAvailable),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_NotAvailableInThisUniverse => Ok(SpatialAnchorError::NotAvailableInThisUniverse),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_PermanentlyUnavailable => Ok(SpatialAnchorError::PermanentlyUnavailable),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_WrongDriver => Ok(SpatialAnchorError::WrongDriver),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_DescriptorTooLong => Ok(SpatialAnchorError::DescriptorTooLong),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_Unknown => Ok(SpatialAnchorError::Unknown),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_NoRoomCalibration => Ok(SpatialAnchorError::NoRoomCalibration),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_InvalidArgument => Ok(SpatialAnchorError::InvalidArgument),
+             sys::EVRSpatialAnchorError_VRSpatialAnchorError_UnknownDriver => Ok(SpatialAnchorError::UnknownDriver),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSpatialAnchorError> for SpatialAnchorError {
-    fn from(val: RawSpatialAnchorError) -> Self {
-        SpatialAnchorError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SpatialAnchorError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawHiddenAreaMeshType(pub u32);
+impl fmt::Display for Invalid<SpatialAnchorError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SpatialAnchorError.", self.0)
+    }
+}
 
-pub const HiddenAreaMeshType_eHiddenAreaMesh_Standard: RawHiddenAreaMeshType =
-    RawHiddenAreaMeshType(0);
-pub const HiddenAreaMeshType_eHiddenAreaMesh_Inverse: RawHiddenAreaMeshType =
-    RawHiddenAreaMeshType(1);
-pub const HiddenAreaMeshType_eHiddenAreaMesh_LineLoop: RawHiddenAreaMeshType =
-    RawHiddenAreaMeshType(2);
-pub const HiddenAreaMeshType_eHiddenAreaMesh_Max: RawHiddenAreaMeshType = RawHiddenAreaMeshType(3);
+impl error::Error for Invalid<SpatialAnchorError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SpatialAnchorError."
+    }
+}
 
+/// EHiddenAreaMeshType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum HiddenAreaMeshType {
-    eHiddenAreaMesh_Standard = 0,
-    eHiddenAreaMesh_Inverse = 1,
-    eHiddenAreaMesh_LineLoop = 2,
-    eHiddenAreaMesh_Max = 3,
+    /// EHiddenAreaMeshType_k_eHiddenAreaMesh_Standard = 0.
+    EhiddenAreaMeshStandard = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Standard,
+    /// EHiddenAreaMeshType_k_eHiddenAreaMesh_Inverse = 1.
+    EhiddenAreaMeshInverse = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Inverse,
+    /// EHiddenAreaMeshType_k_eHiddenAreaMesh_LineLoop = 2.
+    EhiddenAreaMeshLineLoop = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_LineLoop,
+    /// EHiddenAreaMeshType_k_eHiddenAreaMesh_Max = 3.
+    EhiddenAreaMeshMax = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Max,
 }
 
-impl HiddenAreaMeshType {
+impl Enum for HiddenAreaMeshType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawHiddenAreaMeshType) -> Option<Self> {
-        match val {
-            HiddenAreaMeshType_eHiddenAreaMesh_Standard => {
-                Some(HiddenAreaMeshType::eHiddenAreaMesh_Standard)
-            }
-            HiddenAreaMeshType_eHiddenAreaMesh_Inverse => {
-                Some(HiddenAreaMeshType::eHiddenAreaMesh_Inverse)
-            }
-            HiddenAreaMeshType_eHiddenAreaMesh_LineLoop => {
-                Some(HiddenAreaMeshType::eHiddenAreaMesh_LineLoop)
-            }
-            HiddenAreaMeshType_eHiddenAreaMesh_Max => Some(HiddenAreaMeshType::eHiddenAreaMesh_Max),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Standard => Ok(HiddenAreaMeshType::EhiddenAreaMeshStandard),
+             sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Inverse => Ok(HiddenAreaMeshType::EhiddenAreaMeshInverse),
+             sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_LineLoop => Ok(HiddenAreaMeshType::EhiddenAreaMeshLineLoop),
+             sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Max => Ok(HiddenAreaMeshType::EhiddenAreaMeshMax),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawHiddenAreaMeshType> for HiddenAreaMeshType {
-    fn from(val: RawHiddenAreaMeshType) -> Self {
-        HiddenAreaMeshType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for HiddenAreaMeshType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawControllerAxisType(pub u32);
+impl fmt::Display for Invalid<HiddenAreaMeshType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of HiddenAreaMeshType.", self.0)
+    }
+}
 
-pub const ControllerAxisType_eControllerAxis_None: RawControllerAxisType = RawControllerAxisType(0);
-pub const ControllerAxisType_eControllerAxis_TrackPad: RawControllerAxisType =
-    RawControllerAxisType(1);
-pub const ControllerAxisType_eControllerAxis_Joystick: RawControllerAxisType =
-    RawControllerAxisType(2);
-pub const ControllerAxisType_eControllerAxis_Trigger: RawControllerAxisType =
-    RawControllerAxisType(3);
+impl error::Error for Invalid<HiddenAreaMeshType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of HiddenAreaMeshType."
+    }
+}
 
+/// EVRControllerAxisType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ControllerAxisType {
-    eControllerAxis_None = 0,
-    eControllerAxis_TrackPad = 1,
-    eControllerAxis_Joystick = 2,
-    eControllerAxis_Trigger = 3,
+    /// EVRControllerAxisType_k_eControllerAxis_None = 0.
+    EcontrollerAxisNone = sys::EVRControllerAxisType_k_eControllerAxis_None,
+    /// EVRControllerAxisType_k_eControllerAxis_TrackPad = 1.
+    EcontrollerAxisTrackPad = sys::EVRControllerAxisType_k_eControllerAxis_TrackPad,
+    /// EVRControllerAxisType_k_eControllerAxis_Joystick = 2.
+    EcontrollerAxisJoystick = sys::EVRControllerAxisType_k_eControllerAxis_Joystick,
+    /// EVRControllerAxisType_k_eControllerAxis_Trigger = 3.
+    EcontrollerAxisTrigger = sys::EVRControllerAxisType_k_eControllerAxis_Trigger,
 }
 
-impl ControllerAxisType {
+impl Enum for ControllerAxisType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawControllerAxisType) -> Option<Self> {
-        match val {
-            ControllerAxisType_eControllerAxis_None => {
-                Some(ControllerAxisType::eControllerAxis_None)
-            }
-            ControllerAxisType_eControllerAxis_TrackPad => {
-                Some(ControllerAxisType::eControllerAxis_TrackPad)
-            }
-            ControllerAxisType_eControllerAxis_Joystick => {
-                Some(ControllerAxisType::eControllerAxis_Joystick)
-            }
-            ControllerAxisType_eControllerAxis_Trigger => {
-                Some(ControllerAxisType::eControllerAxis_Trigger)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRControllerAxisType_k_eControllerAxis_None => Ok(ControllerAxisType::EcontrollerAxisNone),
+             sys::EVRControllerAxisType_k_eControllerAxis_TrackPad => Ok(ControllerAxisType::EcontrollerAxisTrackPad),
+             sys::EVRControllerAxisType_k_eControllerAxis_Joystick => Ok(ControllerAxisType::EcontrollerAxisJoystick),
+             sys::EVRControllerAxisType_k_eControllerAxis_Trigger => Ok(ControllerAxisType::EcontrollerAxisTrigger),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawControllerAxisType> for ControllerAxisType {
-    fn from(val: RawControllerAxisType) -> Self {
-        ControllerAxisType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ControllerAxisType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawControllerEventOutputType(pub u32);
+impl fmt::Display for Invalid<ControllerAxisType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ControllerAxisType.", self.0)
+    }
+}
 
-pub const ControllerEventOutputType_OSEvents: RawControllerEventOutputType =
-    RawControllerEventOutputType(0);
-pub const ControllerEventOutputType_VREvents: RawControllerEventOutputType =
-    RawControllerEventOutputType(1);
+impl error::Error for Invalid<ControllerAxisType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ControllerAxisType."
+    }
+}
 
+/// EVRControllerEventOutputType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ControllerEventOutputType {
-    OSEvents = 0,
-    VREvents = 1,
+    /// EVRControllerEventOutputType_ControllerEventOutput_OSEvents = 0.
+    Osevent = sys::EVRControllerEventOutputType_ControllerEventOutput_OSEvents,
+    /// EVRControllerEventOutputType_ControllerEventOutput_VREvents = 1.
+    Vrevent = sys::EVRControllerEventOutputType_ControllerEventOutput_VREvents,
 }
 
-impl ControllerEventOutputType {
+impl Enum for ControllerEventOutputType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawControllerEventOutputType) -> Option<Self> {
-        match val {
-            ControllerEventOutputType_OSEvents => Some(ControllerEventOutputType::OSEvents),
-            ControllerEventOutputType_VREvents => Some(ControllerEventOutputType::VREvents),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRControllerEventOutputType_ControllerEventOutput_OSEvents => Ok(ControllerEventOutputType::Osevent),
+             sys::EVRControllerEventOutputType_ControllerEventOutput_VREvents => Ok(ControllerEventOutputType::Vrevent),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawControllerEventOutputType> for ControllerEventOutputType {
-    fn from(val: RawControllerEventOutputType) -> Self {
-        ControllerEventOutputType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ControllerEventOutputType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawCollisionBoundsStyle(pub u32);
+impl fmt::Display for Invalid<ControllerEventOutputType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ControllerEventOutputType.", self.0)
+    }
+}
 
-pub const CollisionBoundsStyle_BOUNDS_STYLE_BEGINNER: RawCollisionBoundsStyle =
-    RawCollisionBoundsStyle(0);
-pub const CollisionBoundsStyle_BOUNDS_STYLE_INTERMEDIATE: RawCollisionBoundsStyle =
-    RawCollisionBoundsStyle(1);
-pub const CollisionBoundsStyle_BOUNDS_STYLE_SQUARES: RawCollisionBoundsStyle =
-    RawCollisionBoundsStyle(2);
-pub const CollisionBoundsStyle_BOUNDS_STYLE_ADVANCED: RawCollisionBoundsStyle =
-    RawCollisionBoundsStyle(3);
-pub const CollisionBoundsStyle_BOUNDS_STYLE_NONE: RawCollisionBoundsStyle =
-    RawCollisionBoundsStyle(4);
-pub const CollisionBoundsStyle_BOUNDS_STYLE_COUNT: RawCollisionBoundsStyle =
-    RawCollisionBoundsStyle(5);
+impl error::Error for Invalid<ControllerEventOutputType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ControllerEventOutputType."
+    }
+}
 
+/// ECollisionBoundsStyle.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum CollisionBoundsStyle {
-    BOUNDS_STYLE_BEGINNER = 0,
-    BOUNDS_STYLE_INTERMEDIATE = 1,
-    BOUNDS_STYLE_SQUARES = 2,
-    BOUNDS_STYLE_ADVANCED = 3,
-    BOUNDS_STYLE_NONE = 4,
-    BOUNDS_STYLE_COUNT = 5,
+    /// ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_BEGINNER = 0.
+    BoundsStyleBeginner = sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_BEGINNER,
+    /// ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_INTERMEDIATE = 1.
+    BoundsStyleIntermediate = sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_INTERMEDIATE,
+    /// ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_SQUARES = 2.
+    BoundsStyleSquare = sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_SQUARES,
+    /// ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_ADVANCED = 3.
+    BoundsStyleAdvanced = sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_ADVANCED,
+    /// ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_NONE = 4.
+    BoundsStyleNone = sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_NONE,
+    /// ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_COUNT = 5.
+    BoundsStyleCount = sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_COUNT,
 }
 
-impl CollisionBoundsStyle {
+impl Enum for CollisionBoundsStyle {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawCollisionBoundsStyle) -> Option<Self> {
-        match val {
-            CollisionBoundsStyle_BOUNDS_STYLE_BEGINNER => {
-                Some(CollisionBoundsStyle::BOUNDS_STYLE_BEGINNER)
-            }
-            CollisionBoundsStyle_BOUNDS_STYLE_INTERMEDIATE => {
-                Some(CollisionBoundsStyle::BOUNDS_STYLE_INTERMEDIATE)
-            }
-            CollisionBoundsStyle_BOUNDS_STYLE_SQUARES => {
-                Some(CollisionBoundsStyle::BOUNDS_STYLE_SQUARES)
-            }
-            CollisionBoundsStyle_BOUNDS_STYLE_ADVANCED => {
-                Some(CollisionBoundsStyle::BOUNDS_STYLE_ADVANCED)
-            }
-            CollisionBoundsStyle_BOUNDS_STYLE_NONE => Some(CollisionBoundsStyle::BOUNDS_STYLE_NONE),
-            CollisionBoundsStyle_BOUNDS_STYLE_COUNT => {
-                Some(CollisionBoundsStyle::BOUNDS_STYLE_COUNT)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_BEGINNER => Ok(CollisionBoundsStyle::BoundsStyleBeginner),
+             sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_INTERMEDIATE => Ok(CollisionBoundsStyle::BoundsStyleIntermediate),
+             sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_SQUARES => Ok(CollisionBoundsStyle::BoundsStyleSquare),
+             sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_ADVANCED => Ok(CollisionBoundsStyle::BoundsStyleAdvanced),
+             sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_NONE => Ok(CollisionBoundsStyle::BoundsStyleNone),
+             sys::ECollisionBoundsStyle_COLLISION_BOUNDS_STYLE_COUNT => Ok(CollisionBoundsStyle::BoundsStyleCount),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawCollisionBoundsStyle> for CollisionBoundsStyle {
-    fn from(val: RawCollisionBoundsStyle) -> Self {
-        CollisionBoundsStyle::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for CollisionBoundsStyle.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawOverlayError(pub u32);
+impl fmt::Display for Invalid<CollisionBoundsStyle> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of CollisionBoundsStyle.", self.0)
+    }
+}
 
-pub const OverlayError_None: RawOverlayError = RawOverlayError(0);
-pub const OverlayError_UnknownOverlay: RawOverlayError = RawOverlayError(10);
-pub const OverlayError_InvalidHandle: RawOverlayError = RawOverlayError(11);
-pub const OverlayError_PermissionDenied: RawOverlayError = RawOverlayError(12);
-pub const OverlayError_OverlayLimitExceeded: RawOverlayError = RawOverlayError(13);
-pub const OverlayError_WrongVisibilityType: RawOverlayError = RawOverlayError(14);
-pub const OverlayError_KeyTooLong: RawOverlayError = RawOverlayError(15);
-pub const OverlayError_NameTooLong: RawOverlayError = RawOverlayError(16);
-pub const OverlayError_KeyInUse: RawOverlayError = RawOverlayError(17);
-pub const OverlayError_WrongTransformType: RawOverlayError = RawOverlayError(18);
-pub const OverlayError_InvalidTrackedDevice: RawOverlayError = RawOverlayError(19);
-pub const OverlayError_InvalidParameter: RawOverlayError = RawOverlayError(20);
-pub const OverlayError_ThumbnailCantBeDestroyed: RawOverlayError = RawOverlayError(21);
-pub const OverlayError_ArrayTooSmall: RawOverlayError = RawOverlayError(22);
-pub const OverlayError_RequestFailed: RawOverlayError = RawOverlayError(23);
-pub const OverlayError_InvalidTexture: RawOverlayError = RawOverlayError(24);
-pub const OverlayError_UnableToLoadFile: RawOverlayError = RawOverlayError(25);
-pub const OverlayError_KeyboardAlreadyInUse: RawOverlayError = RawOverlayError(26);
-pub const OverlayError_NoNeighbor: RawOverlayError = RawOverlayError(27);
-pub const OverlayError_TooManyMaskPrimitives: RawOverlayError = RawOverlayError(29);
-pub const OverlayError_BadMaskPrimitive: RawOverlayError = RawOverlayError(30);
-pub const OverlayError_TextureAlreadyLocked: RawOverlayError = RawOverlayError(31);
-pub const OverlayError_TextureLockCapacityReached: RawOverlayError = RawOverlayError(32);
-pub const OverlayError_TextureNotLocked: RawOverlayError = RawOverlayError(33);
+impl error::Error for Invalid<CollisionBoundsStyle> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of CollisionBoundsStyle."
+    }
+}
 
+/// EVROverlayError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OverlayError {
-    None = 0,
-    UnknownOverlay = 10,
-    InvalidHandle = 11,
-    PermissionDenied = 12,
-    OverlayLimitExceeded = 13,
-    WrongVisibilityType = 14,
-    KeyTooLong = 15,
-    NameTooLong = 16,
-    KeyInUse = 17,
-    WrongTransformType = 18,
-    InvalidTrackedDevice = 19,
-    InvalidParameter = 20,
-    ThumbnailCantBeDestroyed = 21,
-    ArrayTooSmall = 22,
-    RequestFailed = 23,
-    InvalidTexture = 24,
-    UnableToLoadFile = 25,
-    KeyboardAlreadyInUse = 26,
-    NoNeighbor = 27,
-    TooManyMaskPrimitives = 29,
-    BadMaskPrimitive = 30,
-    TextureAlreadyLocked = 31,
-    TextureLockCapacityReached = 32,
-    TextureNotLocked = 33,
+    /// EVROverlayError_VROverlayError_None = 0.
+    None = sys::EVROverlayError_VROverlayError_None,
+    /// EVROverlayError_VROverlayError_UnknownOverlay = 10.
+    UnknownOverlay = sys::EVROverlayError_VROverlayError_UnknownOverlay,
+    /// EVROverlayError_VROverlayError_InvalidHandle = 11.
+    InvalidHandle = sys::EVROverlayError_VROverlayError_InvalidHandle,
+    /// EVROverlayError_VROverlayError_PermissionDenied = 12.
+    PermissionDenied = sys::EVROverlayError_VROverlayError_PermissionDenied,
+    /// EVROverlayError_VROverlayError_OverlayLimitExceeded = 13.
+    OverlayLimitExceeded = sys::EVROverlayError_VROverlayError_OverlayLimitExceeded,
+    /// EVROverlayError_VROverlayError_WrongVisibilityType = 14.
+    WrongVisibilityType = sys::EVROverlayError_VROverlayError_WrongVisibilityType,
+    /// EVROverlayError_VROverlayError_KeyTooLong = 15.
+    KeyTooLong = sys::EVROverlayError_VROverlayError_KeyTooLong,
+    /// EVROverlayError_VROverlayError_NameTooLong = 16.
+    NameTooLong = sys::EVROverlayError_VROverlayError_NameTooLong,
+    /// EVROverlayError_VROverlayError_KeyInUse = 17.
+    KeyInUse = sys::EVROverlayError_VROverlayError_KeyInUse,
+    /// EVROverlayError_VROverlayError_WrongTransformType = 18.
+    WrongTransformType = sys::EVROverlayError_VROverlayError_WrongTransformType,
+    /// EVROverlayError_VROverlayError_InvalidTrackedDevice = 19.
+    InvalidTrackedDevice = sys::EVROverlayError_VROverlayError_InvalidTrackedDevice,
+    /// EVROverlayError_VROverlayError_InvalidParameter = 20.
+    InvalidParameter = sys::EVROverlayError_VROverlayError_InvalidParameter,
+    /// EVROverlayError_VROverlayError_ThumbnailCantBeDestroyed = 21.
+    ThumbnailCantBeDestroyed = sys::EVROverlayError_VROverlayError_ThumbnailCantBeDestroyed,
+    /// EVROverlayError_VROverlayError_ArrayTooSmall = 22.
+    ArrayTooSmall = sys::EVROverlayError_VROverlayError_ArrayTooSmall,
+    /// EVROverlayError_VROverlayError_RequestFailed = 23.
+    RequestFailed = sys::EVROverlayError_VROverlayError_RequestFailed,
+    /// EVROverlayError_VROverlayError_InvalidTexture = 24.
+    InvalidTexture = sys::EVROverlayError_VROverlayError_InvalidTexture,
+    /// EVROverlayError_VROverlayError_UnableToLoadFile = 25.
+    UnableToLoadFile = sys::EVROverlayError_VROverlayError_UnableToLoadFile,
+    /// EVROverlayError_VROverlayError_KeyboardAlreadyInUse = 26.
+    KeyboardAlreadyInUse = sys::EVROverlayError_VROverlayError_KeyboardAlreadyInUse,
+    /// EVROverlayError_VROverlayError_NoNeighbor = 27.
+    NoNeighbor = sys::EVROverlayError_VROverlayError_NoNeighbor,
+    /// EVROverlayError_VROverlayError_TooManyMaskPrimitives = 29.
+    TooManyMaskPrimi = sys::EVROverlayError_VROverlayError_TooManyMaskPrimitives,
+    /// EVROverlayError_VROverlayError_BadMaskPrimitive = 30.
+    BadMaskPrimitive = sys::EVROverlayError_VROverlayError_BadMaskPrimitive,
+    /// EVROverlayError_VROverlayError_TextureAlreadyLocked = 31.
+    TextureAlreadyLocked = sys::EVROverlayError_VROverlayError_TextureAlreadyLocked,
+    /// EVROverlayError_VROverlayError_TextureLockCapacityReached = 32.
+    TextureLockCapacityReached = sys::EVROverlayError_VROverlayError_TextureLockCapacityReached,
+    /// EVROverlayError_VROverlayError_TextureNotLocked = 33.
+    TextureNotLocked = sys::EVROverlayError_VROverlayError_TextureNotLocked,
 }
 
-impl OverlayError {
+impl Enum for OverlayError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawOverlayError) -> Option<Self> {
-        match val {
-            OverlayError_None => Some(OverlayError::None),
-            OverlayError_UnknownOverlay => Some(OverlayError::UnknownOverlay),
-            OverlayError_InvalidHandle => Some(OverlayError::InvalidHandle),
-            OverlayError_PermissionDenied => Some(OverlayError::PermissionDenied),
-            OverlayError_OverlayLimitExceeded => Some(OverlayError::OverlayLimitExceeded),
-            OverlayError_WrongVisibilityType => Some(OverlayError::WrongVisibilityType),
-            OverlayError_KeyTooLong => Some(OverlayError::KeyTooLong),
-            OverlayError_NameTooLong => Some(OverlayError::NameTooLong),
-            OverlayError_KeyInUse => Some(OverlayError::KeyInUse),
-            OverlayError_WrongTransformType => Some(OverlayError::WrongTransformType),
-            OverlayError_InvalidTrackedDevice => Some(OverlayError::InvalidTrackedDevice),
-            OverlayError_InvalidParameter => Some(OverlayError::InvalidParameter),
-            OverlayError_ThumbnailCantBeDestroyed => Some(OverlayError::ThumbnailCantBeDestroyed),
-            OverlayError_ArrayTooSmall => Some(OverlayError::ArrayTooSmall),
-            OverlayError_RequestFailed => Some(OverlayError::RequestFailed),
-            OverlayError_InvalidTexture => Some(OverlayError::InvalidTexture),
-            OverlayError_UnableToLoadFile => Some(OverlayError::UnableToLoadFile),
-            OverlayError_KeyboardAlreadyInUse => Some(OverlayError::KeyboardAlreadyInUse),
-            OverlayError_NoNeighbor => Some(OverlayError::NoNeighbor),
-            OverlayError_TooManyMaskPrimitives => Some(OverlayError::TooManyMaskPrimitives),
-            OverlayError_BadMaskPrimitive => Some(OverlayError::BadMaskPrimitive),
-            OverlayError_TextureAlreadyLocked => Some(OverlayError::TextureAlreadyLocked),
-            OverlayError_TextureLockCapacityReached => {
-                Some(OverlayError::TextureLockCapacityReached)
-            }
-            OverlayError_TextureNotLocked => Some(OverlayError::TextureNotLocked),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVROverlayError_VROverlayError_None => Ok(OverlayError::None),
+             sys::EVROverlayError_VROverlayError_UnknownOverlay => Ok(OverlayError::UnknownOverlay),
+             sys::EVROverlayError_VROverlayError_InvalidHandle => Ok(OverlayError::InvalidHandle),
+             sys::EVROverlayError_VROverlayError_PermissionDenied => Ok(OverlayError::PermissionDenied),
+             sys::EVROverlayError_VROverlayError_OverlayLimitExceeded => Ok(OverlayError::OverlayLimitExceeded),
+             sys::EVROverlayError_VROverlayError_WrongVisibilityType => Ok(OverlayError::WrongVisibilityType),
+             sys::EVROverlayError_VROverlayError_KeyTooLong => Ok(OverlayError::KeyTooLong),
+             sys::EVROverlayError_VROverlayError_NameTooLong => Ok(OverlayError::NameTooLong),
+             sys::EVROverlayError_VROverlayError_KeyInUse => Ok(OverlayError::KeyInUse),
+             sys::EVROverlayError_VROverlayError_WrongTransformType => Ok(OverlayError::WrongTransformType),
+             sys::EVROverlayError_VROverlayError_InvalidTrackedDevice => Ok(OverlayError::InvalidTrackedDevice),
+             sys::EVROverlayError_VROverlayError_InvalidParameter => Ok(OverlayError::InvalidParameter),
+             sys::EVROverlayError_VROverlayError_ThumbnailCantBeDestroyed => Ok(OverlayError::ThumbnailCantBeDestroyed),
+             sys::EVROverlayError_VROverlayError_ArrayTooSmall => Ok(OverlayError::ArrayTooSmall),
+             sys::EVROverlayError_VROverlayError_RequestFailed => Ok(OverlayError::RequestFailed),
+             sys::EVROverlayError_VROverlayError_InvalidTexture => Ok(OverlayError::InvalidTexture),
+             sys::EVROverlayError_VROverlayError_UnableToLoadFile => Ok(OverlayError::UnableToLoadFile),
+             sys::EVROverlayError_VROverlayError_KeyboardAlreadyInUse => Ok(OverlayError::KeyboardAlreadyInUse),
+             sys::EVROverlayError_VROverlayError_NoNeighbor => Ok(OverlayError::NoNeighbor),
+             sys::EVROverlayError_VROverlayError_TooManyMaskPrimitives => Ok(OverlayError::TooManyMaskPrimi),
+             sys::EVROverlayError_VROverlayError_BadMaskPrimitive => Ok(OverlayError::BadMaskPrimitive),
+             sys::EVROverlayError_VROverlayError_TextureAlreadyLocked => Ok(OverlayError::TextureAlreadyLocked),
+             sys::EVROverlayError_VROverlayError_TextureLockCapacityReached => Ok(OverlayError::TextureLockCapacityReached),
+             sys::EVROverlayError_VROverlayError_TextureNotLocked => Ok(OverlayError::TextureNotLocked),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawOverlayError> for OverlayError {
-    fn from(val: RawOverlayError) -> Self {
-        OverlayError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for OverlayError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawApplicationType(pub u32);
+impl fmt::Display for Invalid<OverlayError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of OverlayError.", self.0)
+    }
+}
 
-pub const ApplicationType_Other: RawApplicationType = RawApplicationType(0);
-pub const ApplicationType_Scene: RawApplicationType = RawApplicationType(1);
-pub const ApplicationType_Overlay: RawApplicationType = RawApplicationType(2);
-pub const ApplicationType_Background: RawApplicationType = RawApplicationType(3);
-pub const ApplicationType_Utility: RawApplicationType = RawApplicationType(4);
-pub const ApplicationType_VRMonitor: RawApplicationType = RawApplicationType(5);
-pub const ApplicationType_SteamWatchdog: RawApplicationType = RawApplicationType(6);
-pub const ApplicationType_Bootstrapper: RawApplicationType = RawApplicationType(7);
-pub const ApplicationType_WebHelper: RawApplicationType = RawApplicationType(8);
-pub const ApplicationType_Max: RawApplicationType = RawApplicationType(9);
+impl error::Error for Invalid<OverlayError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of OverlayError."
+    }
+}
 
+/// EVRApplicationType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ApplicationType {
-    Other = 0,
-    Scene = 1,
-    Overlay = 2,
-    Background = 3,
-    Utility = 4,
-    VRMonitor = 5,
-    SteamWatchdog = 6,
-    Bootstrapper = 7,
-    WebHelper = 8,
-    Max = 9,
+    /// EVRApplicationType_VRApplication_Other = 0.
+    Other = sys::EVRApplicationType_VRApplication_Other,
+    /// EVRApplicationType_VRApplication_Scene = 1.
+    Scene = sys::EVRApplicationType_VRApplication_Scene,
+    /// EVRApplicationType_VRApplication_Overlay = 2.
+    Overlay = sys::EVRApplicationType_VRApplication_Overlay,
+    /// EVRApplicationType_VRApplication_Background = 3.
+    Background = sys::EVRApplicationType_VRApplication_Background,
+    /// EVRApplicationType_VRApplication_Utility = 4.
+    Utility = sys::EVRApplicationType_VRApplication_Utility,
+    /// EVRApplicationType_VRApplication_VRMonitor = 5.
+    Vrmonitor = sys::EVRApplicationType_VRApplication_VRMonitor,
+    /// EVRApplicationType_VRApplication_SteamWatchdog = 6.
+    SteamWatchdog = sys::EVRApplicationType_VRApplication_SteamWatchdog,
+    /// EVRApplicationType_VRApplication_Bootstrapper = 7.
+    Bootstrapper = sys::EVRApplicationType_VRApplication_Bootstrapper,
+    /// EVRApplicationType_VRApplication_WebHelper = 8.
+    WebHelper = sys::EVRApplicationType_VRApplication_WebHelper,
+    /// EVRApplicationType_VRApplication_Max = 9.
+    Max = sys::EVRApplicationType_VRApplication_Max,
 }
 
-impl ApplicationType {
+impl Enum for ApplicationType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawApplicationType) -> Option<Self> {
-        match val {
-            ApplicationType_Other => Some(ApplicationType::Other),
-            ApplicationType_Scene => Some(ApplicationType::Scene),
-            ApplicationType_Overlay => Some(ApplicationType::Overlay),
-            ApplicationType_Background => Some(ApplicationType::Background),
-            ApplicationType_Utility => Some(ApplicationType::Utility),
-            ApplicationType_VRMonitor => Some(ApplicationType::VRMonitor),
-            ApplicationType_SteamWatchdog => Some(ApplicationType::SteamWatchdog),
-            ApplicationType_Bootstrapper => Some(ApplicationType::Bootstrapper),
-            ApplicationType_WebHelper => Some(ApplicationType::WebHelper),
-            ApplicationType_Max => Some(ApplicationType::Max),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRApplicationType_VRApplication_Other => Ok(ApplicationType::Other),
+             sys::EVRApplicationType_VRApplication_Scene => Ok(ApplicationType::Scene),
+             sys::EVRApplicationType_VRApplication_Overlay => Ok(ApplicationType::Overlay),
+             sys::EVRApplicationType_VRApplication_Background => Ok(ApplicationType::Background),
+             sys::EVRApplicationType_VRApplication_Utility => Ok(ApplicationType::Utility),
+             sys::EVRApplicationType_VRApplication_VRMonitor => Ok(ApplicationType::Vrmonitor),
+             sys::EVRApplicationType_VRApplication_SteamWatchdog => Ok(ApplicationType::SteamWatchdog),
+             sys::EVRApplicationType_VRApplication_Bootstrapper => Ok(ApplicationType::Bootstrapper),
+             sys::EVRApplicationType_VRApplication_WebHelper => Ok(ApplicationType::WebHelper),
+             sys::EVRApplicationType_VRApplication_Max => Ok(ApplicationType::Max),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawApplicationType> for ApplicationType {
-    fn from(val: RawApplicationType) -> Self {
-        ApplicationType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ApplicationType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawFirmwareError(pub u32);
+impl fmt::Display for Invalid<ApplicationType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ApplicationType.", self.0)
+    }
+}
 
-pub const FirmwareError_None: RawFirmwareError = RawFirmwareError(0);
-pub const FirmwareError_Success: RawFirmwareError = RawFirmwareError(1);
-pub const FirmwareError_Fail: RawFirmwareError = RawFirmwareError(2);
+impl error::Error for Invalid<ApplicationType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ApplicationType."
+    }
+}
 
+/// EVRFirmwareError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum FirmwareError {
-    None = 0,
-    Success = 1,
-    Fail = 2,
+    /// EVRFirmwareError_VRFirmwareError_None = 0.
+    None = sys::EVRFirmwareError_VRFirmwareError_None,
+    /// EVRFirmwareError_VRFirmwareError_Success = 1.
+    Success = sys::EVRFirmwareError_VRFirmwareError_Success,
+    /// EVRFirmwareError_VRFirmwareError_Fail = 2.
+    Fail = sys::EVRFirmwareError_VRFirmwareError_Fail,
 }
 
-impl FirmwareError {
+impl Enum for FirmwareError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawFirmwareError) -> Option<Self> {
-        match val {
-            FirmwareError_None => Some(FirmwareError::None),
-            FirmwareError_Success => Some(FirmwareError::Success),
-            FirmwareError_Fail => Some(FirmwareError::Fail),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRFirmwareError_VRFirmwareError_None => Ok(FirmwareError::None),
+             sys::EVRFirmwareError_VRFirmwareError_Success => Ok(FirmwareError::Success),
+             sys::EVRFirmwareError_VRFirmwareError_Fail => Ok(FirmwareError::Fail),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawFirmwareError> for FirmwareError {
-    fn from(val: RawFirmwareError) -> Self {
-        FirmwareError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for FirmwareError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawNotificationError(pub u32);
+impl fmt::Display for Invalid<FirmwareError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of FirmwareError.", self.0)
+    }
+}
 
-pub const NotificationError_OK: RawNotificationError = RawNotificationError(0);
-pub const NotificationError_InvalidNotificationId: RawNotificationError = RawNotificationError(100);
-pub const NotificationError_NotificationQueueFull: RawNotificationError = RawNotificationError(101);
-pub const NotificationError_InvalidOverlayHandle: RawNotificationError = RawNotificationError(102);
-pub const NotificationError_SystemWithUserValueAlreadyExists: RawNotificationError =
-    RawNotificationError(103);
+impl error::Error for Invalid<FirmwareError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of FirmwareError."
+    }
+}
 
+/// EVRNotificationError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NotificationError {
-    OK = 0,
-    InvalidNotificationId = 100,
-    NotificationQueueFull = 101,
-    InvalidOverlayHandle = 102,
-    SystemWithUserValueAlreadyExists = 103,
+    /// EVRNotificationError_VRNotificationError_OK = 0.
+    Ok = sys::EVRNotificationError_VRNotificationError_OK,
+    /// EVRNotificationError_VRNotificationError_InvalidNotificationId = 100.
+    InvalidNotificationId = sys::EVRNotificationError_VRNotificationError_InvalidNotificationId,
+    /// EVRNotificationError_VRNotificationError_NotificationQueueFull = 101.
+    NotificationQueueFull = sys::EVRNotificationError_VRNotificationError_NotificationQueueFull,
+    /// EVRNotificationError_VRNotificationError_InvalidOverlayHandle = 102.
+    InvalidOverlayHandle = sys::EVRNotificationError_VRNotificationError_InvalidOverlayHandle,
+    /// EVRNotificationError_VRNotificationError_SystemWithUserValueAlreadyExists = 103.
+    SystemWithUserValueAlreadyExist = sys::EVRNotificationError_VRNotificationError_SystemWithUserValueAlreadyExists,
 }
 
-impl NotificationError {
+impl Enum for NotificationError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawNotificationError) -> Option<Self> {
-        match val {
-            NotificationError_OK => Some(NotificationError::OK),
-            NotificationError_InvalidNotificationId => {
-                Some(NotificationError::InvalidNotificationId)
-            }
-            NotificationError_NotificationQueueFull => {
-                Some(NotificationError::NotificationQueueFull)
-            }
-            NotificationError_InvalidOverlayHandle => Some(NotificationError::InvalidOverlayHandle),
-            NotificationError_SystemWithUserValueAlreadyExists => {
-                Some(NotificationError::SystemWithUserValueAlreadyExists)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRNotificationError_VRNotificationError_OK => Ok(NotificationError::Ok),
+             sys::EVRNotificationError_VRNotificationError_InvalidNotificationId => Ok(NotificationError::InvalidNotificationId),
+             sys::EVRNotificationError_VRNotificationError_NotificationQueueFull => Ok(NotificationError::NotificationQueueFull),
+             sys::EVRNotificationError_VRNotificationError_InvalidOverlayHandle => Ok(NotificationError::InvalidOverlayHandle),
+             sys::EVRNotificationError_VRNotificationError_SystemWithUserValueAlreadyExists => Ok(NotificationError::SystemWithUserValueAlreadyExist),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawNotificationError> for NotificationError {
-    fn from(val: RawNotificationError) -> Self {
-        NotificationError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for NotificationError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSkeletalMotionRange(pub u32);
+impl fmt::Display for Invalid<NotificationError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of NotificationError.", self.0)
+    }
+}
 
-pub const SkeletalMotionRange_WithController: RawSkeletalMotionRange = RawSkeletalMotionRange(0);
-pub const SkeletalMotionRange_WithoutController: RawSkeletalMotionRange = RawSkeletalMotionRange(1);
+impl error::Error for Invalid<NotificationError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of NotificationError."
+    }
+}
 
+/// EVRSkeletalMotionRange.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum SkeletalMotionRange {
-    WithController = 0,
-    WithoutController = 1,
+    /// EVRSkeletalMotionRange_VRSkeletalMotionRange_WithController = 0.
+    WithController = sys::EVRSkeletalMotionRange_VRSkeletalMotionRange_WithController,
+    /// EVRSkeletalMotionRange_VRSkeletalMotionRange_WithoutController = 1.
+    WithoutController = sys::EVRSkeletalMotionRange_VRSkeletalMotionRange_WithoutController,
 }
 
-impl SkeletalMotionRange {
+impl Enum for SkeletalMotionRange {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSkeletalMotionRange) -> Option<Self> {
-        match val {
-            SkeletalMotionRange_WithController => Some(SkeletalMotionRange::WithController),
-            SkeletalMotionRange_WithoutController => Some(SkeletalMotionRange::WithoutController),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSkeletalMotionRange_VRSkeletalMotionRange_WithController => Ok(SkeletalMotionRange::WithController),
+             sys::EVRSkeletalMotionRange_VRSkeletalMotionRange_WithoutController => Ok(SkeletalMotionRange::WithoutController),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSkeletalMotionRange> for SkeletalMotionRange {
-    fn from(val: RawSkeletalMotionRange) -> Self {
-        SkeletalMotionRange::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SkeletalMotionRange.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSkeletalTrackingLevel(pub u32);
+impl fmt::Display for Invalid<SkeletalMotionRange> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SkeletalMotionRange.", self.0)
+    }
+}
 
-pub const SkeletalTrackingLevel_Estimated: RawSkeletalTrackingLevel = RawSkeletalTrackingLevel(0);
-pub const SkeletalTrackingLevel_Partial: RawSkeletalTrackingLevel = RawSkeletalTrackingLevel(1);
-pub const SkeletalTrackingLevel_Full: RawSkeletalTrackingLevel = RawSkeletalTrackingLevel(2);
-pub const SkeletalTrackingLevel_Count: RawSkeletalTrackingLevel = RawSkeletalTrackingLevel(3);
-pub const SkeletalTrackingLevel_Max: RawSkeletalTrackingLevel = RawSkeletalTrackingLevel(2);
+impl error::Error for Invalid<SkeletalMotionRange> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SkeletalMotionRange."
+    }
+}
 
+/// EVRSkeletalTrackingLevel.
+/// Omitted variants:
+///  - VRSkeletalTrackingLevel_Max
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum SkeletalTrackingLevel {
-    Estimated = 0,
-    Partial = 1,
-    Full = 2,
-    Count = 3,
-    Max = 2,
+    /// EVRSkeletalTrackingLevel_VRSkeletalTracking_Estimated = 0.
+    Estimated = sys::EVRSkeletalTrackingLevel_VRSkeletalTracking_Estimated,
+    /// EVRSkeletalTrackingLevel_VRSkeletalTracking_Partial = 1.
+    Partial = sys::EVRSkeletalTrackingLevel_VRSkeletalTracking_Partial,
+    /// EVRSkeletalTrackingLevel_VRSkeletalTracking_Full = 2.
+    Full = sys::EVRSkeletalTrackingLevel_VRSkeletalTracking_Full,
+    /// EVRSkeletalTrackingLevel_VRSkeletalTrackingLevel_Count = 3.
+    Count = sys::EVRSkeletalTrackingLevel_VRSkeletalTrackingLevel_Count,
 }
 
-impl SkeletalTrackingLevel {
+impl Enum for SkeletalTrackingLevel {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSkeletalTrackingLevel) -> Option<Self> {
-        match val {
-            SkeletalTrackingLevel_Estimated => Some(SkeletalTrackingLevel::Estimated),
-            SkeletalTrackingLevel_Partial => Some(SkeletalTrackingLevel::Partial),
-            SkeletalTrackingLevel_Full => Some(SkeletalTrackingLevel::Full),
-            SkeletalTrackingLevel_Count => Some(SkeletalTrackingLevel::Count),
-            SkeletalTrackingLevel_Max => Some(SkeletalTrackingLevel::Max),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSkeletalTrackingLevel_VRSkeletalTracking_Estimated => Ok(SkeletalTrackingLevel::Estimated),
+             sys::EVRSkeletalTrackingLevel_VRSkeletalTracking_Partial => Ok(SkeletalTrackingLevel::Partial),
+             sys::EVRSkeletalTrackingLevel_VRSkeletalTracking_Full => Ok(SkeletalTrackingLevel::Full),
+             sys::EVRSkeletalTrackingLevel_VRSkeletalTrackingLevel_Count => Ok(SkeletalTrackingLevel::Count),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSkeletalTrackingLevel> for SkeletalTrackingLevel {
-    fn from(val: RawSkeletalTrackingLevel) -> Self {
-        SkeletalTrackingLevel::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SkeletalTrackingLevel.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawInitError(pub u32);
+impl fmt::Display for Invalid<SkeletalTrackingLevel> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SkeletalTrackingLevel.", self.0)
+    }
+}
 
-pub const InitError_None: RawInitError = RawInitError(0);
-pub const InitError_Unknown: RawInitError = RawInitError(1);
-pub const InitError_Init_InstallationNotFound: RawInitError = RawInitError(100);
-pub const InitError_Init_InstallationCorrupt: RawInitError = RawInitError(101);
-pub const InitError_Init_VRClientDLLNotFound: RawInitError = RawInitError(102);
-pub const InitError_Init_FileNotFound: RawInitError = RawInitError(103);
-pub const InitError_Init_FactoryNotFound: RawInitError = RawInitError(104);
-pub const InitError_Init_InterfaceNotFound: RawInitError = RawInitError(105);
-pub const InitError_Init_InvalidInterface: RawInitError = RawInitError(106);
-pub const InitError_Init_UserConfigDirectoryInvalid: RawInitError = RawInitError(107);
-pub const InitError_Init_HmdNotFound: RawInitError = RawInitError(108);
-pub const InitError_Init_NotInitialized: RawInitError = RawInitError(109);
-pub const InitError_Init_PathRegistryNotFound: RawInitError = RawInitError(110);
-pub const InitError_Init_NoConfigPath: RawInitError = RawInitError(111);
-pub const InitError_Init_NoLogPath: RawInitError = RawInitError(112);
-pub const InitError_Init_PathRegistryNotWritable: RawInitError = RawInitError(113);
-pub const InitError_Init_AppInfoInitFailed: RawInitError = RawInitError(114);
-pub const InitError_Init_Retry: RawInitError = RawInitError(115);
-pub const InitError_Init_InitCanceledByUser: RawInitError = RawInitError(116);
-pub const InitError_Init_AnotherAppLaunching: RawInitError = RawInitError(117);
-pub const InitError_Init_SettingsInitFailed: RawInitError = RawInitError(118);
-pub const InitError_Init_ShuttingDown: RawInitError = RawInitError(119);
-pub const InitError_Init_TooManyObjects: RawInitError = RawInitError(120);
-pub const InitError_Init_NoServerForBackgroundApp: RawInitError = RawInitError(121);
-pub const InitError_Init_NotSupportedWithCompositor: RawInitError = RawInitError(122);
-pub const InitError_Init_NotAvailableToUtilityApps: RawInitError = RawInitError(123);
-pub const InitError_Init_Internal: RawInitError = RawInitError(124);
-pub const InitError_Init_HmdDriverIdIsNone: RawInitError = RawInitError(125);
-pub const InitError_Init_HmdNotFoundPresenceFailed: RawInitError = RawInitError(126);
-pub const InitError_Init_VRMonitorNotFound: RawInitError = RawInitError(127);
-pub const InitError_Init_VRMonitorStartupFailed: RawInitError = RawInitError(128);
-pub const InitError_Init_LowPowerWatchdogNotSupported: RawInitError = RawInitError(129);
-pub const InitError_Init_InvalidApplicationType: RawInitError = RawInitError(130);
-pub const InitError_Init_NotAvailableToWatchdogApps: RawInitError = RawInitError(131);
-pub const InitError_Init_WatchdogDisabledInSettings: RawInitError = RawInitError(132);
-pub const InitError_Init_VRDashboardNotFound: RawInitError = RawInitError(133);
-pub const InitError_Init_VRDashboardStartupFailed: RawInitError = RawInitError(134);
-pub const InitError_Init_VRHomeNotFound: RawInitError = RawInitError(135);
-pub const InitError_Init_VRHomeStartupFailed: RawInitError = RawInitError(136);
-pub const InitError_Init_RebootingBusy: RawInitError = RawInitError(137);
-pub const InitError_Init_FirmwareUpdateBusy: RawInitError = RawInitError(138);
-pub const InitError_Init_FirmwareRecoveryBusy: RawInitError = RawInitError(139);
-pub const InitError_Init_USBServiceBusy: RawInitError = RawInitError(140);
-pub const InitError_Init_VRWebHelperStartupFailed: RawInitError = RawInitError(141);
-pub const InitError_Init_TrackerManagerInitFailed: RawInitError = RawInitError(142);
-pub const InitError_Driver_Failed: RawInitError = RawInitError(200);
-pub const InitError_Driver_Unknown: RawInitError = RawInitError(201);
-pub const InitError_Driver_HmdUnknown: RawInitError = RawInitError(202);
-pub const InitError_Driver_NotLoaded: RawInitError = RawInitError(203);
-pub const InitError_Driver_RuntimeOutOfDate: RawInitError = RawInitError(204);
-pub const InitError_Driver_HmdInUse: RawInitError = RawInitError(205);
-pub const InitError_Driver_NotCalibrated: RawInitError = RawInitError(206);
-pub const InitError_Driver_CalibrationInvalid: RawInitError = RawInitError(207);
-pub const InitError_Driver_HmdDisplayNotFound: RawInitError = RawInitError(208);
-pub const InitError_Driver_TrackedDeviceInterfaceUnknown: RawInitError = RawInitError(209);
-pub const InitError_Driver_HmdDriverIdOutOfBounds: RawInitError = RawInitError(211);
-pub const InitError_Driver_HmdDisplayMirrored: RawInitError = RawInitError(212);
-pub const InitError_IPC_ServerInitFailed: RawInitError = RawInitError(300);
-pub const InitError_IPC_ConnectFailed: RawInitError = RawInitError(301);
-pub const InitError_IPC_SharedStateInitFailed: RawInitError = RawInitError(302);
-pub const InitError_IPC_CompositorInitFailed: RawInitError = RawInitError(303);
-pub const InitError_IPC_MutexInitFailed: RawInitError = RawInitError(304);
-pub const InitError_IPC_Failed: RawInitError = RawInitError(305);
-pub const InitError_IPC_CompositorConnectFailed: RawInitError = RawInitError(306);
-pub const InitError_IPC_CompositorInvalidConnectResponse: RawInitError = RawInitError(307);
-pub const InitError_IPC_ConnectFailedAfterMultipleAttempts: RawInitError = RawInitError(308);
-pub const InitError_Compositor_Failed: RawInitError = RawInitError(400);
-pub const InitError_Compositor_D3D11HardwareRequired: RawInitError = RawInitError(401);
-pub const InitError_Compositor_FirmwareRequiresUpdate: RawInitError = RawInitError(402);
-pub const InitError_Compositor_OverlayInitFailed: RawInitError = RawInitError(403);
-pub const InitError_Compositor_ScreenshotsInitFailed: RawInitError = RawInitError(404);
-pub const InitError_Compositor_UnableToCreateDevice: RawInitError = RawInitError(405);
-pub const InitError_VendorSpecific_UnableToConnectToOculusRuntime: RawInitError =
-    RawInitError(1000);
-pub const InitError_VendorSpecific_WindowsNotInDevMode: RawInitError = RawInitError(1001);
-pub const InitError_VendorSpecific_HmdFound_CantOpenDevice: RawInitError = RawInitError(1101);
-pub const InitError_VendorSpecific_HmdFound_UnableToRequestConfigStart: RawInitError =
-    RawInitError(1102);
-pub const InitError_VendorSpecific_HmdFound_NoStoredConfig: RawInitError = RawInitError(1103);
-pub const InitError_VendorSpecific_HmdFound_ConfigTooBig: RawInitError = RawInitError(1104);
-pub const InitError_VendorSpecific_HmdFound_ConfigTooSmall: RawInitError = RawInitError(1105);
-pub const InitError_VendorSpecific_HmdFound_UnableToInitZLib: RawInitError = RawInitError(1106);
-pub const InitError_VendorSpecific_HmdFound_CantReadFirmwareVersion: RawInitError =
-    RawInitError(1107);
-pub const InitError_VendorSpecific_HmdFound_UnableToSendUserDataStart: RawInitError =
-    RawInitError(1108);
-pub const InitError_VendorSpecific_HmdFound_UnableToGetUserDataStart: RawInitError =
-    RawInitError(1109);
-pub const InitError_VendorSpecific_HmdFound_UnableToGetUserDataNext: RawInitError =
-    RawInitError(1110);
-pub const InitError_VendorSpecific_HmdFound_UserDataAddressRange: RawInitError = RawInitError(1111);
-pub const InitError_VendorSpecific_HmdFound_UserDataError: RawInitError = RawInitError(1112);
-pub const InitError_VendorSpecific_HmdFound_ConfigFailedSanityCheck: RawInitError =
-    RawInitError(1113);
-pub const InitError_Steam_SteamInstallationNotFound: RawInitError = RawInitError(2000);
+impl error::Error for Invalid<SkeletalTrackingLevel> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SkeletalTrackingLevel."
+    }
+}
 
+/// EVRInitError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum InitError {
-    None = 0,
-    Unknown = 1,
-    Init_InstallationNotFound = 100,
-    Init_InstallationCorrupt = 101,
-    Init_VRClientDLLNotFound = 102,
-    Init_FileNotFound = 103,
-    Init_FactoryNotFound = 104,
-    Init_InterfaceNotFound = 105,
-    Init_InvalidInterface = 106,
-    Init_UserConfigDirectoryInvalid = 107,
-    Init_HmdNotFound = 108,
-    Init_NotInitialized = 109,
-    Init_PathRegistryNotFound = 110,
-    Init_NoConfigPath = 111,
-    Init_NoLogPath = 112,
-    Init_PathRegistryNotWritable = 113,
-    Init_AppInfoInitFailed = 114,
-    Init_Retry = 115,
-    Init_InitCanceledByUser = 116,
-    Init_AnotherAppLaunching = 117,
-    Init_SettingsInitFailed = 118,
-    Init_ShuttingDown = 119,
-    Init_TooManyObjects = 120,
-    Init_NoServerForBackgroundApp = 121,
-    Init_NotSupportedWithCompositor = 122,
-    Init_NotAvailableToUtilityApps = 123,
-    Init_Internal = 124,
-    Init_HmdDriverIdIsNone = 125,
-    Init_HmdNotFoundPresenceFailed = 126,
-    Init_VRMonitorNotFound = 127,
-    Init_VRMonitorStartupFailed = 128,
-    Init_LowPowerWatchdogNotSupported = 129,
-    Init_InvalidApplicationType = 130,
-    Init_NotAvailableToWatchdogApps = 131,
-    Init_WatchdogDisabledInSettings = 132,
-    Init_VRDashboardNotFound = 133,
-    Init_VRDashboardStartupFailed = 134,
-    Init_VRHomeNotFound = 135,
-    Init_VRHomeStartupFailed = 136,
-    Init_RebootingBusy = 137,
-    Init_FirmwareUpdateBusy = 138,
-    Init_FirmwareRecoveryBusy = 139,
-    Init_USBServiceBusy = 140,
-    Init_VRWebHelperStartupFailed = 141,
-    Init_TrackerManagerInitFailed = 142,
-    Driver_Failed = 200,
-    Driver_Unknown = 201,
-    Driver_HmdUnknown = 202,
-    Driver_NotLoaded = 203,
-    Driver_RuntimeOutOfDate = 204,
-    Driver_HmdInUse = 205,
-    Driver_NotCalibrated = 206,
-    Driver_CalibrationInvalid = 207,
-    Driver_HmdDisplayNotFound = 208,
-    Driver_TrackedDeviceInterfaceUnknown = 209,
-    Driver_HmdDriverIdOutOfBounds = 211,
-    Driver_HmdDisplayMirrored = 212,
-    IPC_ServerInitFailed = 300,
-    IPC_ConnectFailed = 301,
-    IPC_SharedStateInitFailed = 302,
-    IPC_CompositorInitFailed = 303,
-    IPC_MutexInitFailed = 304,
-    IPC_Failed = 305,
-    IPC_CompositorConnectFailed = 306,
-    IPC_CompositorInvalidConnectResponse = 307,
-    IPC_ConnectFailedAfterMultipleAttempts = 308,
-    Compositor_Failed = 400,
-    Compositor_D3D11HardwareRequired = 401,
-    Compositor_FirmwareRequiresUpdate = 402,
-    Compositor_OverlayInitFailed = 403,
-    Compositor_ScreenshotsInitFailed = 404,
-    Compositor_UnableToCreateDevice = 405,
-    VendorSpecific_UnableToConnectToOculusRuntime = 1000,
-    VendorSpecific_WindowsNotInDevMode = 1001,
-    VendorSpecific_HmdFound_CantOpenDevice = 1101,
-    VendorSpecific_HmdFound_UnableToRequestConfigStart = 1102,
-    VendorSpecific_HmdFound_NoStoredConfig = 1103,
-    VendorSpecific_HmdFound_ConfigTooBig = 1104,
-    VendorSpecific_HmdFound_ConfigTooSmall = 1105,
-    VendorSpecific_HmdFound_UnableToInitZLib = 1106,
-    VendorSpecific_HmdFound_CantReadFirmwareVersion = 1107,
-    VendorSpecific_HmdFound_UnableToSendUserDataStart = 1108,
-    VendorSpecific_HmdFound_UnableToGetUserDataStart = 1109,
-    VendorSpecific_HmdFound_UnableToGetUserDataNext = 1110,
-    VendorSpecific_HmdFound_UserDataAddressRange = 1111,
-    VendorSpecific_HmdFound_UserDataError = 1112,
-    VendorSpecific_HmdFound_ConfigFailedSanityCheck = 1113,
-    Steam_SteamInstallationNotFound = 2000,
+    /// EVRInitError_VRInitError_None = 0.
+    None = sys::EVRInitError_VRInitError_None,
+    /// EVRInitError_VRInitError_Unknown = 1.
+    Unknown = sys::EVRInitError_VRInitError_Unknown,
+    /// EVRInitError_VRInitError_Init_InstallationNotFound = 100.
+    InitInstallationNotFound = sys::EVRInitError_VRInitError_Init_InstallationNotFound,
+    /// EVRInitError_VRInitError_Init_InstallationCorrupt = 101.
+    InitInstallationCorrupt = sys::EVRInitError_VRInitError_Init_InstallationCorrupt,
+    /// EVRInitError_VRInitError_Init_VRClientDLLNotFound = 102.
+    InitVRClientDLLNotFound = sys::EVRInitError_VRInitError_Init_VRClientDLLNotFound,
+    /// EVRInitError_VRInitError_Init_FileNotFound = 103.
+    InitFileNotFound = sys::EVRInitError_VRInitError_Init_FileNotFound,
+    /// EVRInitError_VRInitError_Init_FactoryNotFound = 104.
+    InitFactoryNotFound = sys::EVRInitError_VRInitError_Init_FactoryNotFound,
+    /// EVRInitError_VRInitError_Init_InterfaceNotFound = 105.
+    InitInterfaceNotFound = sys::EVRInitError_VRInitError_Init_InterfaceNotFound,
+    /// EVRInitError_VRInitError_Init_InvalidInterface = 106.
+    InitInvalidInterface = sys::EVRInitError_VRInitError_Init_InvalidInterface,
+    /// EVRInitError_VRInitError_Init_UserConfigDirectoryInvalid = 107.
+    InitUserConfigDirectoryInvalid = sys::EVRInitError_VRInitError_Init_UserConfigDirectoryInvalid,
+    /// EVRInitError_VRInitError_Init_HmdNotFound = 108.
+    InitHmdNotFound = sys::EVRInitError_VRInitError_Init_HmdNotFound,
+    /// EVRInitError_VRInitError_Init_NotInitialized = 109.
+    InitNotInitialized = sys::EVRInitError_VRInitError_Init_NotInitialized,
+    /// EVRInitError_VRInitError_Init_PathRegistryNotFound = 110.
+    InitPathRegistryNotFound = sys::EVRInitError_VRInitError_Init_PathRegistryNotFound,
+    /// EVRInitError_VRInitError_Init_NoConfigPath = 111.
+    InitNoConfigPath = sys::EVRInitError_VRInitError_Init_NoConfigPath,
+    /// EVRInitError_VRInitError_Init_NoLogPath = 112.
+    InitNoLogPath = sys::EVRInitError_VRInitError_Init_NoLogPath,
+    /// EVRInitError_VRInitError_Init_PathRegistryNotWritable = 113.
+    InitPathRegistryNotWritable = sys::EVRInitError_VRInitError_Init_PathRegistryNotWritable,
+    /// EVRInitError_VRInitError_Init_AppInfoInitFailed = 114.
+    InitAppInfoInitFailed = sys::EVRInitError_VRInitError_Init_AppInfoInitFailed,
+    /// EVRInitError_VRInitError_Init_Retry = 115.
+    InitRetry = sys::EVRInitError_VRInitError_Init_Retry,
+    /// EVRInitError_VRInitError_Init_InitCanceledByUser = 116.
+    InitInitCanceledByUser = sys::EVRInitError_VRInitError_Init_InitCanceledByUser,
+    /// EVRInitError_VRInitError_Init_AnotherAppLaunching = 117.
+    InitAnotherAppLaunching = sys::EVRInitError_VRInitError_Init_AnotherAppLaunching,
+    /// EVRInitError_VRInitError_Init_SettingsInitFailed = 118.
+    InitSettingsInitFailed = sys::EVRInitError_VRInitError_Init_SettingsInitFailed,
+    /// EVRInitError_VRInitError_Init_ShuttingDown = 119.
+    InitShuttingDown = sys::EVRInitError_VRInitError_Init_ShuttingDown,
+    /// EVRInitError_VRInitError_Init_TooManyObjects = 120.
+    InitTooManyObject = sys::EVRInitError_VRInitError_Init_TooManyObjects,
+    /// EVRInitError_VRInitError_Init_NoServerForBackgroundApp = 121.
+    InitNoServerForBackgroundApp = sys::EVRInitError_VRInitError_Init_NoServerForBackgroundApp,
+    /// EVRInitError_VRInitError_Init_NotSupportedWithCompositor = 122.
+    InitNotSupportedWithCompositor = sys::EVRInitError_VRInitError_Init_NotSupportedWithCompositor,
+    /// EVRInitError_VRInitError_Init_NotAvailableToUtilityApps = 123.
+    InitNotAvailableToUtilityApp = sys::EVRInitError_VRInitError_Init_NotAvailableToUtilityApps,
+    /// EVRInitError_VRInitError_Init_Internal = 124.
+    InitInternal = sys::EVRInitError_VRInitError_Init_Internal,
+    /// EVRInitError_VRInitError_Init_HmdDriverIdIsNone = 125.
+    InitHmdDriverIdIsNone = sys::EVRInitError_VRInitError_Init_HmdDriverIdIsNone,
+    /// EVRInitError_VRInitError_Init_HmdNotFoundPresenceFailed = 126.
+    InitHmdNotFoundPresenceFailed = sys::EVRInitError_VRInitError_Init_HmdNotFoundPresenceFailed,
+    /// EVRInitError_VRInitError_Init_VRMonitorNotFound = 127.
+    InitVRMonitorNotFound = sys::EVRInitError_VRInitError_Init_VRMonitorNotFound,
+    /// EVRInitError_VRInitError_Init_VRMonitorStartupFailed = 128.
+    InitVRMonitorStartupFailed = sys::EVRInitError_VRInitError_Init_VRMonitorStartupFailed,
+    /// EVRInitError_VRInitError_Init_LowPowerWatchdogNotSupported = 129.
+    InitLowPowerWatchdogNotSupported = sys::EVRInitError_VRInitError_Init_LowPowerWatchdogNotSupported,
+    /// EVRInitError_VRInitError_Init_InvalidApplicationType = 130.
+    InitInvalidApplicationType = sys::EVRInitError_VRInitError_Init_InvalidApplicationType,
+    /// EVRInitError_VRInitError_Init_NotAvailableToWatchdogApps = 131.
+    InitNotAvailableToWatchdogApp = sys::EVRInitError_VRInitError_Init_NotAvailableToWatchdogApps,
+    /// EVRInitError_VRInitError_Init_WatchdogDisabledInSettings = 132.
+    InitWatchdogDisabledInSetting = sys::EVRInitError_VRInitError_Init_WatchdogDisabledInSettings,
+    /// EVRInitError_VRInitError_Init_VRDashboardNotFound = 133.
+    InitVRDashboardNotFound = sys::EVRInitError_VRInitError_Init_VRDashboardNotFound,
+    /// EVRInitError_VRInitError_Init_VRDashboardStartupFailed = 134.
+    InitVRDashboardStartupFailed = sys::EVRInitError_VRInitError_Init_VRDashboardStartupFailed,
+    /// EVRInitError_VRInitError_Init_VRHomeNotFound = 135.
+    InitVRHomeNotFound = sys::EVRInitError_VRInitError_Init_VRHomeNotFound,
+    /// EVRInitError_VRInitError_Init_VRHomeStartupFailed = 136.
+    InitVRHomeStartupFailed = sys::EVRInitError_VRInitError_Init_VRHomeStartupFailed,
+    /// EVRInitError_VRInitError_Init_RebootingBusy = 137.
+    InitRebootingBusy = sys::EVRInitError_VRInitError_Init_RebootingBusy,
+    /// EVRInitError_VRInitError_Init_FirmwareUpdateBusy = 138.
+    InitFirmwareUpdateBusy = sys::EVRInitError_VRInitError_Init_FirmwareUpdateBusy,
+    /// EVRInitError_VRInitError_Init_FirmwareRecoveryBusy = 139.
+    InitFirmwareRecoveryBusy = sys::EVRInitError_VRInitError_Init_FirmwareRecoveryBusy,
+    /// EVRInitError_VRInitError_Init_USBServiceBusy = 140.
+    InitUSBServiceBusy = sys::EVRInitError_VRInitError_Init_USBServiceBusy,
+    /// EVRInitError_VRInitError_Init_VRWebHelperStartupFailed = 141.
+    InitVRWebHelperStartupFailed = sys::EVRInitError_VRInitError_Init_VRWebHelperStartupFailed,
+    /// EVRInitError_VRInitError_Init_TrackerManagerInitFailed = 142.
+    InitTrackerManagerInitFailed = sys::EVRInitError_VRInitError_Init_TrackerManagerInitFailed,
+    /// EVRInitError_VRInitError_Driver_Failed = 200.
+    DriverFailed = sys::EVRInitError_VRInitError_Driver_Failed,
+    /// EVRInitError_VRInitError_Driver_Unknown = 201.
+    DriverUnknown = sys::EVRInitError_VRInitError_Driver_Unknown,
+    /// EVRInitError_VRInitError_Driver_HmdUnknown = 202.
+    DriverHmdUnknown = sys::EVRInitError_VRInitError_Driver_HmdUnknown,
+    /// EVRInitError_VRInitError_Driver_NotLoaded = 203.
+    DriverNotLoaded = sys::EVRInitError_VRInitError_Driver_NotLoaded,
+    /// EVRInitError_VRInitError_Driver_RuntimeOutOfDate = 204.
+    DriverRuntimeOutOfDate = sys::EVRInitError_VRInitError_Driver_RuntimeOutOfDate,
+    /// EVRInitError_VRInitError_Driver_HmdInUse = 205.
+    DriverHmdInUse = sys::EVRInitError_VRInitError_Driver_HmdInUse,
+    /// EVRInitError_VRInitError_Driver_NotCalibrated = 206.
+    DriverNotCalibrated = sys::EVRInitError_VRInitError_Driver_NotCalibrated,
+    /// EVRInitError_VRInitError_Driver_CalibrationInvalid = 207.
+    DriverCalibrationInvalid = sys::EVRInitError_VRInitError_Driver_CalibrationInvalid,
+    /// EVRInitError_VRInitError_Driver_HmdDisplayNotFound = 208.
+    DriverHmdDisplayNotFound = sys::EVRInitError_VRInitError_Driver_HmdDisplayNotFound,
+    /// EVRInitError_VRInitError_Driver_TrackedDeviceInterfaceUnknown = 209.
+    DriverTrackedDeviceInterfaceUnknown = sys::EVRInitError_VRInitError_Driver_TrackedDeviceInterfaceUnknown,
+    /// EVRInitError_VRInitError_Driver_HmdDriverIdOutOfBounds = 211.
+    DriverHmdDriverIdOutOfBound = sys::EVRInitError_VRInitError_Driver_HmdDriverIdOutOfBounds,
+    /// EVRInitError_VRInitError_Driver_HmdDisplayMirrored = 212.
+    DriverHmdDisplayMirrored = sys::EVRInitError_VRInitError_Driver_HmdDisplayMirrored,
+    /// EVRInitError_VRInitError_IPC_ServerInitFailed = 300.
+    IpcServerInitFailed = sys::EVRInitError_VRInitError_IPC_ServerInitFailed,
+    /// EVRInitError_VRInitError_IPC_ConnectFailed = 301.
+    IpcConnectFailed = sys::EVRInitError_VRInitError_IPC_ConnectFailed,
+    /// EVRInitError_VRInitError_IPC_SharedStateInitFailed = 302.
+    IpcSharedStateInitFailed = sys::EVRInitError_VRInitError_IPC_SharedStateInitFailed,
+    /// EVRInitError_VRInitError_IPC_CompositorInitFailed = 303.
+    IpcCompositorInitFailed = sys::EVRInitError_VRInitError_IPC_CompositorInitFailed,
+    /// EVRInitError_VRInitError_IPC_MutexInitFailed = 304.
+    IpcMutexInitFailed = sys::EVRInitError_VRInitError_IPC_MutexInitFailed,
+    /// EVRInitError_VRInitError_IPC_Failed = 305.
+    IpcFailed = sys::EVRInitError_VRInitError_IPC_Failed,
+    /// EVRInitError_VRInitError_IPC_CompositorConnectFailed = 306.
+    IpcCompositorConnectFailed = sys::EVRInitError_VRInitError_IPC_CompositorConnectFailed,
+    /// EVRInitError_VRInitError_IPC_CompositorInvalidConnectResponse = 307.
+    IpcCompositorInvalidConnectResponse = sys::EVRInitError_VRInitError_IPC_CompositorInvalidConnectResponse,
+    /// EVRInitError_VRInitError_IPC_ConnectFailedAfterMultipleAttempts = 308.
+    IpcConnectFailedAfterMultipleAttempt = sys::EVRInitError_VRInitError_IPC_ConnectFailedAfterMultipleAttempts,
+    /// EVRInitError_VRInitError_Compositor_Failed = 400.
+    CompositorFailed = sys::EVRInitError_VRInitError_Compositor_Failed,
+    /// EVRInitError_VRInitError_Compositor_D3D11HardwareRequired = 401.
+    CompositorD3D11HardwareRequired = sys::EVRInitError_VRInitError_Compositor_D3D11HardwareRequired,
+    /// EVRInitError_VRInitError_Compositor_FirmwareRequiresUpdate = 402.
+    CompositorFirmwareRequiresUpdate = sys::EVRInitError_VRInitError_Compositor_FirmwareRequiresUpdate,
+    /// EVRInitError_VRInitError_Compositor_OverlayInitFailed = 403.
+    CompositorOverlayInitFailed = sys::EVRInitError_VRInitError_Compositor_OverlayInitFailed,
+    /// EVRInitError_VRInitError_Compositor_ScreenshotsInitFailed = 404.
+    CompositorScreenshotsInitFailed = sys::EVRInitError_VRInitError_Compositor_ScreenshotsInitFailed,
+    /// EVRInitError_VRInitError_Compositor_UnableToCreateDevice = 405.
+    CompositorUnableToCreateDevice = sys::EVRInitError_VRInitError_Compositor_UnableToCreateDevice,
+    /// EVRInitError_VRInitError_VendorSpecific_UnableToConnectToOculusRuntime = 1000.
+    VendorSpecificUnableToConnectToOculusRuntime = sys::EVRInitError_VRInitError_VendorSpecific_UnableToConnectToOculusRuntime,
+    /// EVRInitError_VRInitError_VendorSpecific_WindowsNotInDevMode = 1001.
+    VendorSpecificWindowsNotInDevMode = sys::EVRInitError_VRInitError_VendorSpecific_WindowsNotInDevMode,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_CantOpenDevice = 1101.
+    VendorSpecificHmdFoundCantOpenDevice = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_CantOpenDevice,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToRequestConfigStart = 1102.
+    VendorSpecificHmdFoundUnableToRequestConfigStart = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToRequestConfigStart,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_NoStoredConfig = 1103.
+    VendorSpecificHmdFoundNoStoredConfig = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_NoStoredConfig,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigTooBig = 1104.
+    VendorSpecificHmdFoundConfigTooBig = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigTooBig,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigTooSmall = 1105.
+    VendorSpecificHmdFoundConfigTooSmall = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigTooSmall,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToInitZLib = 1106.
+    VendorSpecificHmdFoundUnableToInitZLib = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToInitZLib,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_CantReadFirmwareVersion = 1107.
+    VendorSpecificHmdFoundCantReadFirmwareVersion = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_CantReadFirmwareVersion,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToSendUserDataStart = 1108.
+    VendorSpecificHmdFoundUnableToSendUserDataStart = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToSendUserDataStart,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToGetUserDataStart = 1109.
+    VendorSpecificHmdFoundUnableToGetUserDataStart = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToGetUserDataStart,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToGetUserDataNext = 1110.
+    VendorSpecificHmdFoundUnableToGetUserDataNext = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToGetUserDataNext,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UserDataAddressRange = 1111.
+    VendorSpecificHmdFoundUserDataAddressRange = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UserDataAddressRange,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_UserDataError = 1112.
+    VendorSpecificHmdFoundUserDataError = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UserDataError,
+    /// EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigFailedSanityCheck = 1113.
+    VendorSpecificHmdFoundConfigFailedSanityCheck = sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigFailedSanityCheck,
+    /// EVRInitError_VRInitError_Steam_SteamInstallationNotFound = 2000.
+    SteamSteamInstallationNotFound = sys::EVRInitError_VRInitError_Steam_SteamInstallationNotFound,
 }
 
-impl InitError {
+impl Enum for InitError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawInitError) -> Option<Self> {
-        match val {
-            InitError_None => Some(InitError::None),
-            InitError_Unknown => Some(InitError::Unknown),
-            InitError_Init_InstallationNotFound => Some(InitError::Init_InstallationNotFound),
-            InitError_Init_InstallationCorrupt => Some(InitError::Init_InstallationCorrupt),
-            InitError_Init_VRClientDLLNotFound => Some(InitError::Init_VRClientDLLNotFound),
-            InitError_Init_FileNotFound => Some(InitError::Init_FileNotFound),
-            InitError_Init_FactoryNotFound => Some(InitError::Init_FactoryNotFound),
-            InitError_Init_InterfaceNotFound => Some(InitError::Init_InterfaceNotFound),
-            InitError_Init_InvalidInterface => Some(InitError::Init_InvalidInterface),
-            InitError_Init_UserConfigDirectoryInvalid => {
-                Some(InitError::Init_UserConfigDirectoryInvalid)
-            }
-            InitError_Init_HmdNotFound => Some(InitError::Init_HmdNotFound),
-            InitError_Init_NotInitialized => Some(InitError::Init_NotInitialized),
-            InitError_Init_PathRegistryNotFound => Some(InitError::Init_PathRegistryNotFound),
-            InitError_Init_NoConfigPath => Some(InitError::Init_NoConfigPath),
-            InitError_Init_NoLogPath => Some(InitError::Init_NoLogPath),
-            InitError_Init_PathRegistryNotWritable => Some(InitError::Init_PathRegistryNotWritable),
-            InitError_Init_AppInfoInitFailed => Some(InitError::Init_AppInfoInitFailed),
-            InitError_Init_Retry => Some(InitError::Init_Retry),
-            InitError_Init_InitCanceledByUser => Some(InitError::Init_InitCanceledByUser),
-            InitError_Init_AnotherAppLaunching => Some(InitError::Init_AnotherAppLaunching),
-            InitError_Init_SettingsInitFailed => Some(InitError::Init_SettingsInitFailed),
-            InitError_Init_ShuttingDown => Some(InitError::Init_ShuttingDown),
-            InitError_Init_TooManyObjects => Some(InitError::Init_TooManyObjects),
-            InitError_Init_NoServerForBackgroundApp => {
-                Some(InitError::Init_NoServerForBackgroundApp)
-            }
-            InitError_Init_NotSupportedWithCompositor => {
-                Some(InitError::Init_NotSupportedWithCompositor)
-            }
-            InitError_Init_NotAvailableToUtilityApps => {
-                Some(InitError::Init_NotAvailableToUtilityApps)
-            }
-            InitError_Init_Internal => Some(InitError::Init_Internal),
-            InitError_Init_HmdDriverIdIsNone => Some(InitError::Init_HmdDriverIdIsNone),
-            InitError_Init_HmdNotFoundPresenceFailed => {
-                Some(InitError::Init_HmdNotFoundPresenceFailed)
-            }
-            InitError_Init_VRMonitorNotFound => Some(InitError::Init_VRMonitorNotFound),
-            InitError_Init_VRMonitorStartupFailed => Some(InitError::Init_VRMonitorStartupFailed),
-            InitError_Init_LowPowerWatchdogNotSupported => {
-                Some(InitError::Init_LowPowerWatchdogNotSupported)
-            }
-            InitError_Init_InvalidApplicationType => Some(InitError::Init_InvalidApplicationType),
-            InitError_Init_NotAvailableToWatchdogApps => {
-                Some(InitError::Init_NotAvailableToWatchdogApps)
-            }
-            InitError_Init_WatchdogDisabledInSettings => {
-                Some(InitError::Init_WatchdogDisabledInSettings)
-            }
-            InitError_Init_VRDashboardNotFound => Some(InitError::Init_VRDashboardNotFound),
-            InitError_Init_VRDashboardStartupFailed => {
-                Some(InitError::Init_VRDashboardStartupFailed)
-            }
-            InitError_Init_VRHomeNotFound => Some(InitError::Init_VRHomeNotFound),
-            InitError_Init_VRHomeStartupFailed => Some(InitError::Init_VRHomeStartupFailed),
-            InitError_Init_RebootingBusy => Some(InitError::Init_RebootingBusy),
-            InitError_Init_FirmwareUpdateBusy => Some(InitError::Init_FirmwareUpdateBusy),
-            InitError_Init_FirmwareRecoveryBusy => Some(InitError::Init_FirmwareRecoveryBusy),
-            InitError_Init_USBServiceBusy => Some(InitError::Init_USBServiceBusy),
-            InitError_Init_VRWebHelperStartupFailed => {
-                Some(InitError::Init_VRWebHelperStartupFailed)
-            }
-            InitError_Init_TrackerManagerInitFailed => {
-                Some(InitError::Init_TrackerManagerInitFailed)
-            }
-            InitError_Driver_Failed => Some(InitError::Driver_Failed),
-            InitError_Driver_Unknown => Some(InitError::Driver_Unknown),
-            InitError_Driver_HmdUnknown => Some(InitError::Driver_HmdUnknown),
-            InitError_Driver_NotLoaded => Some(InitError::Driver_NotLoaded),
-            InitError_Driver_RuntimeOutOfDate => Some(InitError::Driver_RuntimeOutOfDate),
-            InitError_Driver_HmdInUse => Some(InitError::Driver_HmdInUse),
-            InitError_Driver_NotCalibrated => Some(InitError::Driver_NotCalibrated),
-            InitError_Driver_CalibrationInvalid => Some(InitError::Driver_CalibrationInvalid),
-            InitError_Driver_HmdDisplayNotFound => Some(InitError::Driver_HmdDisplayNotFound),
-            InitError_Driver_TrackedDeviceInterfaceUnknown => {
-                Some(InitError::Driver_TrackedDeviceInterfaceUnknown)
-            }
-            InitError_Driver_HmdDriverIdOutOfBounds => {
-                Some(InitError::Driver_HmdDriverIdOutOfBounds)
-            }
-            InitError_Driver_HmdDisplayMirrored => Some(InitError::Driver_HmdDisplayMirrored),
-            InitError_IPC_ServerInitFailed => Some(InitError::IPC_ServerInitFailed),
-            InitError_IPC_ConnectFailed => Some(InitError::IPC_ConnectFailed),
-            InitError_IPC_SharedStateInitFailed => Some(InitError::IPC_SharedStateInitFailed),
-            InitError_IPC_CompositorInitFailed => Some(InitError::IPC_CompositorInitFailed),
-            InitError_IPC_MutexInitFailed => Some(InitError::IPC_MutexInitFailed),
-            InitError_IPC_Failed => Some(InitError::IPC_Failed),
-            InitError_IPC_CompositorConnectFailed => Some(InitError::IPC_CompositorConnectFailed),
-            InitError_IPC_CompositorInvalidConnectResponse => {
-                Some(InitError::IPC_CompositorInvalidConnectResponse)
-            }
-            InitError_IPC_ConnectFailedAfterMultipleAttempts => {
-                Some(InitError::IPC_ConnectFailedAfterMultipleAttempts)
-            }
-            InitError_Compositor_Failed => Some(InitError::Compositor_Failed),
-            InitError_Compositor_D3D11HardwareRequired => {
-                Some(InitError::Compositor_D3D11HardwareRequired)
-            }
-            InitError_Compositor_FirmwareRequiresUpdate => {
-                Some(InitError::Compositor_FirmwareRequiresUpdate)
-            }
-            InitError_Compositor_OverlayInitFailed => Some(InitError::Compositor_OverlayInitFailed),
-            InitError_Compositor_ScreenshotsInitFailed => {
-                Some(InitError::Compositor_ScreenshotsInitFailed)
-            }
-            InitError_Compositor_UnableToCreateDevice => {
-                Some(InitError::Compositor_UnableToCreateDevice)
-            }
-            InitError_VendorSpecific_UnableToConnectToOculusRuntime => {
-                Some(InitError::VendorSpecific_UnableToConnectToOculusRuntime)
-            }
-            InitError_VendorSpecific_WindowsNotInDevMode => {
-                Some(InitError::VendorSpecific_WindowsNotInDevMode)
-            }
-            InitError_VendorSpecific_HmdFound_CantOpenDevice => {
-                Some(InitError::VendorSpecific_HmdFound_CantOpenDevice)
-            }
-            InitError_VendorSpecific_HmdFound_UnableToRequestConfigStart => {
-                Some(InitError::VendorSpecific_HmdFound_UnableToRequestConfigStart)
-            }
-            InitError_VendorSpecific_HmdFound_NoStoredConfig => {
-                Some(InitError::VendorSpecific_HmdFound_NoStoredConfig)
-            }
-            InitError_VendorSpecific_HmdFound_ConfigTooBig => {
-                Some(InitError::VendorSpecific_HmdFound_ConfigTooBig)
-            }
-            InitError_VendorSpecific_HmdFound_ConfigTooSmall => {
-                Some(InitError::VendorSpecific_HmdFound_ConfigTooSmall)
-            }
-            InitError_VendorSpecific_HmdFound_UnableToInitZLib => {
-                Some(InitError::VendorSpecific_HmdFound_UnableToInitZLib)
-            }
-            InitError_VendorSpecific_HmdFound_CantReadFirmwareVersion => {
-                Some(InitError::VendorSpecific_HmdFound_CantReadFirmwareVersion)
-            }
-            InitError_VendorSpecific_HmdFound_UnableToSendUserDataStart => {
-                Some(InitError::VendorSpecific_HmdFound_UnableToSendUserDataStart)
-            }
-            InitError_VendorSpecific_HmdFound_UnableToGetUserDataStart => {
-                Some(InitError::VendorSpecific_HmdFound_UnableToGetUserDataStart)
-            }
-            InitError_VendorSpecific_HmdFound_UnableToGetUserDataNext => {
-                Some(InitError::VendorSpecific_HmdFound_UnableToGetUserDataNext)
-            }
-            InitError_VendorSpecific_HmdFound_UserDataAddressRange => {
-                Some(InitError::VendorSpecific_HmdFound_UserDataAddressRange)
-            }
-            InitError_VendorSpecific_HmdFound_UserDataError => {
-                Some(InitError::VendorSpecific_HmdFound_UserDataError)
-            }
-            InitError_VendorSpecific_HmdFound_ConfigFailedSanityCheck => {
-                Some(InitError::VendorSpecific_HmdFound_ConfigFailedSanityCheck)
-            }
-            InitError_Steam_SteamInstallationNotFound => {
-                Some(InitError::Steam_SteamInstallationNotFound)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRInitError_VRInitError_None => Ok(InitError::None),
+             sys::EVRInitError_VRInitError_Unknown => Ok(InitError::Unknown),
+             sys::EVRInitError_VRInitError_Init_InstallationNotFound => Ok(InitError::InitInstallationNotFound),
+             sys::EVRInitError_VRInitError_Init_InstallationCorrupt => Ok(InitError::InitInstallationCorrupt),
+             sys::EVRInitError_VRInitError_Init_VRClientDLLNotFound => Ok(InitError::InitVRClientDLLNotFound),
+             sys::EVRInitError_VRInitError_Init_FileNotFound => Ok(InitError::InitFileNotFound),
+             sys::EVRInitError_VRInitError_Init_FactoryNotFound => Ok(InitError::InitFactoryNotFound),
+             sys::EVRInitError_VRInitError_Init_InterfaceNotFound => Ok(InitError::InitInterfaceNotFound),
+             sys::EVRInitError_VRInitError_Init_InvalidInterface => Ok(InitError::InitInvalidInterface),
+             sys::EVRInitError_VRInitError_Init_UserConfigDirectoryInvalid => Ok(InitError::InitUserConfigDirectoryInvalid),
+             sys::EVRInitError_VRInitError_Init_HmdNotFound => Ok(InitError::InitHmdNotFound),
+             sys::EVRInitError_VRInitError_Init_NotInitialized => Ok(InitError::InitNotInitialized),
+             sys::EVRInitError_VRInitError_Init_PathRegistryNotFound => Ok(InitError::InitPathRegistryNotFound),
+             sys::EVRInitError_VRInitError_Init_NoConfigPath => Ok(InitError::InitNoConfigPath),
+             sys::EVRInitError_VRInitError_Init_NoLogPath => Ok(InitError::InitNoLogPath),
+             sys::EVRInitError_VRInitError_Init_PathRegistryNotWritable => Ok(InitError::InitPathRegistryNotWritable),
+             sys::EVRInitError_VRInitError_Init_AppInfoInitFailed => Ok(InitError::InitAppInfoInitFailed),
+             sys::EVRInitError_VRInitError_Init_Retry => Ok(InitError::InitRetry),
+             sys::EVRInitError_VRInitError_Init_InitCanceledByUser => Ok(InitError::InitInitCanceledByUser),
+             sys::EVRInitError_VRInitError_Init_AnotherAppLaunching => Ok(InitError::InitAnotherAppLaunching),
+             sys::EVRInitError_VRInitError_Init_SettingsInitFailed => Ok(InitError::InitSettingsInitFailed),
+             sys::EVRInitError_VRInitError_Init_ShuttingDown => Ok(InitError::InitShuttingDown),
+             sys::EVRInitError_VRInitError_Init_TooManyObjects => Ok(InitError::InitTooManyObject),
+             sys::EVRInitError_VRInitError_Init_NoServerForBackgroundApp => Ok(InitError::InitNoServerForBackgroundApp),
+             sys::EVRInitError_VRInitError_Init_NotSupportedWithCompositor => Ok(InitError::InitNotSupportedWithCompositor),
+             sys::EVRInitError_VRInitError_Init_NotAvailableToUtilityApps => Ok(InitError::InitNotAvailableToUtilityApp),
+             sys::EVRInitError_VRInitError_Init_Internal => Ok(InitError::InitInternal),
+             sys::EVRInitError_VRInitError_Init_HmdDriverIdIsNone => Ok(InitError::InitHmdDriverIdIsNone),
+             sys::EVRInitError_VRInitError_Init_HmdNotFoundPresenceFailed => Ok(InitError::InitHmdNotFoundPresenceFailed),
+             sys::EVRInitError_VRInitError_Init_VRMonitorNotFound => Ok(InitError::InitVRMonitorNotFound),
+             sys::EVRInitError_VRInitError_Init_VRMonitorStartupFailed => Ok(InitError::InitVRMonitorStartupFailed),
+             sys::EVRInitError_VRInitError_Init_LowPowerWatchdogNotSupported => Ok(InitError::InitLowPowerWatchdogNotSupported),
+             sys::EVRInitError_VRInitError_Init_InvalidApplicationType => Ok(InitError::InitInvalidApplicationType),
+             sys::EVRInitError_VRInitError_Init_NotAvailableToWatchdogApps => Ok(InitError::InitNotAvailableToWatchdogApp),
+             sys::EVRInitError_VRInitError_Init_WatchdogDisabledInSettings => Ok(InitError::InitWatchdogDisabledInSetting),
+             sys::EVRInitError_VRInitError_Init_VRDashboardNotFound => Ok(InitError::InitVRDashboardNotFound),
+             sys::EVRInitError_VRInitError_Init_VRDashboardStartupFailed => Ok(InitError::InitVRDashboardStartupFailed),
+             sys::EVRInitError_VRInitError_Init_VRHomeNotFound => Ok(InitError::InitVRHomeNotFound),
+             sys::EVRInitError_VRInitError_Init_VRHomeStartupFailed => Ok(InitError::InitVRHomeStartupFailed),
+             sys::EVRInitError_VRInitError_Init_RebootingBusy => Ok(InitError::InitRebootingBusy),
+             sys::EVRInitError_VRInitError_Init_FirmwareUpdateBusy => Ok(InitError::InitFirmwareUpdateBusy),
+             sys::EVRInitError_VRInitError_Init_FirmwareRecoveryBusy => Ok(InitError::InitFirmwareRecoveryBusy),
+             sys::EVRInitError_VRInitError_Init_USBServiceBusy => Ok(InitError::InitUSBServiceBusy),
+             sys::EVRInitError_VRInitError_Init_VRWebHelperStartupFailed => Ok(InitError::InitVRWebHelperStartupFailed),
+             sys::EVRInitError_VRInitError_Init_TrackerManagerInitFailed => Ok(InitError::InitTrackerManagerInitFailed),
+             sys::EVRInitError_VRInitError_Driver_Failed => Ok(InitError::DriverFailed),
+             sys::EVRInitError_VRInitError_Driver_Unknown => Ok(InitError::DriverUnknown),
+             sys::EVRInitError_VRInitError_Driver_HmdUnknown => Ok(InitError::DriverHmdUnknown),
+             sys::EVRInitError_VRInitError_Driver_NotLoaded => Ok(InitError::DriverNotLoaded),
+             sys::EVRInitError_VRInitError_Driver_RuntimeOutOfDate => Ok(InitError::DriverRuntimeOutOfDate),
+             sys::EVRInitError_VRInitError_Driver_HmdInUse => Ok(InitError::DriverHmdInUse),
+             sys::EVRInitError_VRInitError_Driver_NotCalibrated => Ok(InitError::DriverNotCalibrated),
+             sys::EVRInitError_VRInitError_Driver_CalibrationInvalid => Ok(InitError::DriverCalibrationInvalid),
+             sys::EVRInitError_VRInitError_Driver_HmdDisplayNotFound => Ok(InitError::DriverHmdDisplayNotFound),
+             sys::EVRInitError_VRInitError_Driver_TrackedDeviceInterfaceUnknown => Ok(InitError::DriverTrackedDeviceInterfaceUnknown),
+             sys::EVRInitError_VRInitError_Driver_HmdDriverIdOutOfBounds => Ok(InitError::DriverHmdDriverIdOutOfBound),
+             sys::EVRInitError_VRInitError_Driver_HmdDisplayMirrored => Ok(InitError::DriverHmdDisplayMirrored),
+             sys::EVRInitError_VRInitError_IPC_ServerInitFailed => Ok(InitError::IpcServerInitFailed),
+             sys::EVRInitError_VRInitError_IPC_ConnectFailed => Ok(InitError::IpcConnectFailed),
+             sys::EVRInitError_VRInitError_IPC_SharedStateInitFailed => Ok(InitError::IpcSharedStateInitFailed),
+             sys::EVRInitError_VRInitError_IPC_CompositorInitFailed => Ok(InitError::IpcCompositorInitFailed),
+             sys::EVRInitError_VRInitError_IPC_MutexInitFailed => Ok(InitError::IpcMutexInitFailed),
+             sys::EVRInitError_VRInitError_IPC_Failed => Ok(InitError::IpcFailed),
+             sys::EVRInitError_VRInitError_IPC_CompositorConnectFailed => Ok(InitError::IpcCompositorConnectFailed),
+             sys::EVRInitError_VRInitError_IPC_CompositorInvalidConnectResponse => Ok(InitError::IpcCompositorInvalidConnectResponse),
+             sys::EVRInitError_VRInitError_IPC_ConnectFailedAfterMultipleAttempts => Ok(InitError::IpcConnectFailedAfterMultipleAttempt),
+             sys::EVRInitError_VRInitError_Compositor_Failed => Ok(InitError::CompositorFailed),
+             sys::EVRInitError_VRInitError_Compositor_D3D11HardwareRequired => Ok(InitError::CompositorD3D11HardwareRequired),
+             sys::EVRInitError_VRInitError_Compositor_FirmwareRequiresUpdate => Ok(InitError::CompositorFirmwareRequiresUpdate),
+             sys::EVRInitError_VRInitError_Compositor_OverlayInitFailed => Ok(InitError::CompositorOverlayInitFailed),
+             sys::EVRInitError_VRInitError_Compositor_ScreenshotsInitFailed => Ok(InitError::CompositorScreenshotsInitFailed),
+             sys::EVRInitError_VRInitError_Compositor_UnableToCreateDevice => Ok(InitError::CompositorUnableToCreateDevice),
+             sys::EVRInitError_VRInitError_VendorSpecific_UnableToConnectToOculusRuntime => Ok(InitError::VendorSpecificUnableToConnectToOculusRuntime),
+             sys::EVRInitError_VRInitError_VendorSpecific_WindowsNotInDevMode => Ok(InitError::VendorSpecificWindowsNotInDevMode),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_CantOpenDevice => Ok(InitError::VendorSpecificHmdFoundCantOpenDevice),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToRequestConfigStart => Ok(InitError::VendorSpecificHmdFoundUnableToRequestConfigStart),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_NoStoredConfig => Ok(InitError::VendorSpecificHmdFoundNoStoredConfig),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigTooBig => Ok(InitError::VendorSpecificHmdFoundConfigTooBig),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigTooSmall => Ok(InitError::VendorSpecificHmdFoundConfigTooSmall),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToInitZLib => Ok(InitError::VendorSpecificHmdFoundUnableToInitZLib),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_CantReadFirmwareVersion => Ok(InitError::VendorSpecificHmdFoundCantReadFirmwareVersion),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToSendUserDataStart => Ok(InitError::VendorSpecificHmdFoundUnableToSendUserDataStart),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToGetUserDataStart => Ok(InitError::VendorSpecificHmdFoundUnableToGetUserDataStart),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UnableToGetUserDataNext => Ok(InitError::VendorSpecificHmdFoundUnableToGetUserDataNext),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UserDataAddressRange => Ok(InitError::VendorSpecificHmdFoundUserDataAddressRange),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_UserDataError => Ok(InitError::VendorSpecificHmdFoundUserDataError),
+             sys::EVRInitError_VRInitError_VendorSpecific_HmdFound_ConfigFailedSanityCheck => Ok(InitError::VendorSpecificHmdFoundConfigFailedSanityCheck),
+             sys::EVRInitError_VRInitError_Steam_SteamInstallationNotFound => Ok(InitError::SteamSteamInstallationNotFound),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawInitError> for InitError {
-    fn from(val: RawInitError) -> Self {
-        InitError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for InitError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawScreenshotType(pub u32);
+impl fmt::Display for Invalid<InitError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of InitError.", self.0)
+    }
+}
 
-pub const ScreenshotType_None: RawScreenshotType = RawScreenshotType(0);
-pub const ScreenshotType_Mono: RawScreenshotType = RawScreenshotType(1);
-pub const ScreenshotType_Stereo: RawScreenshotType = RawScreenshotType(2);
-pub const ScreenshotType_Cubemap: RawScreenshotType = RawScreenshotType(3);
-pub const ScreenshotType_MonoPanorama: RawScreenshotType = RawScreenshotType(4);
-pub const ScreenshotType_StereoPanorama: RawScreenshotType = RawScreenshotType(5);
+impl error::Error for Invalid<InitError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of InitError."
+    }
+}
 
+/// EVRScreenshotType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ScreenshotType {
-    None = 0,
-    Mono = 1,
-    Stereo = 2,
-    Cubemap = 3,
-    MonoPanorama = 4,
-    StereoPanorama = 5,
+    /// EVRScreenshotType_VRScreenshotType_None = 0.
+    None = sys::EVRScreenshotType_VRScreenshotType_None,
+    /// EVRScreenshotType_VRScreenshotType_Mono = 1.
+    Mono = sys::EVRScreenshotType_VRScreenshotType_Mono,
+    /// EVRScreenshotType_VRScreenshotType_Stereo = 2.
+    Stereo = sys::EVRScreenshotType_VRScreenshotType_Stereo,
+    /// EVRScreenshotType_VRScreenshotType_Cubemap = 3.
+    Cubemap = sys::EVRScreenshotType_VRScreenshotType_Cubemap,
+    /// EVRScreenshotType_VRScreenshotType_MonoPanorama = 4.
+    MonoPanorama = sys::EVRScreenshotType_VRScreenshotType_MonoPanorama,
+    /// EVRScreenshotType_VRScreenshotType_StereoPanorama = 5.
+    StereoPanorama = sys::EVRScreenshotType_VRScreenshotType_StereoPanorama,
 }
 
-impl ScreenshotType {
+impl Enum for ScreenshotType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawScreenshotType) -> Option<Self> {
-        match val {
-            ScreenshotType_None => Some(ScreenshotType::None),
-            ScreenshotType_Mono => Some(ScreenshotType::Mono),
-            ScreenshotType_Stereo => Some(ScreenshotType::Stereo),
-            ScreenshotType_Cubemap => Some(ScreenshotType::Cubemap),
-            ScreenshotType_MonoPanorama => Some(ScreenshotType::MonoPanorama),
-            ScreenshotType_StereoPanorama => Some(ScreenshotType::StereoPanorama),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRScreenshotType_VRScreenshotType_None => Ok(ScreenshotType::None),
+             sys::EVRScreenshotType_VRScreenshotType_Mono => Ok(ScreenshotType::Mono),
+             sys::EVRScreenshotType_VRScreenshotType_Stereo => Ok(ScreenshotType::Stereo),
+             sys::EVRScreenshotType_VRScreenshotType_Cubemap => Ok(ScreenshotType::Cubemap),
+             sys::EVRScreenshotType_VRScreenshotType_MonoPanorama => Ok(ScreenshotType::MonoPanorama),
+             sys::EVRScreenshotType_VRScreenshotType_StereoPanorama => Ok(ScreenshotType::StereoPanorama),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawScreenshotType> for ScreenshotType {
-    fn from(val: RawScreenshotType) -> Self {
-        ScreenshotType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ScreenshotType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawScreenshotPropertyFilenames(pub u32);
+impl fmt::Display for Invalid<ScreenshotType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ScreenshotType.", self.0)
+    }
+}
 
-pub const ScreenshotPropertyFilenames_Preview: RawScreenshotPropertyFilenames =
-    RawScreenshotPropertyFilenames(0);
-pub const ScreenshotPropertyFilenames_VR: RawScreenshotPropertyFilenames =
-    RawScreenshotPropertyFilenames(1);
+impl error::Error for Invalid<ScreenshotType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ScreenshotType."
+    }
+}
 
+/// EVRScreenshotPropertyFilenames.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum ScreenshotPropertyFilenames {
-    Preview = 0,
-    VR = 1,
+pub enum ScreenshotPropertyFilename {
+    /// EVRScreenshotPropertyFilenames_VRScreenshotPropertyFilenames_Preview = 0.
+    Preview = sys::EVRScreenshotPropertyFilenames_VRScreenshotPropertyFilenames_Preview,
+    /// EVRScreenshotPropertyFilenames_VRScreenshotPropertyFilenames_VR = 1.
+    Vr = sys::EVRScreenshotPropertyFilenames_VRScreenshotPropertyFilenames_VR,
 }
 
-impl ScreenshotPropertyFilenames {
+impl Enum for ScreenshotPropertyFilename {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawScreenshotPropertyFilenames) -> Option<Self> {
-        match val {
-            ScreenshotPropertyFilenames_Preview => Some(ScreenshotPropertyFilenames::Preview),
-            ScreenshotPropertyFilenames_VR => Some(ScreenshotPropertyFilenames::VR),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRScreenshotPropertyFilenames_VRScreenshotPropertyFilenames_Preview => Ok(ScreenshotPropertyFilename::Preview),
+             sys::EVRScreenshotPropertyFilenames_VRScreenshotPropertyFilenames_VR => Ok(ScreenshotPropertyFilename::Vr),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawScreenshotPropertyFilenames> for ScreenshotPropertyFilenames {
-    fn from(val: RawScreenshotPropertyFilenames) -> Self {
-        ScreenshotPropertyFilenames::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ScreenshotPropertyFilenames.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedCameraError(pub u32);
+impl fmt::Display for Invalid<ScreenshotPropertyFilename> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ScreenshotPropertyFilename.", self.0)
+    }
+}
 
-pub const TrackedCameraError_None: RawTrackedCameraError = RawTrackedCameraError(0);
-pub const TrackedCameraError_OperationFailed: RawTrackedCameraError = RawTrackedCameraError(100);
-pub const TrackedCameraError_InvalidHandle: RawTrackedCameraError = RawTrackedCameraError(101);
-pub const TrackedCameraError_InvalidFrameHeaderVersion: RawTrackedCameraError =
-    RawTrackedCameraError(102);
-pub const TrackedCameraError_OutOfHandles: RawTrackedCameraError = RawTrackedCameraError(103);
-pub const TrackedCameraError_IPCFailure: RawTrackedCameraError = RawTrackedCameraError(104);
-pub const TrackedCameraError_NotSupportedForThisDevice: RawTrackedCameraError =
-    RawTrackedCameraError(105);
-pub const TrackedCameraError_SharedMemoryFailure: RawTrackedCameraError =
-    RawTrackedCameraError(106);
-pub const TrackedCameraError_FrameBufferingFailure: RawTrackedCameraError =
-    RawTrackedCameraError(107);
-pub const TrackedCameraError_StreamSetupFailure: RawTrackedCameraError = RawTrackedCameraError(108);
-pub const TrackedCameraError_InvalidGLTextureId: RawTrackedCameraError = RawTrackedCameraError(109);
-pub const TrackedCameraError_InvalidSharedTextureHandle: RawTrackedCameraError =
-    RawTrackedCameraError(110);
-pub const TrackedCameraError_FailedToGetGLTextureId: RawTrackedCameraError =
-    RawTrackedCameraError(111);
-pub const TrackedCameraError_SharedTextureFailure: RawTrackedCameraError =
-    RawTrackedCameraError(112);
-pub const TrackedCameraError_NoFrameAvailable: RawTrackedCameraError = RawTrackedCameraError(113);
-pub const TrackedCameraError_InvalidArgument: RawTrackedCameraError = RawTrackedCameraError(114);
-pub const TrackedCameraError_InvalidFrameBufferSize: RawTrackedCameraError =
-    RawTrackedCameraError(115);
+impl error::Error for Invalid<ScreenshotPropertyFilename> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ScreenshotPropertyFilename."
+    }
+}
 
+/// EVRTrackedCameraError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedCameraError {
-    None = 0,
-    OperationFailed = 100,
-    InvalidHandle = 101,
-    InvalidFrameHeaderVersion = 102,
-    OutOfHandles = 103,
-    IPCFailure = 104,
-    NotSupportedForThisDevice = 105,
-    SharedMemoryFailure = 106,
-    FrameBufferingFailure = 107,
-    StreamSetupFailure = 108,
-    InvalidGLTextureId = 109,
-    InvalidSharedTextureHandle = 110,
-    FailedToGetGLTextureId = 111,
-    SharedTextureFailure = 112,
-    NoFrameAvailable = 113,
-    InvalidArgument = 114,
-    InvalidFrameBufferSize = 115,
+    /// EVRTrackedCameraError_VRTrackedCameraError_None = 0.
+    None = sys::EVRTrackedCameraError_VRTrackedCameraError_None,
+    /// EVRTrackedCameraError_VRTrackedCameraError_OperationFailed = 100.
+    OperationFailed = sys::EVRTrackedCameraError_VRTrackedCameraError_OperationFailed,
+    /// EVRTrackedCameraError_VRTrackedCameraError_InvalidHandle = 101.
+    InvalidHandle = sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidHandle,
+    /// EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameHeaderVersion = 102.
+    InvalidFrameHeaderVersion = sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameHeaderVersion,
+    /// EVRTrackedCameraError_VRTrackedCameraError_OutOfHandles = 103.
+    OutOfHandle = sys::EVRTrackedCameraError_VRTrackedCameraError_OutOfHandles,
+    /// EVRTrackedCameraError_VRTrackedCameraError_IPCFailure = 104.
+    Ipcfailure = sys::EVRTrackedCameraError_VRTrackedCameraError_IPCFailure,
+    /// EVRTrackedCameraError_VRTrackedCameraError_NotSupportedForThisDevice = 105.
+    NotSupportedForThisDevice = sys::EVRTrackedCameraError_VRTrackedCameraError_NotSupportedForThisDevice,
+    /// EVRTrackedCameraError_VRTrackedCameraError_SharedMemoryFailure = 106.
+    SharedMemoryFailure = sys::EVRTrackedCameraError_VRTrackedCameraError_SharedMemoryFailure,
+    /// EVRTrackedCameraError_VRTrackedCameraError_FrameBufferingFailure = 107.
+    FrameBufferingFailure = sys::EVRTrackedCameraError_VRTrackedCameraError_FrameBufferingFailure,
+    /// EVRTrackedCameraError_VRTrackedCameraError_StreamSetupFailure = 108.
+    StreamSetupFailure = sys::EVRTrackedCameraError_VRTrackedCameraError_StreamSetupFailure,
+    /// EVRTrackedCameraError_VRTrackedCameraError_InvalidGLTextureId = 109.
+    InvalidGLTextureId = sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidGLTextureId,
+    /// EVRTrackedCameraError_VRTrackedCameraError_InvalidSharedTextureHandle = 110.
+    InvalidSharedTextureHandle = sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidSharedTextureHandle,
+    /// EVRTrackedCameraError_VRTrackedCameraError_FailedToGetGLTextureId = 111.
+    FailedToGetGLTextureId = sys::EVRTrackedCameraError_VRTrackedCameraError_FailedToGetGLTextureId,
+    /// EVRTrackedCameraError_VRTrackedCameraError_SharedTextureFailure = 112.
+    SharedTextureFailure = sys::EVRTrackedCameraError_VRTrackedCameraError_SharedTextureFailure,
+    /// EVRTrackedCameraError_VRTrackedCameraError_NoFrameAvailable = 113.
+    NoFrameAvailable = sys::EVRTrackedCameraError_VRTrackedCameraError_NoFrameAvailable,
+    /// EVRTrackedCameraError_VRTrackedCameraError_InvalidArgument = 114.
+    InvalidArgument = sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidArgument,
+    /// EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameBufferSize = 115.
+    InvalidFrameBufferSize = sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameBufferSize,
 }
 
-impl TrackedCameraError {
+impl Enum for TrackedCameraError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedCameraError) -> Option<Self> {
-        match val {
-            TrackedCameraError_None => Some(TrackedCameraError::None),
-            TrackedCameraError_OperationFailed => Some(TrackedCameraError::OperationFailed),
-            TrackedCameraError_InvalidHandle => Some(TrackedCameraError::InvalidHandle),
-            TrackedCameraError_InvalidFrameHeaderVersion => {
-                Some(TrackedCameraError::InvalidFrameHeaderVersion)
-            }
-            TrackedCameraError_OutOfHandles => Some(TrackedCameraError::OutOfHandles),
-            TrackedCameraError_IPCFailure => Some(TrackedCameraError::IPCFailure),
-            TrackedCameraError_NotSupportedForThisDevice => {
-                Some(TrackedCameraError::NotSupportedForThisDevice)
-            }
-            TrackedCameraError_SharedMemoryFailure => Some(TrackedCameraError::SharedMemoryFailure),
-            TrackedCameraError_FrameBufferingFailure => {
-                Some(TrackedCameraError::FrameBufferingFailure)
-            }
-            TrackedCameraError_StreamSetupFailure => Some(TrackedCameraError::StreamSetupFailure),
-            TrackedCameraError_InvalidGLTextureId => Some(TrackedCameraError::InvalidGLTextureId),
-            TrackedCameraError_InvalidSharedTextureHandle => {
-                Some(TrackedCameraError::InvalidSharedTextureHandle)
-            }
-            TrackedCameraError_FailedToGetGLTextureId => {
-                Some(TrackedCameraError::FailedToGetGLTextureId)
-            }
-            TrackedCameraError_SharedTextureFailure => {
-                Some(TrackedCameraError::SharedTextureFailure)
-            }
-            TrackedCameraError_NoFrameAvailable => Some(TrackedCameraError::NoFrameAvailable),
-            TrackedCameraError_InvalidArgument => Some(TrackedCameraError::InvalidArgument),
-            TrackedCameraError_InvalidFrameBufferSize => {
-                Some(TrackedCameraError::InvalidFrameBufferSize)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRTrackedCameraError_VRTrackedCameraError_None => Ok(TrackedCameraError::None),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_OperationFailed => Ok(TrackedCameraError::OperationFailed),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidHandle => Ok(TrackedCameraError::InvalidHandle),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameHeaderVersion => Ok(TrackedCameraError::InvalidFrameHeaderVersion),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_OutOfHandles => Ok(TrackedCameraError::OutOfHandle),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_IPCFailure => Ok(TrackedCameraError::Ipcfailure),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_NotSupportedForThisDevice => Ok(TrackedCameraError::NotSupportedForThisDevice),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_SharedMemoryFailure => Ok(TrackedCameraError::SharedMemoryFailure),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_FrameBufferingFailure => Ok(TrackedCameraError::FrameBufferingFailure),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_StreamSetupFailure => Ok(TrackedCameraError::StreamSetupFailure),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidGLTextureId => Ok(TrackedCameraError::InvalidGLTextureId),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidSharedTextureHandle => Ok(TrackedCameraError::InvalidSharedTextureHandle),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_FailedToGetGLTextureId => Ok(TrackedCameraError::FailedToGetGLTextureId),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_SharedTextureFailure => Ok(TrackedCameraError::SharedTextureFailure),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_NoFrameAvailable => Ok(TrackedCameraError::NoFrameAvailable),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidArgument => Ok(TrackedCameraError::InvalidArgument),
+             sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameBufferSize => Ok(TrackedCameraError::InvalidFrameBufferSize),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedCameraError> for TrackedCameraError {
-    fn from(val: RawTrackedCameraError) -> Self {
-        TrackedCameraError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedCameraError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedCameraFrameLayout(pub u32);
+impl fmt::Display for Invalid<TrackedCameraError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedCameraError.", self.0)
+    }
+}
 
-pub const TrackedCameraFrameLayout_Mono: RawTrackedCameraFrameLayout =
-    RawTrackedCameraFrameLayout(1);
-pub const TrackedCameraFrameLayout_Stereo: RawTrackedCameraFrameLayout =
-    RawTrackedCameraFrameLayout(2);
-pub const TrackedCameraFrameLayout_VerticalLayout: RawTrackedCameraFrameLayout =
-    RawTrackedCameraFrameLayout(16);
-pub const TrackedCameraFrameLayout_HorizontalLayout: RawTrackedCameraFrameLayout =
-    RawTrackedCameraFrameLayout(32);
+impl error::Error for Invalid<TrackedCameraError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedCameraError."
+    }
+}
 
+/// EVRTrackedCameraFrameLayout.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedCameraFrameLayout {
-    Mono = 1,
-    Stereo = 2,
-    VerticalLayout = 16,
-    HorizontalLayout = 32,
+    /// EVRTrackedCameraFrameLayout_Mono = 1.
+    Mono = sys::EVRTrackedCameraFrameLayout_Mono,
+    /// EVRTrackedCameraFrameLayout_Stereo = 2.
+    Stereo = sys::EVRTrackedCameraFrameLayout_Stereo,
+    /// EVRTrackedCameraFrameLayout_VerticalLayout = 16.
+    VerticalLayout = sys::EVRTrackedCameraFrameLayout_VerticalLayout,
+    /// EVRTrackedCameraFrameLayout_HorizontalLayout = 32.
+    HorizontalLayout = sys::EVRTrackedCameraFrameLayout_HorizontalLayout,
 }
 
-impl TrackedCameraFrameLayout {
+impl Enum for TrackedCameraFrameLayout {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedCameraFrameLayout) -> Option<Self> {
-        match val {
-            TrackedCameraFrameLayout_Mono => Some(TrackedCameraFrameLayout::Mono),
-            TrackedCameraFrameLayout_Stereo => Some(TrackedCameraFrameLayout::Stereo),
-            TrackedCameraFrameLayout_VerticalLayout => {
-                Some(TrackedCameraFrameLayout::VerticalLayout)
-            }
-            TrackedCameraFrameLayout_HorizontalLayout => {
-                Some(TrackedCameraFrameLayout::HorizontalLayout)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRTrackedCameraFrameLayout_Mono => Ok(TrackedCameraFrameLayout::Mono),
+             sys::EVRTrackedCameraFrameLayout_Stereo => Ok(TrackedCameraFrameLayout::Stereo),
+             sys::EVRTrackedCameraFrameLayout_VerticalLayout => Ok(TrackedCameraFrameLayout::VerticalLayout),
+             sys::EVRTrackedCameraFrameLayout_HorizontalLayout => Ok(TrackedCameraFrameLayout::HorizontalLayout),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedCameraFrameLayout> for TrackedCameraFrameLayout {
-    fn from(val: RawTrackedCameraFrameLayout) -> Self {
-        TrackedCameraFrameLayout::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedCameraFrameLayout.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawTrackedCameraFrameType(pub u32);
+impl fmt::Display for Invalid<TrackedCameraFrameLayout> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedCameraFrameLayout.", self.0)
+    }
+}
 
-pub const TrackedCameraFrameType_Distorted: RawTrackedCameraFrameType =
-    RawTrackedCameraFrameType(0);
-pub const TrackedCameraFrameType_Undistorted: RawTrackedCameraFrameType =
-    RawTrackedCameraFrameType(1);
-pub const TrackedCameraFrameType_MaximumUndistorted: RawTrackedCameraFrameType =
-    RawTrackedCameraFrameType(2);
-pub const TrackedCameraFrameType_CAMERA_FRAME_TYPES: RawTrackedCameraFrameType =
-    RawTrackedCameraFrameType(3);
+impl error::Error for Invalid<TrackedCameraFrameLayout> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedCameraFrameLayout."
+    }
+}
 
+/// EVRTrackedCameraFrameType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum TrackedCameraFrameType {
-    Distorted = 0,
-    Undistorted = 1,
-    MaximumUndistorted = 2,
-    CAMERA_FRAME_TYPES = 3,
+    /// EVRTrackedCameraFrameType_VRTrackedCameraFrameType_Distorted = 0.
+    Distorted = sys::EVRTrackedCameraFrameType_VRTrackedCameraFrameType_Distorted,
+    /// EVRTrackedCameraFrameType_VRTrackedCameraFrameType_Undistorted = 1.
+    Undistorted = sys::EVRTrackedCameraFrameType_VRTrackedCameraFrameType_Undistorted,
+    /// EVRTrackedCameraFrameType_VRTrackedCameraFrameType_MaximumUndistorted = 2.
+    MaximumUndistorted = sys::EVRTrackedCameraFrameType_VRTrackedCameraFrameType_MaximumUndistorted,
+    /// EVRTrackedCameraFrameType_MAX_CAMERA_FRAME_TYPES = 3.
+    CameraFrameType = sys::EVRTrackedCameraFrameType_MAX_CAMERA_FRAME_TYPES,
 }
 
-impl TrackedCameraFrameType {
+impl Enum for TrackedCameraFrameType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawTrackedCameraFrameType) -> Option<Self> {
-        match val {
-            TrackedCameraFrameType_Distorted => Some(TrackedCameraFrameType::Distorted),
-            TrackedCameraFrameType_Undistorted => Some(TrackedCameraFrameType::Undistorted),
-            TrackedCameraFrameType_MaximumUndistorted => {
-                Some(TrackedCameraFrameType::MaximumUndistorted)
-            }
-            TrackedCameraFrameType_CAMERA_FRAME_TYPES => {
-                Some(TrackedCameraFrameType::CAMERA_FRAME_TYPES)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRTrackedCameraFrameType_VRTrackedCameraFrameType_Distorted => Ok(TrackedCameraFrameType::Distorted),
+             sys::EVRTrackedCameraFrameType_VRTrackedCameraFrameType_Undistorted => Ok(TrackedCameraFrameType::Undistorted),
+             sys::EVRTrackedCameraFrameType_VRTrackedCameraFrameType_MaximumUndistorted => Ok(TrackedCameraFrameType::MaximumUndistorted),
+             sys::EVRTrackedCameraFrameType_MAX_CAMERA_FRAME_TYPES => Ok(TrackedCameraFrameType::CameraFrameType),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawTrackedCameraFrameType> for TrackedCameraFrameType {
-    fn from(val: RawTrackedCameraFrameType) -> Self {
-        TrackedCameraFrameType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for TrackedCameraFrameType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawDistortionFunctionType(pub u32);
+impl fmt::Display for Invalid<TrackedCameraFrameType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of TrackedCameraFrameType.", self.0)
+    }
+}
 
-pub const DistortionFunctionType_None: RawDistortionFunctionType = RawDistortionFunctionType(0);
-pub const DistortionFunctionType_FTheta: RawDistortionFunctionType = RawDistortionFunctionType(1);
-pub const DistortionFunctionType_Extended_FTheta: RawDistortionFunctionType =
-    RawDistortionFunctionType(2);
-pub const DistortionFunctionType_DISTORTION_FUNCTION_TYPES: RawDistortionFunctionType =
-    RawDistortionFunctionType(3);
+impl error::Error for Invalid<TrackedCameraFrameType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of TrackedCameraFrameType."
+    }
+}
 
+/// EVRDistortionFunctionType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DistortionFunctionType {
-    None = 0,
-    FTheta = 1,
-    Extended_FTheta = 2,
-    DISTORTION_FUNCTION_TYPES = 3,
+    /// EVRDistortionFunctionType_VRDistortionFunctionType_None = 0.
+    None = sys::EVRDistortionFunctionType_VRDistortionFunctionType_None,
+    /// EVRDistortionFunctionType_VRDistortionFunctionType_FTheta = 1.
+    Ftheum = sys::EVRDistortionFunctionType_VRDistortionFunctionType_FTheta,
+    /// EVRDistortionFunctionType_VRDistortionFucntionType_Extended_FTheta = 2.
+    ExtendedFTheum = sys::EVRDistortionFunctionType_VRDistortionFucntionType_Extended_FTheta,
+    /// EVRDistortionFunctionType_MAX_DISTORTION_FUNCTION_TYPES = 3.
+    DistortionFunctionType = sys::EVRDistortionFunctionType_MAX_DISTORTION_FUNCTION_TYPES,
 }
 
-impl DistortionFunctionType {
+impl Enum for DistortionFunctionType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawDistortionFunctionType) -> Option<Self> {
-        match val {
-            DistortionFunctionType_None => Some(DistortionFunctionType::None),
-            DistortionFunctionType_FTheta => Some(DistortionFunctionType::FTheta),
-            DistortionFunctionType_Extended_FTheta => Some(DistortionFunctionType::Extended_FTheta),
-            DistortionFunctionType_DISTORTION_FUNCTION_TYPES => {
-                Some(DistortionFunctionType::DISTORTION_FUNCTION_TYPES)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRDistortionFunctionType_VRDistortionFunctionType_None => Ok(DistortionFunctionType::None),
+             sys::EVRDistortionFunctionType_VRDistortionFunctionType_FTheta => Ok(DistortionFunctionType::Ftheum),
+             sys::EVRDistortionFunctionType_VRDistortionFucntionType_Extended_FTheta => Ok(DistortionFunctionType::ExtendedFTheum),
+             sys::EVRDistortionFunctionType_MAX_DISTORTION_FUNCTION_TYPES => Ok(DistortionFunctionType::DistortionFunctionType),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawDistortionFunctionType> for DistortionFunctionType {
-    fn from(val: RawDistortionFunctionType) -> Self {
-        DistortionFunctionType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for DistortionFunctionType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawVSync(pub u32);
+impl fmt::Display for Invalid<DistortionFunctionType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of DistortionFunctionType.", self.0)
+    }
+}
 
-pub const VSync_None: RawVSync = RawVSync(0);
-pub const VSync_WaitRender: RawVSync = RawVSync(1);
-pub const VSync_NoWaitRender: RawVSync = RawVSync(2);
+impl error::Error for Invalid<DistortionFunctionType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of DistortionFunctionType."
+    }
+}
 
+/// EVSync.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum VSync {
-    None = 0,
-    WaitRender = 1,
-    NoWaitRender = 2,
+pub enum Vsync {
+    /// EVSync_VSync_None = 0.
+    None = sys::EVSync_VSync_None,
+    /// EVSync_VSync_WaitRender = 1.
+    WaitRender = sys::EVSync_VSync_WaitRender,
+    /// EVSync_VSync_NoWaitRender = 2.
+    NoWaitRender = sys::EVSync_VSync_NoWaitRender,
 }
 
-impl VSync {
+impl Enum for Vsync {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawVSync) -> Option<Self> {
-        match val {
-            VSync_None => Some(VSync::None),
-            VSync_WaitRender => Some(VSync::WaitRender),
-            VSync_NoWaitRender => Some(VSync::NoWaitRender),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVSync_VSync_None => Ok(Vsync::None),
+             sys::EVSync_VSync_WaitRender => Ok(Vsync::WaitRender),
+             sys::EVSync_VSync_NoWaitRender => Ok(Vsync::NoWaitRender),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawVSync> for VSync {
-    fn from(val: RawVSync) -> Self {
-        VSync::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for VSync.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawMuraCorrectionMode(pub u32);
+impl fmt::Display for Invalid<Vsync> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of Vsync.", self.0)
+    }
+}
 
-pub const MuraCorrectionMode_Default: RawMuraCorrectionMode = RawMuraCorrectionMode(0);
-pub const MuraCorrectionMode_NoCorrection: RawMuraCorrectionMode = RawMuraCorrectionMode(1);
+impl error::Error for Invalid<Vsync> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of Vsync."
+    }
+}
 
+/// EVRMuraCorrectionMode.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum MuraCorrectionMode {
-    Default = 0,
-    NoCorrection = 1,
+    /// EVRMuraCorrectionMode_Default = 0.
+    Default = sys::EVRMuraCorrectionMode_Default,
+    /// EVRMuraCorrectionMode_NoCorrection = 1.
+    NoCorrection = sys::EVRMuraCorrectionMode_NoCorrection,
 }
 
-impl MuraCorrectionMode {
+impl Enum for MuraCorrectionMode {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawMuraCorrectionMode) -> Option<Self> {
-        match val {
-            MuraCorrectionMode_Default => Some(MuraCorrectionMode::Default),
-            MuraCorrectionMode_NoCorrection => Some(MuraCorrectionMode::NoCorrection),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRMuraCorrectionMode_Default => Ok(MuraCorrectionMode::Default),
+             sys::EVRMuraCorrectionMode_NoCorrection => Ok(MuraCorrectionMode::NoCorrection),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawMuraCorrectionMode> for MuraCorrectionMode {
-    fn from(val: RawMuraCorrectionMode) -> Self {
-        MuraCorrectionMode::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for MuraCorrectionMode.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawImu_OffScaleFlags(pub u32);
+impl fmt::Display for Invalid<MuraCorrectionMode> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of MuraCorrectionMode.", self.0)
+    }
+}
 
-pub const Imu_OffScaleFlags_AccelX: RawImu_OffScaleFlags = RawImu_OffScaleFlags(1);
-pub const Imu_OffScaleFlags_AccelY: RawImu_OffScaleFlags = RawImu_OffScaleFlags(2);
-pub const Imu_OffScaleFlags_AccelZ: RawImu_OffScaleFlags = RawImu_OffScaleFlags(4);
-pub const Imu_OffScaleFlags_GyroX: RawImu_OffScaleFlags = RawImu_OffScaleFlags(8);
-pub const Imu_OffScaleFlags_GyroY: RawImu_OffScaleFlags = RawImu_OffScaleFlags(16);
-pub const Imu_OffScaleFlags_GyroZ: RawImu_OffScaleFlags = RawImu_OffScaleFlags(32);
+impl error::Error for Invalid<MuraCorrectionMode> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of MuraCorrectionMode."
+    }
+}
 
+/// Imu_OffScaleFlags.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum Imu_OffScaleFlags {
-    AccelX = 1,
-    AccelY = 2,
-    AccelZ = 4,
-    GyroX = 8,
-    GyroY = 16,
-    GyroZ = 32,
+pub enum ImuOffScaleFlag {
+    /// Imu_OffScaleFlags_OffScale_AccelX = 1.
+    AccelX = sys::Imu_OffScaleFlags_OffScale_AccelX,
+    /// Imu_OffScaleFlags_OffScale_AccelY = 2.
+    AccelY = sys::Imu_OffScaleFlags_OffScale_AccelY,
+    /// Imu_OffScaleFlags_OffScale_AccelZ = 4.
+    AccelZ = sys::Imu_OffScaleFlags_OffScale_AccelZ,
+    /// Imu_OffScaleFlags_OffScale_GyroX = 8.
+    GyroX = sys::Imu_OffScaleFlags_OffScale_GyroX,
+    /// Imu_OffScaleFlags_OffScale_GyroY = 16.
+    GyroY = sys::Imu_OffScaleFlags_OffScale_GyroY,
+    /// Imu_OffScaleFlags_OffScale_GyroZ = 32.
+    GyroZ = sys::Imu_OffScaleFlags_OffScale_GyroZ,
 }
 
-impl Imu_OffScaleFlags {
+impl Enum for ImuOffScaleFlag {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawImu_OffScaleFlags) -> Option<Self> {
-        match val {
-            Imu_OffScaleFlags_AccelX => Some(Imu_OffScaleFlags::AccelX),
-            Imu_OffScaleFlags_AccelY => Some(Imu_OffScaleFlags::AccelY),
-            Imu_OffScaleFlags_AccelZ => Some(Imu_OffScaleFlags::AccelZ),
-            Imu_OffScaleFlags_GyroX => Some(Imu_OffScaleFlags::GyroX),
-            Imu_OffScaleFlags_GyroY => Some(Imu_OffScaleFlags::GyroY),
-            Imu_OffScaleFlags_GyroZ => Some(Imu_OffScaleFlags::GyroZ),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::Imu_OffScaleFlags_OffScale_AccelX => Ok(ImuOffScaleFlag::AccelX),
+             sys::Imu_OffScaleFlags_OffScale_AccelY => Ok(ImuOffScaleFlag::AccelY),
+             sys::Imu_OffScaleFlags_OffScale_AccelZ => Ok(ImuOffScaleFlag::AccelZ),
+             sys::Imu_OffScaleFlags_OffScale_GyroX => Ok(ImuOffScaleFlag::GyroX),
+             sys::Imu_OffScaleFlags_OffScale_GyroY => Ok(ImuOffScaleFlag::GyroY),
+             sys::Imu_OffScaleFlags_OffScale_GyroZ => Ok(ImuOffScaleFlag::GyroZ),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawImu_OffScaleFlags> for Imu_OffScaleFlags {
-    fn from(val: RawImu_OffScaleFlags) -> Self {
-        Imu_OffScaleFlags::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for Imu_OffScaleFlags.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawApplicationError(pub u32);
+impl fmt::Display for Invalid<ImuOffScaleFlag> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ImuOffScaleFlag.", self.0)
+    }
+}
 
-pub const ApplicationError_None: RawApplicationError = RawApplicationError(0);
-pub const ApplicationError_AppKeyAlreadyExists: RawApplicationError = RawApplicationError(100);
-pub const ApplicationError_NoManifest: RawApplicationError = RawApplicationError(101);
-pub const ApplicationError_NoApplication: RawApplicationError = RawApplicationError(102);
-pub const ApplicationError_InvalidIndex: RawApplicationError = RawApplicationError(103);
-pub const ApplicationError_UnknownApplication: RawApplicationError = RawApplicationError(104);
-pub const ApplicationError_IPCFailed: RawApplicationError = RawApplicationError(105);
-pub const ApplicationError_ApplicationAlreadyRunning: RawApplicationError =
-    RawApplicationError(106);
-pub const ApplicationError_InvalidManifest: RawApplicationError = RawApplicationError(107);
-pub const ApplicationError_InvalidApplication: RawApplicationError = RawApplicationError(108);
-pub const ApplicationError_LaunchFailed: RawApplicationError = RawApplicationError(109);
-pub const ApplicationError_ApplicationAlreadyStarting: RawApplicationError =
-    RawApplicationError(110);
-pub const ApplicationError_LaunchInProgress: RawApplicationError = RawApplicationError(111);
-pub const ApplicationError_OldApplicationQuitting: RawApplicationError = RawApplicationError(112);
-pub const ApplicationError_TransitionAborted: RawApplicationError = RawApplicationError(113);
-pub const ApplicationError_IsTemplate: RawApplicationError = RawApplicationError(114);
-pub const ApplicationError_SteamVRIsExiting: RawApplicationError = RawApplicationError(115);
-pub const ApplicationError_BufferTooSmall: RawApplicationError = RawApplicationError(200);
-pub const ApplicationError_PropertyNotSet: RawApplicationError = RawApplicationError(201);
-pub const ApplicationError_UnknownProperty: RawApplicationError = RawApplicationError(202);
-pub const ApplicationError_InvalidParameter: RawApplicationError = RawApplicationError(203);
+impl error::Error for Invalid<ImuOffScaleFlag> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ImuOffScaleFlag."
+    }
+}
 
+/// EVRApplicationError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ApplicationError {
-    None = 0,
-    AppKeyAlreadyExists = 100,
-    NoManifest = 101,
-    NoApplication = 102,
-    InvalidIndex = 103,
-    UnknownApplication = 104,
-    IPCFailed = 105,
-    ApplicationAlreadyRunning = 106,
-    InvalidManifest = 107,
-    InvalidApplication = 108,
-    LaunchFailed = 109,
-    ApplicationAlreadyStarting = 110,
-    LaunchInProgress = 111,
-    OldApplicationQuitting = 112,
-    TransitionAborted = 113,
-    IsTemplate = 114,
-    SteamVRIsExiting = 115,
-    BufferTooSmall = 200,
-    PropertyNotSet = 201,
-    UnknownProperty = 202,
-    InvalidParameter = 203,
+    /// EVRApplicationError_VRApplicationError_None = 0.
+    None = sys::EVRApplicationError_VRApplicationError_None,
+    /// EVRApplicationError_VRApplicationError_AppKeyAlreadyExists = 100.
+    AppKeyAlreadyExist = sys::EVRApplicationError_VRApplicationError_AppKeyAlreadyExists,
+    /// EVRApplicationError_VRApplicationError_NoManifest = 101.
+    NoManifest = sys::EVRApplicationError_VRApplicationError_NoManifest,
+    /// EVRApplicationError_VRApplicationError_NoApplication = 102.
+    NoApplication = sys::EVRApplicationError_VRApplicationError_NoApplication,
+    /// EVRApplicationError_VRApplicationError_InvalidIndex = 103.
+    InvalidIndex = sys::EVRApplicationError_VRApplicationError_InvalidIndex,
+    /// EVRApplicationError_VRApplicationError_UnknownApplication = 104.
+    UnknownApplication = sys::EVRApplicationError_VRApplicationError_UnknownApplication,
+    /// EVRApplicationError_VRApplicationError_IPCFailed = 105.
+    Ipcfailed = sys::EVRApplicationError_VRApplicationError_IPCFailed,
+    /// EVRApplicationError_VRApplicationError_ApplicationAlreadyRunning = 106.
+    ApplicationAlreadyRunning = sys::EVRApplicationError_VRApplicationError_ApplicationAlreadyRunning,
+    /// EVRApplicationError_VRApplicationError_InvalidManifest = 107.
+    InvalidManifest = sys::EVRApplicationError_VRApplicationError_InvalidManifest,
+    /// EVRApplicationError_VRApplicationError_InvalidApplication = 108.
+    InvalidApplication = sys::EVRApplicationError_VRApplicationError_InvalidApplication,
+    /// EVRApplicationError_VRApplicationError_LaunchFailed = 109.
+    LaunchFailed = sys::EVRApplicationError_VRApplicationError_LaunchFailed,
+    /// EVRApplicationError_VRApplicationError_ApplicationAlreadyStarting = 110.
+    ApplicationAlreadyStarting = sys::EVRApplicationError_VRApplicationError_ApplicationAlreadyStarting,
+    /// EVRApplicationError_VRApplicationError_LaunchInProgress = 111.
+    LaunchInProgress = sys::EVRApplicationError_VRApplicationError_LaunchInProgress,
+    /// EVRApplicationError_VRApplicationError_OldApplicationQuitting = 112.
+    OldApplicationQuitting = sys::EVRApplicationError_VRApplicationError_OldApplicationQuitting,
+    /// EVRApplicationError_VRApplicationError_TransitionAborted = 113.
+    TransitionAborted = sys::EVRApplicationError_VRApplicationError_TransitionAborted,
+    /// EVRApplicationError_VRApplicationError_IsTemplate = 114.
+    IsTemplate = sys::EVRApplicationError_VRApplicationError_IsTemplate,
+    /// EVRApplicationError_VRApplicationError_SteamVRIsExiting = 115.
+    SteamVRIsExiting = sys::EVRApplicationError_VRApplicationError_SteamVRIsExiting,
+    /// EVRApplicationError_VRApplicationError_BufferTooSmall = 200.
+    BufferTooSmall = sys::EVRApplicationError_VRApplicationError_BufferTooSmall,
+    /// EVRApplicationError_VRApplicationError_PropertyNotSet = 201.
+    PropertyNotSet = sys::EVRApplicationError_VRApplicationError_PropertyNotSet,
+    /// EVRApplicationError_VRApplicationError_UnknownProperty = 202.
+    UnknownProperty = sys::EVRApplicationError_VRApplicationError_UnknownProperty,
+    /// EVRApplicationError_VRApplicationError_InvalidParameter = 203.
+    InvalidParameter = sys::EVRApplicationError_VRApplicationError_InvalidParameter,
 }
 
-impl ApplicationError {
+impl Enum for ApplicationError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawApplicationError) -> Option<Self> {
-        match val {
-            ApplicationError_None => Some(ApplicationError::None),
-            ApplicationError_AppKeyAlreadyExists => Some(ApplicationError::AppKeyAlreadyExists),
-            ApplicationError_NoManifest => Some(ApplicationError::NoManifest),
-            ApplicationError_NoApplication => Some(ApplicationError::NoApplication),
-            ApplicationError_InvalidIndex => Some(ApplicationError::InvalidIndex),
-            ApplicationError_UnknownApplication => Some(ApplicationError::UnknownApplication),
-            ApplicationError_IPCFailed => Some(ApplicationError::IPCFailed),
-            ApplicationError_ApplicationAlreadyRunning => {
-                Some(ApplicationError::ApplicationAlreadyRunning)
-            }
-            ApplicationError_InvalidManifest => Some(ApplicationError::InvalidManifest),
-            ApplicationError_InvalidApplication => Some(ApplicationError::InvalidApplication),
-            ApplicationError_LaunchFailed => Some(ApplicationError::LaunchFailed),
-            ApplicationError_ApplicationAlreadyStarting => {
-                Some(ApplicationError::ApplicationAlreadyStarting)
-            }
-            ApplicationError_LaunchInProgress => Some(ApplicationError::LaunchInProgress),
-            ApplicationError_OldApplicationQuitting => {
-                Some(ApplicationError::OldApplicationQuitting)
-            }
-            ApplicationError_TransitionAborted => Some(ApplicationError::TransitionAborted),
-            ApplicationError_IsTemplate => Some(ApplicationError::IsTemplate),
-            ApplicationError_SteamVRIsExiting => Some(ApplicationError::SteamVRIsExiting),
-            ApplicationError_BufferTooSmall => Some(ApplicationError::BufferTooSmall),
-            ApplicationError_PropertyNotSet => Some(ApplicationError::PropertyNotSet),
-            ApplicationError_UnknownProperty => Some(ApplicationError::UnknownProperty),
-            ApplicationError_InvalidParameter => Some(ApplicationError::InvalidParameter),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRApplicationError_VRApplicationError_None => Ok(ApplicationError::None),
+             sys::EVRApplicationError_VRApplicationError_AppKeyAlreadyExists => Ok(ApplicationError::AppKeyAlreadyExist),
+             sys::EVRApplicationError_VRApplicationError_NoManifest => Ok(ApplicationError::NoManifest),
+             sys::EVRApplicationError_VRApplicationError_NoApplication => Ok(ApplicationError::NoApplication),
+             sys::EVRApplicationError_VRApplicationError_InvalidIndex => Ok(ApplicationError::InvalidIndex),
+             sys::EVRApplicationError_VRApplicationError_UnknownApplication => Ok(ApplicationError::UnknownApplication),
+             sys::EVRApplicationError_VRApplicationError_IPCFailed => Ok(ApplicationError::Ipcfailed),
+             sys::EVRApplicationError_VRApplicationError_ApplicationAlreadyRunning => Ok(ApplicationError::ApplicationAlreadyRunning),
+             sys::EVRApplicationError_VRApplicationError_InvalidManifest => Ok(ApplicationError::InvalidManifest),
+             sys::EVRApplicationError_VRApplicationError_InvalidApplication => Ok(ApplicationError::InvalidApplication),
+             sys::EVRApplicationError_VRApplicationError_LaunchFailed => Ok(ApplicationError::LaunchFailed),
+             sys::EVRApplicationError_VRApplicationError_ApplicationAlreadyStarting => Ok(ApplicationError::ApplicationAlreadyStarting),
+             sys::EVRApplicationError_VRApplicationError_LaunchInProgress => Ok(ApplicationError::LaunchInProgress),
+             sys::EVRApplicationError_VRApplicationError_OldApplicationQuitting => Ok(ApplicationError::OldApplicationQuitting),
+             sys::EVRApplicationError_VRApplicationError_TransitionAborted => Ok(ApplicationError::TransitionAborted),
+             sys::EVRApplicationError_VRApplicationError_IsTemplate => Ok(ApplicationError::IsTemplate),
+             sys::EVRApplicationError_VRApplicationError_SteamVRIsExiting => Ok(ApplicationError::SteamVRIsExiting),
+             sys::EVRApplicationError_VRApplicationError_BufferTooSmall => Ok(ApplicationError::BufferTooSmall),
+             sys::EVRApplicationError_VRApplicationError_PropertyNotSet => Ok(ApplicationError::PropertyNotSet),
+             sys::EVRApplicationError_VRApplicationError_UnknownProperty => Ok(ApplicationError::UnknownProperty),
+             sys::EVRApplicationError_VRApplicationError_InvalidParameter => Ok(ApplicationError::InvalidParameter),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawApplicationError> for ApplicationError {
-    fn from(val: RawApplicationError) -> Self {
-        ApplicationError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ApplicationError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawApplicationProperty(pub u32);
+impl fmt::Display for Invalid<ApplicationError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ApplicationError.", self.0)
+    }
+}
 
-pub const ApplicationProperty_Name_String: RawApplicationProperty = RawApplicationProperty(0);
-pub const ApplicationProperty_LaunchType_String: RawApplicationProperty =
-    RawApplicationProperty(11);
-pub const ApplicationProperty_WorkingDirectory_String: RawApplicationProperty =
-    RawApplicationProperty(12);
-pub const ApplicationProperty_BinaryPath_String: RawApplicationProperty =
-    RawApplicationProperty(13);
-pub const ApplicationProperty_Arguments_String: RawApplicationProperty = RawApplicationProperty(14);
-pub const ApplicationProperty_URL_String: RawApplicationProperty = RawApplicationProperty(15);
-pub const ApplicationProperty_Description_String: RawApplicationProperty =
-    RawApplicationProperty(50);
-pub const ApplicationProperty_NewsURL_String: RawApplicationProperty = RawApplicationProperty(51);
-pub const ApplicationProperty_ImagePath_String: RawApplicationProperty = RawApplicationProperty(52);
-pub const ApplicationProperty_Source_String: RawApplicationProperty = RawApplicationProperty(53);
-pub const ApplicationProperty_ActionManifestURL_String: RawApplicationProperty =
-    RawApplicationProperty(54);
-pub const ApplicationProperty_IsDashboardOverlay_Bool: RawApplicationProperty =
-    RawApplicationProperty(60);
-pub const ApplicationProperty_IsTemplate_Bool: RawApplicationProperty = RawApplicationProperty(61);
-pub const ApplicationProperty_IsInstanced_Bool: RawApplicationProperty = RawApplicationProperty(62);
-pub const ApplicationProperty_IsInternal_Bool: RawApplicationProperty = RawApplicationProperty(63);
-pub const ApplicationProperty_WantsCompositorPauseInStandby_Bool: RawApplicationProperty =
-    RawApplicationProperty(64);
-pub const ApplicationProperty_LastLaunchTime_Uint64: RawApplicationProperty =
-    RawApplicationProperty(70);
+impl error::Error for Invalid<ApplicationError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ApplicationError."
+    }
+}
 
+/// EVRApplicationProperty.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ApplicationProperty {
-    Name_String = 0,
-    LaunchType_String = 11,
-    WorkingDirectory_String = 12,
-    BinaryPath_String = 13,
-    Arguments_String = 14,
-    URL_String = 15,
-    Description_String = 50,
-    NewsURL_String = 51,
-    ImagePath_String = 52,
-    Source_String = 53,
-    ActionManifestURL_String = 54,
-    IsDashboardOverlay_Bool = 60,
-    IsTemplate_Bool = 61,
-    IsInstanced_Bool = 62,
-    IsInternal_Bool = 63,
-    WantsCompositorPauseInStandby_Bool = 64,
-    LastLaunchTime_Uint64 = 70,
+    /// EVRApplicationProperty_VRApplicationProperty_Name_String = 0.
+    NameString = sys::EVRApplicationProperty_VRApplicationProperty_Name_String,
+    /// EVRApplicationProperty_VRApplicationProperty_LaunchType_String = 11.
+    LaunchTypeString = sys::EVRApplicationProperty_VRApplicationProperty_LaunchType_String,
+    /// EVRApplicationProperty_VRApplicationProperty_WorkingDirectory_String = 12.
+    WorkingDirectoryString = sys::EVRApplicationProperty_VRApplicationProperty_WorkingDirectory_String,
+    /// EVRApplicationProperty_VRApplicationProperty_BinaryPath_String = 13.
+    BinaryPathString = sys::EVRApplicationProperty_VRApplicationProperty_BinaryPath_String,
+    /// EVRApplicationProperty_VRApplicationProperty_Arguments_String = 14.
+    ArgumentsString = sys::EVRApplicationProperty_VRApplicationProperty_Arguments_String,
+    /// EVRApplicationProperty_VRApplicationProperty_URL_String = 15.
+    UrlString = sys::EVRApplicationProperty_VRApplicationProperty_URL_String,
+    /// EVRApplicationProperty_VRApplicationProperty_Description_String = 50.
+    DescriptionString = sys::EVRApplicationProperty_VRApplicationProperty_Description_String,
+    /// EVRApplicationProperty_VRApplicationProperty_NewsURL_String = 51.
+    NewsURLString = sys::EVRApplicationProperty_VRApplicationProperty_NewsURL_String,
+    /// EVRApplicationProperty_VRApplicationProperty_ImagePath_String = 52.
+    ImagePathString = sys::EVRApplicationProperty_VRApplicationProperty_ImagePath_String,
+    /// EVRApplicationProperty_VRApplicationProperty_Source_String = 53.
+    SourceString = sys::EVRApplicationProperty_VRApplicationProperty_Source_String,
+    /// EVRApplicationProperty_VRApplicationProperty_ActionManifestURL_String = 54.
+    ActionManifestURLString = sys::EVRApplicationProperty_VRApplicationProperty_ActionManifestURL_String,
+    /// EVRApplicationProperty_VRApplicationProperty_IsDashboardOverlay_Bool = 60.
+    IsDashboardOverlayBool = sys::EVRApplicationProperty_VRApplicationProperty_IsDashboardOverlay_Bool,
+    /// EVRApplicationProperty_VRApplicationProperty_IsTemplate_Bool = 61.
+    IsTemplateBool = sys::EVRApplicationProperty_VRApplicationProperty_IsTemplate_Bool,
+    /// EVRApplicationProperty_VRApplicationProperty_IsInstanced_Bool = 62.
+    IsInstancedBool = sys::EVRApplicationProperty_VRApplicationProperty_IsInstanced_Bool,
+    /// EVRApplicationProperty_VRApplicationProperty_IsInternal_Bool = 63.
+    IsInternalBool = sys::EVRApplicationProperty_VRApplicationProperty_IsInternal_Bool,
+    /// EVRApplicationProperty_VRApplicationProperty_WantsCompositorPauseInStandby_Bool = 64.
+    WantsCompositorPauseInStandbyBool = sys::EVRApplicationProperty_VRApplicationProperty_WantsCompositorPauseInStandby_Bool,
+    /// EVRApplicationProperty_VRApplicationProperty_LastLaunchTime_Uint64 = 70.
+    LastLaunchTimeUint64 = sys::EVRApplicationProperty_VRApplicationProperty_LastLaunchTime_Uint64,
 }
 
-impl ApplicationProperty {
+impl Enum for ApplicationProperty {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawApplicationProperty) -> Option<Self> {
-        match val {
-            ApplicationProperty_Name_String => Some(ApplicationProperty::Name_String),
-            ApplicationProperty_LaunchType_String => Some(ApplicationProperty::LaunchType_String),
-            ApplicationProperty_WorkingDirectory_String => {
-                Some(ApplicationProperty::WorkingDirectory_String)
-            }
-            ApplicationProperty_BinaryPath_String => Some(ApplicationProperty::BinaryPath_String),
-            ApplicationProperty_Arguments_String => Some(ApplicationProperty::Arguments_String),
-            ApplicationProperty_URL_String => Some(ApplicationProperty::URL_String),
-            ApplicationProperty_Description_String => Some(ApplicationProperty::Description_String),
-            ApplicationProperty_NewsURL_String => Some(ApplicationProperty::NewsURL_String),
-            ApplicationProperty_ImagePath_String => Some(ApplicationProperty::ImagePath_String),
-            ApplicationProperty_Source_String => Some(ApplicationProperty::Source_String),
-            ApplicationProperty_ActionManifestURL_String => {
-                Some(ApplicationProperty::ActionManifestURL_String)
-            }
-            ApplicationProperty_IsDashboardOverlay_Bool => {
-                Some(ApplicationProperty::IsDashboardOverlay_Bool)
-            }
-            ApplicationProperty_IsTemplate_Bool => Some(ApplicationProperty::IsTemplate_Bool),
-            ApplicationProperty_IsInstanced_Bool => Some(ApplicationProperty::IsInstanced_Bool),
-            ApplicationProperty_IsInternal_Bool => Some(ApplicationProperty::IsInternal_Bool),
-            ApplicationProperty_WantsCompositorPauseInStandby_Bool => {
-                Some(ApplicationProperty::WantsCompositorPauseInStandby_Bool)
-            }
-            ApplicationProperty_LastLaunchTime_Uint64 => {
-                Some(ApplicationProperty::LastLaunchTime_Uint64)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRApplicationProperty_VRApplicationProperty_Name_String => Ok(ApplicationProperty::NameString),
+             sys::EVRApplicationProperty_VRApplicationProperty_LaunchType_String => Ok(ApplicationProperty::LaunchTypeString),
+             sys::EVRApplicationProperty_VRApplicationProperty_WorkingDirectory_String => Ok(ApplicationProperty::WorkingDirectoryString),
+             sys::EVRApplicationProperty_VRApplicationProperty_BinaryPath_String => Ok(ApplicationProperty::BinaryPathString),
+             sys::EVRApplicationProperty_VRApplicationProperty_Arguments_String => Ok(ApplicationProperty::ArgumentsString),
+             sys::EVRApplicationProperty_VRApplicationProperty_URL_String => Ok(ApplicationProperty::UrlString),
+             sys::EVRApplicationProperty_VRApplicationProperty_Description_String => Ok(ApplicationProperty::DescriptionString),
+             sys::EVRApplicationProperty_VRApplicationProperty_NewsURL_String => Ok(ApplicationProperty::NewsURLString),
+             sys::EVRApplicationProperty_VRApplicationProperty_ImagePath_String => Ok(ApplicationProperty::ImagePathString),
+             sys::EVRApplicationProperty_VRApplicationProperty_Source_String => Ok(ApplicationProperty::SourceString),
+             sys::EVRApplicationProperty_VRApplicationProperty_ActionManifestURL_String => Ok(ApplicationProperty::ActionManifestURLString),
+             sys::EVRApplicationProperty_VRApplicationProperty_IsDashboardOverlay_Bool => Ok(ApplicationProperty::IsDashboardOverlayBool),
+             sys::EVRApplicationProperty_VRApplicationProperty_IsTemplate_Bool => Ok(ApplicationProperty::IsTemplateBool),
+             sys::EVRApplicationProperty_VRApplicationProperty_IsInstanced_Bool => Ok(ApplicationProperty::IsInstancedBool),
+             sys::EVRApplicationProperty_VRApplicationProperty_IsInternal_Bool => Ok(ApplicationProperty::IsInternalBool),
+             sys::EVRApplicationProperty_VRApplicationProperty_WantsCompositorPauseInStandby_Bool => Ok(ApplicationProperty::WantsCompositorPauseInStandbyBool),
+             sys::EVRApplicationProperty_VRApplicationProperty_LastLaunchTime_Uint64 => Ok(ApplicationProperty::LastLaunchTimeUint64),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawApplicationProperty> for ApplicationProperty {
-    fn from(val: RawApplicationProperty) -> Self {
-        ApplicationProperty::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ApplicationProperty.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawApplicationTransitionState(pub u32);
+impl fmt::Display for Invalid<ApplicationProperty> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ApplicationProperty.", self.0)
+    }
+}
 
-pub const ApplicationTransitionState_None: RawApplicationTransitionState =
-    RawApplicationTransitionState(0);
-pub const ApplicationTransitionState_OldAppQuitSent: RawApplicationTransitionState =
-    RawApplicationTransitionState(10);
-pub const ApplicationTransitionState_WaitingForExternalLaunch: RawApplicationTransitionState =
-    RawApplicationTransitionState(11);
-pub const ApplicationTransitionState_NewAppLaunched: RawApplicationTransitionState =
-    RawApplicationTransitionState(20);
+impl error::Error for Invalid<ApplicationProperty> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ApplicationProperty."
+    }
+}
 
+/// EVRApplicationTransitionState.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ApplicationTransitionState {
-    None = 0,
-    OldAppQuitSent = 10,
-    WaitingForExternalLaunch = 11,
-    NewAppLaunched = 20,
+    /// EVRApplicationTransitionState_VRApplicationTransition_None = 0.
+    None = sys::EVRApplicationTransitionState_VRApplicationTransition_None,
+    /// EVRApplicationTransitionState_VRApplicationTransition_OldAppQuitSent = 10.
+    OldAppQuitSent = sys::EVRApplicationTransitionState_VRApplicationTransition_OldAppQuitSent,
+    /// EVRApplicationTransitionState_VRApplicationTransition_WaitingForExternalLaunch = 11.
+    WaitingForExternalLaunch = sys::EVRApplicationTransitionState_VRApplicationTransition_WaitingForExternalLaunch,
+    /// EVRApplicationTransitionState_VRApplicationTransition_NewAppLaunched = 20.
+    NewAppLaunched = sys::EVRApplicationTransitionState_VRApplicationTransition_NewAppLaunched,
 }
 
-impl ApplicationTransitionState {
+impl Enum for ApplicationTransitionState {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawApplicationTransitionState) -> Option<Self> {
-        match val {
-            ApplicationTransitionState_None => Some(ApplicationTransitionState::None),
-            ApplicationTransitionState_OldAppQuitSent => {
-                Some(ApplicationTransitionState::OldAppQuitSent)
-            }
-            ApplicationTransitionState_WaitingForExternalLaunch => {
-                Some(ApplicationTransitionState::WaitingForExternalLaunch)
-            }
-            ApplicationTransitionState_NewAppLaunched => {
-                Some(ApplicationTransitionState::NewAppLaunched)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRApplicationTransitionState_VRApplicationTransition_None => Ok(ApplicationTransitionState::None),
+             sys::EVRApplicationTransitionState_VRApplicationTransition_OldAppQuitSent => Ok(ApplicationTransitionState::OldAppQuitSent),
+             sys::EVRApplicationTransitionState_VRApplicationTransition_WaitingForExternalLaunch => Ok(ApplicationTransitionState::WaitingForExternalLaunch),
+             sys::EVRApplicationTransitionState_VRApplicationTransition_NewAppLaunched => Ok(ApplicationTransitionState::NewAppLaunched),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawApplicationTransitionState> for ApplicationTransitionState {
-    fn from(val: RawApplicationTransitionState) -> Self {
-        ApplicationTransitionState::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ApplicationTransitionState.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawChaperoneCalibrationState(pub u32);
+impl fmt::Display for Invalid<ApplicationTransitionState> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ApplicationTransitionState.", self.0)
+    }
+}
 
-pub const ChaperoneCalibrationState_OK: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(1);
-pub const ChaperoneCalibrationState_Warning: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(100);
-pub const ChaperoneCalibrationState_Warning_BaseStationMayHaveMoved: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(101);
-pub const ChaperoneCalibrationState_Warning_BaseStationRemoved: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(102);
-pub const ChaperoneCalibrationState_Warning_SeatedBoundsInvalid: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(103);
-pub const ChaperoneCalibrationState_Error: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(200);
-pub const ChaperoneCalibrationState_Error_BaseStationUninitialized: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(201);
-pub const ChaperoneCalibrationState_Error_BaseStationConflict: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(202);
-pub const ChaperoneCalibrationState_Error_PlayAreaInvalid: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(203);
-pub const ChaperoneCalibrationState_Error_CollisionBoundsInvalid: RawChaperoneCalibrationState =
-    RawChaperoneCalibrationState(204);
+impl error::Error for Invalid<ApplicationTransitionState> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ApplicationTransitionState."
+    }
+}
 
+/// ChaperoneCalibrationState.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ChaperoneCalibrationState {
-    OK = 1,
-    Warning = 100,
-    Warning_BaseStationMayHaveMoved = 101,
-    Warning_BaseStationRemoved = 102,
-    Warning_SeatedBoundsInvalid = 103,
-    Error = 200,
-    Error_BaseStationUninitialized = 201,
-    Error_BaseStationConflict = 202,
-    Error_PlayAreaInvalid = 203,
-    Error_CollisionBoundsInvalid = 204,
+    /// ChaperoneCalibrationState_OK = 1.
+    Ok = sys::ChaperoneCalibrationState_OK,
+    /// ChaperoneCalibrationState_Warning = 100.
+    Warning = sys::ChaperoneCalibrationState_Warning,
+    /// ChaperoneCalibrationState_Warning_BaseStationMayHaveMoved = 101.
+    WarningBaseStationMayHaveMoved = sys::ChaperoneCalibrationState_Warning_BaseStationMayHaveMoved,
+    /// ChaperoneCalibrationState_Warning_BaseStationRemoved = 102.
+    WarningBaseStationRemoved = sys::ChaperoneCalibrationState_Warning_BaseStationRemoved,
+    /// ChaperoneCalibrationState_Warning_SeatedBoundsInvalid = 103.
+    WarningSeatedBoundsInvalid = sys::ChaperoneCalibrationState_Warning_SeatedBoundsInvalid,
+    /// ChaperoneCalibrationState_Error = 200.
+    Error = sys::ChaperoneCalibrationState_Error,
+    /// ChaperoneCalibrationState_Error_BaseStationUninitialized = 201.
+    ErrorBaseStationUninitialized = sys::ChaperoneCalibrationState_Error_BaseStationUninitialized,
+    /// ChaperoneCalibrationState_Error_BaseStationConflict = 202.
+    ErrorBaseStationConflict = sys::ChaperoneCalibrationState_Error_BaseStationConflict,
+    /// ChaperoneCalibrationState_Error_PlayAreaInvalid = 203.
+    ErrorPlayAreaInvalid = sys::ChaperoneCalibrationState_Error_PlayAreaInvalid,
+    /// ChaperoneCalibrationState_Error_CollisionBoundsInvalid = 204.
+    ErrorCollisionBoundsInvalid = sys::ChaperoneCalibrationState_Error_CollisionBoundsInvalid,
 }
 
-impl ChaperoneCalibrationState {
+impl Enum for ChaperoneCalibrationState {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawChaperoneCalibrationState) -> Option<Self> {
-        match val {
-            ChaperoneCalibrationState_OK => Some(ChaperoneCalibrationState::OK),
-            ChaperoneCalibrationState_Warning => Some(ChaperoneCalibrationState::Warning),
-            ChaperoneCalibrationState_Warning_BaseStationMayHaveMoved => {
-                Some(ChaperoneCalibrationState::Warning_BaseStationMayHaveMoved)
-            }
-            ChaperoneCalibrationState_Warning_BaseStationRemoved => {
-                Some(ChaperoneCalibrationState::Warning_BaseStationRemoved)
-            }
-            ChaperoneCalibrationState_Warning_SeatedBoundsInvalid => {
-                Some(ChaperoneCalibrationState::Warning_SeatedBoundsInvalid)
-            }
-            ChaperoneCalibrationState_Error => Some(ChaperoneCalibrationState::Error),
-            ChaperoneCalibrationState_Error_BaseStationUninitialized => {
-                Some(ChaperoneCalibrationState::Error_BaseStationUninitialized)
-            }
-            ChaperoneCalibrationState_Error_BaseStationConflict => {
-                Some(ChaperoneCalibrationState::Error_BaseStationConflict)
-            }
-            ChaperoneCalibrationState_Error_PlayAreaInvalid => {
-                Some(ChaperoneCalibrationState::Error_PlayAreaInvalid)
-            }
-            ChaperoneCalibrationState_Error_CollisionBoundsInvalid => {
-                Some(ChaperoneCalibrationState::Error_CollisionBoundsInvalid)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::ChaperoneCalibrationState_OK => Ok(ChaperoneCalibrationState::Ok),
+             sys::ChaperoneCalibrationState_Warning => Ok(ChaperoneCalibrationState::Warning),
+             sys::ChaperoneCalibrationState_Warning_BaseStationMayHaveMoved => Ok(ChaperoneCalibrationState::WarningBaseStationMayHaveMoved),
+             sys::ChaperoneCalibrationState_Warning_BaseStationRemoved => Ok(ChaperoneCalibrationState::WarningBaseStationRemoved),
+             sys::ChaperoneCalibrationState_Warning_SeatedBoundsInvalid => Ok(ChaperoneCalibrationState::WarningSeatedBoundsInvalid),
+             sys::ChaperoneCalibrationState_Error => Ok(ChaperoneCalibrationState::Error),
+             sys::ChaperoneCalibrationState_Error_BaseStationUninitialized => Ok(ChaperoneCalibrationState::ErrorBaseStationUninitialized),
+             sys::ChaperoneCalibrationState_Error_BaseStationConflict => Ok(ChaperoneCalibrationState::ErrorBaseStationConflict),
+             sys::ChaperoneCalibrationState_Error_PlayAreaInvalid => Ok(ChaperoneCalibrationState::ErrorPlayAreaInvalid),
+             sys::ChaperoneCalibrationState_Error_CollisionBoundsInvalid => Ok(ChaperoneCalibrationState::ErrorCollisionBoundsInvalid),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawChaperoneCalibrationState> for ChaperoneCalibrationState {
-    fn from(val: RawChaperoneCalibrationState) -> Self {
-        ChaperoneCalibrationState::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ChaperoneCalibrationState.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawChaperoneConfigFile(pub u32);
+impl fmt::Display for Invalid<ChaperoneCalibrationState> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ChaperoneCalibrationState.", self.0)
+    }
+}
 
-pub const ChaperoneConfigFile_Live: RawChaperoneConfigFile = RawChaperoneConfigFile(1);
-pub const ChaperoneConfigFile_Temp: RawChaperoneConfigFile = RawChaperoneConfigFile(2);
+impl error::Error for Invalid<ChaperoneCalibrationState> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ChaperoneCalibrationState."
+    }
+}
 
+/// EChaperoneConfigFile.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ChaperoneConfigFile {
-    Live = 1,
-    Temp = 2,
+    /// EChaperoneConfigFile_Live = 1.
+    Live = sys::EChaperoneConfigFile_Live,
+    /// EChaperoneConfigFile_Temp = 2.
+    Temp = sys::EChaperoneConfigFile_Temp,
 }
 
-impl ChaperoneConfigFile {
+impl Enum for ChaperoneConfigFile {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawChaperoneConfigFile) -> Option<Self> {
-        match val {
-            ChaperoneConfigFile_Live => Some(ChaperoneConfigFile::Live),
-            ChaperoneConfigFile_Temp => Some(ChaperoneConfigFile::Temp),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EChaperoneConfigFile_Live => Ok(ChaperoneConfigFile::Live),
+             sys::EChaperoneConfigFile_Temp => Ok(ChaperoneConfigFile::Temp),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawChaperoneConfigFile> for ChaperoneConfigFile {
-    fn from(val: RawChaperoneConfigFile) -> Self {
-        ChaperoneConfigFile::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ChaperoneConfigFile.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawChaperoneImportFlags(pub u32);
+impl fmt::Display for Invalid<ChaperoneConfigFile> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ChaperoneConfigFile.", self.0)
+    }
+}
 
-pub const ChaperoneImportFlags_BoundsOnly: RawChaperoneImportFlags = RawChaperoneImportFlags(1);
+impl error::Error for Invalid<ChaperoneConfigFile> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ChaperoneConfigFile."
+    }
+}
 
+/// EChaperoneImportFlags.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum ChaperoneImportFlags {
-    BoundsOnly = 1,
+pub enum ChaperoneImportFlag {
+    /// EChaperoneImportFlags_EChaperoneImport_BoundsOnly = 1.
+    BoundsOnly = sys::EChaperoneImportFlags_EChaperoneImport_BoundsOnly,
 }
 
-impl ChaperoneImportFlags {
+impl Enum for ChaperoneImportFlag {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawChaperoneImportFlags) -> Option<Self> {
-        match val {
-            ChaperoneImportFlags_BoundsOnly => Some(ChaperoneImportFlags::BoundsOnly),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EChaperoneImportFlags_EChaperoneImport_BoundsOnly => Ok(ChaperoneImportFlag::BoundsOnly),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawChaperoneImportFlags> for ChaperoneImportFlags {
-    fn from(val: RawChaperoneImportFlags) -> Self {
-        ChaperoneImportFlags::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ChaperoneImportFlags.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawCompositorError(pub u32);
+impl fmt::Display for Invalid<ChaperoneImportFlag> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ChaperoneImportFlag.", self.0)
+    }
+}
 
-pub const CompositorError_None: RawCompositorError = RawCompositorError(0);
-pub const CompositorError_RequestFailed: RawCompositorError = RawCompositorError(1);
-pub const CompositorError_IncompatibleVersion: RawCompositorError = RawCompositorError(100);
-pub const CompositorError_DoNotHaveFocus: RawCompositorError = RawCompositorError(101);
-pub const CompositorError_InvalidTexture: RawCompositorError = RawCompositorError(102);
-pub const CompositorError_IsNotSceneApplication: RawCompositorError = RawCompositorError(103);
-pub const CompositorError_TextureIsOnWrongDevice: RawCompositorError = RawCompositorError(104);
-pub const CompositorError_TextureUsesUnsupportedFormat: RawCompositorError =
-    RawCompositorError(105);
-pub const CompositorError_SharedTexturesNotSupported: RawCompositorError = RawCompositorError(106);
-pub const CompositorError_IndexOutOfRange: RawCompositorError = RawCompositorError(107);
-pub const CompositorError_AlreadySubmitted: RawCompositorError = RawCompositorError(108);
-pub const CompositorError_InvalidBounds: RawCompositorError = RawCompositorError(109);
+impl error::Error for Invalid<ChaperoneImportFlag> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ChaperoneImportFlag."
+    }
+}
 
+/// EVRCompositorError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum CompositorError {
-    None = 0,
-    RequestFailed = 1,
-    IncompatibleVersion = 100,
-    DoNotHaveFocus = 101,
-    InvalidTexture = 102,
-    IsNotSceneApplication = 103,
-    TextureIsOnWrongDevice = 104,
-    TextureUsesUnsupportedFormat = 105,
-    SharedTexturesNotSupported = 106,
-    IndexOutOfRange = 107,
-    AlreadySubmitted = 108,
-    InvalidBounds = 109,
+    /// EVRCompositorError_VRCompositorError_None = 0.
+    None = sys::EVRCompositorError_VRCompositorError_None,
+    /// EVRCompositorError_VRCompositorError_RequestFailed = 1.
+    RequestFailed = sys::EVRCompositorError_VRCompositorError_RequestFailed,
+    /// EVRCompositorError_VRCompositorError_IncompatibleVersion = 100.
+    IncompatibleVersion = sys::EVRCompositorError_VRCompositorError_IncompatibleVersion,
+    /// EVRCompositorError_VRCompositorError_DoNotHaveFocus = 101.
+    DoNotHaveFocu = sys::EVRCompositorError_VRCompositorError_DoNotHaveFocus,
+    /// EVRCompositorError_VRCompositorError_InvalidTexture = 102.
+    InvalidTexture = sys::EVRCompositorError_VRCompositorError_InvalidTexture,
+    /// EVRCompositorError_VRCompositorError_IsNotSceneApplication = 103.
+    IsNotSceneApplication = sys::EVRCompositorError_VRCompositorError_IsNotSceneApplication,
+    /// EVRCompositorError_VRCompositorError_TextureIsOnWrongDevice = 104.
+    TextureIsOnWrongDevice = sys::EVRCompositorError_VRCompositorError_TextureIsOnWrongDevice,
+    /// EVRCompositorError_VRCompositorError_TextureUsesUnsupportedFormat = 105.
+    TextureUsesUnsupportedFormat = sys::EVRCompositorError_VRCompositorError_TextureUsesUnsupportedFormat,
+    /// EVRCompositorError_VRCompositorError_SharedTexturesNotSupported = 106.
+    SharedTexturesNotSupported = sys::EVRCompositorError_VRCompositorError_SharedTexturesNotSupported,
+    /// EVRCompositorError_VRCompositorError_IndexOutOfRange = 107.
+    IndexOutOfRange = sys::EVRCompositorError_VRCompositorError_IndexOutOfRange,
+    /// EVRCompositorError_VRCompositorError_AlreadySubmitted = 108.
+    AlreadySubmitted = sys::EVRCompositorError_VRCompositorError_AlreadySubmitted,
+    /// EVRCompositorError_VRCompositorError_InvalidBounds = 109.
+    InvalidBound = sys::EVRCompositorError_VRCompositorError_InvalidBounds,
 }
 
-impl CompositorError {
+impl Enum for CompositorError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawCompositorError) -> Option<Self> {
-        match val {
-            CompositorError_None => Some(CompositorError::None),
-            CompositorError_RequestFailed => Some(CompositorError::RequestFailed),
-            CompositorError_IncompatibleVersion => Some(CompositorError::IncompatibleVersion),
-            CompositorError_DoNotHaveFocus => Some(CompositorError::DoNotHaveFocus),
-            CompositorError_InvalidTexture => Some(CompositorError::InvalidTexture),
-            CompositorError_IsNotSceneApplication => Some(CompositorError::IsNotSceneApplication),
-            CompositorError_TextureIsOnWrongDevice => Some(CompositorError::TextureIsOnWrongDevice),
-            CompositorError_TextureUsesUnsupportedFormat => {
-                Some(CompositorError::TextureUsesUnsupportedFormat)
-            }
-            CompositorError_SharedTexturesNotSupported => {
-                Some(CompositorError::SharedTexturesNotSupported)
-            }
-            CompositorError_IndexOutOfRange => Some(CompositorError::IndexOutOfRange),
-            CompositorError_AlreadySubmitted => Some(CompositorError::AlreadySubmitted),
-            CompositorError_InvalidBounds => Some(CompositorError::InvalidBounds),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRCompositorError_VRCompositorError_None => Ok(CompositorError::None),
+             sys::EVRCompositorError_VRCompositorError_RequestFailed => Ok(CompositorError::RequestFailed),
+             sys::EVRCompositorError_VRCompositorError_IncompatibleVersion => Ok(CompositorError::IncompatibleVersion),
+             sys::EVRCompositorError_VRCompositorError_DoNotHaveFocus => Ok(CompositorError::DoNotHaveFocu),
+             sys::EVRCompositorError_VRCompositorError_InvalidTexture => Ok(CompositorError::InvalidTexture),
+             sys::EVRCompositorError_VRCompositorError_IsNotSceneApplication => Ok(CompositorError::IsNotSceneApplication),
+             sys::EVRCompositorError_VRCompositorError_TextureIsOnWrongDevice => Ok(CompositorError::TextureIsOnWrongDevice),
+             sys::EVRCompositorError_VRCompositorError_TextureUsesUnsupportedFormat => Ok(CompositorError::TextureUsesUnsupportedFormat),
+             sys::EVRCompositorError_VRCompositorError_SharedTexturesNotSupported => Ok(CompositorError::SharedTexturesNotSupported),
+             sys::EVRCompositorError_VRCompositorError_IndexOutOfRange => Ok(CompositorError::IndexOutOfRange),
+             sys::EVRCompositorError_VRCompositorError_AlreadySubmitted => Ok(CompositorError::AlreadySubmitted),
+             sys::EVRCompositorError_VRCompositorError_InvalidBounds => Ok(CompositorError::InvalidBound),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawCompositorError> for CompositorError {
-    fn from(val: RawCompositorError) -> Self {
-        CompositorError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for CompositorError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawCompositorTimingMode(pub u32);
+impl fmt::Display for Invalid<CompositorError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of CompositorError.", self.0)
+    }
+}
 
-pub const CompositorTimingMode_Implicit: RawCompositorTimingMode = RawCompositorTimingMode(0);
-pub const CompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff: RawCompositorTimingMode =
-    RawCompositorTimingMode(1);
-pub const CompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff:
-    RawCompositorTimingMode = RawCompositorTimingMode(2);
+impl error::Error for Invalid<CompositorError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of CompositorError."
+    }
+}
 
+/// EVRCompositorTimingMode.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum CompositorTimingMode {
-    Implicit = 0,
-    Explicit_RuntimePerformsPostPresentHandoff = 1,
-    Explicit_ApplicationPerformsPostPresentHandoff = 2,
+    /// EVRCompositorTimingMode_VRCompositorTimingMode_Implicit = 0.
+    Implicit = sys::EVRCompositorTimingMode_VRCompositorTimingMode_Implicit,
+    /// EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff = 1.
+    ExplicitRuntimePerformsPostPresentHandoff = sys::EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff,
+    /// EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff = 2.
+    ExplicitApplicationPerformsPostPresentHandoff = sys::EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff,
 }
 
-impl CompositorTimingMode {
+impl Enum for CompositorTimingMode {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawCompositorTimingMode) -> Option<Self> {
-        match val {
-            CompositorTimingMode_Implicit => Some(CompositorTimingMode::Implicit),
-            CompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff => {
-                Some(CompositorTimingMode::Explicit_RuntimePerformsPostPresentHandoff)
-            }
-            CompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff => {
-                Some(CompositorTimingMode::Explicit_ApplicationPerformsPostPresentHandoff)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRCompositorTimingMode_VRCompositorTimingMode_Implicit => Ok(CompositorTimingMode::Implicit),
+             sys::EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff => Ok(CompositorTimingMode::ExplicitRuntimePerformsPostPresentHandoff),
+             sys::EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff => Ok(CompositorTimingMode::ExplicitApplicationPerformsPostPresentHandoff),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawCompositorTimingMode> for CompositorTimingMode {
-    fn from(val: RawCompositorTimingMode) -> Self {
-        CompositorTimingMode::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for CompositorTimingMode.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawOverlayInputMethod(pub u32);
+impl fmt::Display for Invalid<CompositorTimingMode> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of CompositorTimingMode.", self.0)
+    }
+}
 
-pub const OverlayInputMethod_None: RawOverlayInputMethod = RawOverlayInputMethod(0);
-pub const OverlayInputMethod_Mouse: RawOverlayInputMethod = RawOverlayInputMethod(1);
-pub const OverlayInputMethod_DualAnalog: RawOverlayInputMethod = RawOverlayInputMethod(2);
+impl error::Error for Invalid<CompositorTimingMode> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of CompositorTimingMode."
+    }
+}
 
+/// VROverlayInputMethod.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OverlayInputMethod {
-    None = 0,
-    Mouse = 1,
-    DualAnalog = 2,
+    /// VROverlayInputMethod_None = 0.
+    None = sys::VROverlayInputMethod_None,
+    /// VROverlayInputMethod_Mouse = 1.
+    Mouse = sys::VROverlayInputMethod_Mouse,
+    /// VROverlayInputMethod_DualAnalog = 2.
+    DualAnalog = sys::VROverlayInputMethod_DualAnalog,
 }
 
-impl OverlayInputMethod {
+impl Enum for OverlayInputMethod {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawOverlayInputMethod) -> Option<Self> {
-        match val {
-            OverlayInputMethod_None => Some(OverlayInputMethod::None),
-            OverlayInputMethod_Mouse => Some(OverlayInputMethod::Mouse),
-            OverlayInputMethod_DualAnalog => Some(OverlayInputMethod::DualAnalog),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::VROverlayInputMethod_None => Ok(OverlayInputMethod::None),
+             sys::VROverlayInputMethod_Mouse => Ok(OverlayInputMethod::Mouse),
+             sys::VROverlayInputMethod_DualAnalog => Ok(OverlayInputMethod::DualAnalog),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawOverlayInputMethod> for OverlayInputMethod {
-    fn from(val: RawOverlayInputMethod) -> Self {
-        OverlayInputMethod::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for OverlayInputMethod.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawOverlayTransformType(pub u32);
+impl fmt::Display for Invalid<OverlayInputMethod> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of OverlayInputMethod.", self.0)
+    }
+}
 
-pub const OverlayTransformType_Absolute: RawOverlayTransformType = RawOverlayTransformType(0);
-pub const OverlayTransformType_TrackedDeviceRelative: RawOverlayTransformType =
-    RawOverlayTransformType(1);
-pub const OverlayTransformType_SystemOverlay: RawOverlayTransformType = RawOverlayTransformType(2);
-pub const OverlayTransformType_TrackedComponent: RawOverlayTransformType =
-    RawOverlayTransformType(3);
+impl error::Error for Invalid<OverlayInputMethod> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of OverlayInputMethod."
+    }
+}
 
+/// VROverlayTransformType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OverlayTransformType {
-    Absolute = 0,
-    TrackedDeviceRelative = 1,
-    SystemOverlay = 2,
-    TrackedComponent = 3,
+    /// VROverlayTransformType_VROverlayTransform_Absolute = 0.
+    Absolute = sys::VROverlayTransformType_VROverlayTransform_Absolute,
+    /// VROverlayTransformType_VROverlayTransform_TrackedDeviceRelative = 1.
+    TrackedDeviceRelative = sys::VROverlayTransformType_VROverlayTransform_TrackedDeviceRelative,
+    /// VROverlayTransformType_VROverlayTransform_SystemOverlay = 2.
+    SystemOverlay = sys::VROverlayTransformType_VROverlayTransform_SystemOverlay,
+    /// VROverlayTransformType_VROverlayTransform_TrackedComponent = 3.
+    TrackedComponent = sys::VROverlayTransformType_VROverlayTransform_TrackedComponent,
 }
 
-impl OverlayTransformType {
+impl Enum for OverlayTransformType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawOverlayTransformType) -> Option<Self> {
-        match val {
-            OverlayTransformType_Absolute => Some(OverlayTransformType::Absolute),
-            OverlayTransformType_TrackedDeviceRelative => {
-                Some(OverlayTransformType::TrackedDeviceRelative)
-            }
-            OverlayTransformType_SystemOverlay => Some(OverlayTransformType::SystemOverlay),
-            OverlayTransformType_TrackedComponent => Some(OverlayTransformType::TrackedComponent),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::VROverlayTransformType_VROverlayTransform_Absolute => Ok(OverlayTransformType::Absolute),
+             sys::VROverlayTransformType_VROverlayTransform_TrackedDeviceRelative => Ok(OverlayTransformType::TrackedDeviceRelative),
+             sys::VROverlayTransformType_VROverlayTransform_SystemOverlay => Ok(OverlayTransformType::SystemOverlay),
+             sys::VROverlayTransformType_VROverlayTransform_TrackedComponent => Ok(OverlayTransformType::TrackedComponent),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawOverlayTransformType> for OverlayTransformType {
-    fn from(val: RawOverlayTransformType) -> Self {
-        OverlayTransformType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for OverlayTransformType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawOverlayFlags(pub u32);
+impl fmt::Display for Invalid<OverlayTransformType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of OverlayTransformType.", self.0)
+    }
+}
 
-pub const OverlayFlags_None: RawOverlayFlags = RawOverlayFlags(0);
-pub const OverlayFlags_Curved: RawOverlayFlags = RawOverlayFlags(1);
-pub const OverlayFlags_RGSS4X: RawOverlayFlags = RawOverlayFlags(2);
-pub const OverlayFlags_NoDashboardTab: RawOverlayFlags = RawOverlayFlags(3);
-pub const OverlayFlags_AcceptsGamepadEvents: RawOverlayFlags = RawOverlayFlags(4);
-pub const OverlayFlags_ShowGamepadFocus: RawOverlayFlags = RawOverlayFlags(5);
-pub const OverlayFlags_SendVRScrollEvents: RawOverlayFlags = RawOverlayFlags(6);
-pub const OverlayFlags_SendVRTouchpadEvents: RawOverlayFlags = RawOverlayFlags(7);
-pub const OverlayFlags_ShowTouchPadScrollWheel: RawOverlayFlags = RawOverlayFlags(8);
-pub const OverlayFlags_TransferOwnershipToInternalProcess: RawOverlayFlags = RawOverlayFlags(9);
-pub const OverlayFlags_SideBySide_Parallel: RawOverlayFlags = RawOverlayFlags(10);
-pub const OverlayFlags_SideBySide_Crossed: RawOverlayFlags = RawOverlayFlags(11);
-pub const OverlayFlags_Panorama: RawOverlayFlags = RawOverlayFlags(12);
-pub const OverlayFlags_StereoPanorama: RawOverlayFlags = RawOverlayFlags(13);
-pub const OverlayFlags_SortWithNonSceneOverlays: RawOverlayFlags = RawOverlayFlags(14);
-pub const OverlayFlags_VisibleInDashboard: RawOverlayFlags = RawOverlayFlags(15);
-pub const OverlayFlags_MakeOverlaysInteractiveIfVisible: RawOverlayFlags = RawOverlayFlags(16);
+impl error::Error for Invalid<OverlayTransformType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of OverlayTransformType."
+    }
+}
 
+/// VROverlayFlags.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum OverlayFlags {
-    None = 0,
-    Curved = 1,
-    RGSS4X = 2,
-    NoDashboardTab = 3,
-    AcceptsGamepadEvents = 4,
-    ShowGamepadFocus = 5,
-    SendVRScrollEvents = 6,
-    SendVRTouchpadEvents = 7,
-    ShowTouchPadScrollWheel = 8,
-    TransferOwnershipToInternalProcess = 9,
-    SideBySide_Parallel = 10,
-    SideBySide_Crossed = 11,
-    Panorama = 12,
-    StereoPanorama = 13,
-    SortWithNonSceneOverlays = 14,
-    VisibleInDashboard = 15,
-    MakeOverlaysInteractiveIfVisible = 16,
+pub enum OverlayFlag {
+    /// VROverlayFlags_None = 0.
+    None = sys::VROverlayFlags_None,
+    /// VROverlayFlags_Curved = 1.
+    Curved = sys::VROverlayFlags_Curved,
+    /// VROverlayFlags_RGSS4X = 2.
+    Rgss4X = sys::VROverlayFlags_RGSS4X,
+    /// VROverlayFlags_NoDashboardTab = 3.
+    NoDashboardTab = sys::VROverlayFlags_NoDashboardTab,
+    /// VROverlayFlags_AcceptsGamepadEvents = 4.
+    AcceptsGamepadEvent = sys::VROverlayFlags_AcceptsGamepadEvents,
+    /// VROverlayFlags_ShowGamepadFocus = 5.
+    ShowGamepadFocu = sys::VROverlayFlags_ShowGamepadFocus,
+    /// VROverlayFlags_SendVRScrollEvents = 6.
+    SendVRScrollEvent = sys::VROverlayFlags_SendVRScrollEvents,
+    /// VROverlayFlags_SendVRTouchpadEvents = 7.
+    SendVRTouchpadEvent = sys::VROverlayFlags_SendVRTouchpadEvents,
+    /// VROverlayFlags_ShowTouchPadScrollWheel = 8.
+    ShowTouchPadScrollWheel = sys::VROverlayFlags_ShowTouchPadScrollWheel,
+    /// VROverlayFlags_TransferOwnershipToInternalProcess = 9.
+    TransferOwnershipToInternalProcess = sys::VROverlayFlags_TransferOwnershipToInternalProcess,
+    /// VROverlayFlags_SideBySide_Parallel = 10.
+    SideBySideParallel = sys::VROverlayFlags_SideBySide_Parallel,
+    /// VROverlayFlags_SideBySide_Crossed = 11.
+    SideBySideCrossed = sys::VROverlayFlags_SideBySide_Crossed,
+    /// VROverlayFlags_Panorama = 12.
+    Panorama = sys::VROverlayFlags_Panorama,
+    /// VROverlayFlags_StereoPanorama = 13.
+    StereoPanorama = sys::VROverlayFlags_StereoPanorama,
+    /// VROverlayFlags_SortWithNonSceneOverlays = 14.
+    SortWithNonSceneOverlay = sys::VROverlayFlags_SortWithNonSceneOverlays,
+    /// VROverlayFlags_VisibleInDashboard = 15.
+    VisibleInDashboard = sys::VROverlayFlags_VisibleInDashboard,
+    /// VROverlayFlags_MakeOverlaysInteractiveIfVisible = 16.
+    MakeOverlaysInteractiveIfVisible = sys::VROverlayFlags_MakeOverlaysInteractiveIfVisible,
 }
 
-impl OverlayFlags {
+impl Enum for OverlayFlag {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawOverlayFlags) -> Option<Self> {
-        match val {
-            OverlayFlags_None => Some(OverlayFlags::None),
-            OverlayFlags_Curved => Some(OverlayFlags::Curved),
-            OverlayFlags_RGSS4X => Some(OverlayFlags::RGSS4X),
-            OverlayFlags_NoDashboardTab => Some(OverlayFlags::NoDashboardTab),
-            OverlayFlags_AcceptsGamepadEvents => Some(OverlayFlags::AcceptsGamepadEvents),
-            OverlayFlags_ShowGamepadFocus => Some(OverlayFlags::ShowGamepadFocus),
-            OverlayFlags_SendVRScrollEvents => Some(OverlayFlags::SendVRScrollEvents),
-            OverlayFlags_SendVRTouchpadEvents => Some(OverlayFlags::SendVRTouchpadEvents),
-            OverlayFlags_ShowTouchPadScrollWheel => Some(OverlayFlags::ShowTouchPadScrollWheel),
-            OverlayFlags_TransferOwnershipToInternalProcess => {
-                Some(OverlayFlags::TransferOwnershipToInternalProcess)
-            }
-            OverlayFlags_SideBySide_Parallel => Some(OverlayFlags::SideBySide_Parallel),
-            OverlayFlags_SideBySide_Crossed => Some(OverlayFlags::SideBySide_Crossed),
-            OverlayFlags_Panorama => Some(OverlayFlags::Panorama),
-            OverlayFlags_StereoPanorama => Some(OverlayFlags::StereoPanorama),
-            OverlayFlags_SortWithNonSceneOverlays => Some(OverlayFlags::SortWithNonSceneOverlays),
-            OverlayFlags_VisibleInDashboard => Some(OverlayFlags::VisibleInDashboard),
-            OverlayFlags_MakeOverlaysInteractiveIfVisible => {
-                Some(OverlayFlags::MakeOverlaysInteractiveIfVisible)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::VROverlayFlags_None => Ok(OverlayFlag::None),
+             sys::VROverlayFlags_Curved => Ok(OverlayFlag::Curved),
+             sys::VROverlayFlags_RGSS4X => Ok(OverlayFlag::Rgss4X),
+             sys::VROverlayFlags_NoDashboardTab => Ok(OverlayFlag::NoDashboardTab),
+             sys::VROverlayFlags_AcceptsGamepadEvents => Ok(OverlayFlag::AcceptsGamepadEvent),
+             sys::VROverlayFlags_ShowGamepadFocus => Ok(OverlayFlag::ShowGamepadFocu),
+             sys::VROverlayFlags_SendVRScrollEvents => Ok(OverlayFlag::SendVRScrollEvent),
+             sys::VROverlayFlags_SendVRTouchpadEvents => Ok(OverlayFlag::SendVRTouchpadEvent),
+             sys::VROverlayFlags_ShowTouchPadScrollWheel => Ok(OverlayFlag::ShowTouchPadScrollWheel),
+             sys::VROverlayFlags_TransferOwnershipToInternalProcess => Ok(OverlayFlag::TransferOwnershipToInternalProcess),
+             sys::VROverlayFlags_SideBySide_Parallel => Ok(OverlayFlag::SideBySideParallel),
+             sys::VROverlayFlags_SideBySide_Crossed => Ok(OverlayFlag::SideBySideCrossed),
+             sys::VROverlayFlags_Panorama => Ok(OverlayFlag::Panorama),
+             sys::VROverlayFlags_StereoPanorama => Ok(OverlayFlag::StereoPanorama),
+             sys::VROverlayFlags_SortWithNonSceneOverlays => Ok(OverlayFlag::SortWithNonSceneOverlay),
+             sys::VROverlayFlags_VisibleInDashboard => Ok(OverlayFlag::VisibleInDashboard),
+             sys::VROverlayFlags_MakeOverlaysInteractiveIfVisible => Ok(OverlayFlag::MakeOverlaysInteractiveIfVisible),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawOverlayFlags> for OverlayFlags {
-    fn from(val: RawOverlayFlags) -> Self {
-        OverlayFlags::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for OverlayFlags.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawMessageOverlayResponse(pub u32);
+impl fmt::Display for Invalid<OverlayFlag> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of OverlayFlag.", self.0)
+    }
+}
 
-pub const MessageOverlayResponse_ButtonPress_0: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(0);
-pub const MessageOverlayResponse_ButtonPress_1: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(1);
-pub const MessageOverlayResponse_ButtonPress_2: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(2);
-pub const MessageOverlayResponse_ButtonPress_3: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(3);
-pub const MessageOverlayResponse_CouldntFindSystemOverlay: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(4);
-pub const MessageOverlayResponse_CouldntFindOrCreateClientOverlay: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(5);
-pub const MessageOverlayResponse_ApplicationQuit: RawMessageOverlayResponse =
-    RawMessageOverlayResponse(6);
+impl error::Error for Invalid<OverlayFlag> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of OverlayFlag."
+    }
+}
 
+/// VRMessageOverlayResponse.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum MessageOverlayResponse {
-    ButtonPress_0 = 0,
-    ButtonPress_1 = 1,
-    ButtonPress_2 = 2,
-    ButtonPress_3 = 3,
-    CouldntFindSystemOverlay = 4,
-    CouldntFindOrCreateClientOverlay = 5,
-    ApplicationQuit = 6,
+    /// VRMessageOverlayResponse_ButtonPress_0 = 0.
+    ButtonPress0 = sys::VRMessageOverlayResponse_ButtonPress_0,
+    /// VRMessageOverlayResponse_ButtonPress_1 = 1.
+    ButtonPress1 = sys::VRMessageOverlayResponse_ButtonPress_1,
+    /// VRMessageOverlayResponse_ButtonPress_2 = 2.
+    ButtonPress2 = sys::VRMessageOverlayResponse_ButtonPress_2,
+    /// VRMessageOverlayResponse_ButtonPress_3 = 3.
+    ButtonPress3 = sys::VRMessageOverlayResponse_ButtonPress_3,
+    /// VRMessageOverlayResponse_CouldntFindSystemOverlay = 4.
+    CouldntFindSystemOverlay = sys::VRMessageOverlayResponse_CouldntFindSystemOverlay,
+    /// VRMessageOverlayResponse_CouldntFindOrCreateClientOverlay = 5.
+    CouldntFindOrCreateClientOverlay = sys::VRMessageOverlayResponse_CouldntFindOrCreateClientOverlay,
+    /// VRMessageOverlayResponse_ApplicationQuit = 6.
+    ApplicationQuit = sys::VRMessageOverlayResponse_ApplicationQuit,
 }
 
-impl MessageOverlayResponse {
+impl Enum for MessageOverlayResponse {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawMessageOverlayResponse) -> Option<Self> {
-        match val {
-            MessageOverlayResponse_ButtonPress_0 => Some(MessageOverlayResponse::ButtonPress_0),
-            MessageOverlayResponse_ButtonPress_1 => Some(MessageOverlayResponse::ButtonPress_1),
-            MessageOverlayResponse_ButtonPress_2 => Some(MessageOverlayResponse::ButtonPress_2),
-            MessageOverlayResponse_ButtonPress_3 => Some(MessageOverlayResponse::ButtonPress_3),
-            MessageOverlayResponse_CouldntFindSystemOverlay => {
-                Some(MessageOverlayResponse::CouldntFindSystemOverlay)
-            }
-            MessageOverlayResponse_CouldntFindOrCreateClientOverlay => {
-                Some(MessageOverlayResponse::CouldntFindOrCreateClientOverlay)
-            }
-            MessageOverlayResponse_ApplicationQuit => Some(MessageOverlayResponse::ApplicationQuit),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::VRMessageOverlayResponse_ButtonPress_0 => Ok(MessageOverlayResponse::ButtonPress0),
+             sys::VRMessageOverlayResponse_ButtonPress_1 => Ok(MessageOverlayResponse::ButtonPress1),
+             sys::VRMessageOverlayResponse_ButtonPress_2 => Ok(MessageOverlayResponse::ButtonPress2),
+             sys::VRMessageOverlayResponse_ButtonPress_3 => Ok(MessageOverlayResponse::ButtonPress3),
+             sys::VRMessageOverlayResponse_CouldntFindSystemOverlay => Ok(MessageOverlayResponse::CouldntFindSystemOverlay),
+             sys::VRMessageOverlayResponse_CouldntFindOrCreateClientOverlay => Ok(MessageOverlayResponse::CouldntFindOrCreateClientOverlay),
+             sys::VRMessageOverlayResponse_ApplicationQuit => Ok(MessageOverlayResponse::ApplicationQuit),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawMessageOverlayResponse> for MessageOverlayResponse {
-    fn from(val: RawMessageOverlayResponse) -> Self {
-        MessageOverlayResponse::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for MessageOverlayResponse.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawGamepadTextInputMode(pub u32);
+impl fmt::Display for Invalid<MessageOverlayResponse> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of MessageOverlayResponse.", self.0)
+    }
+}
 
-pub const GamepadTextInputMode_EGamepadTextInputModeNormal: RawGamepadTextInputMode =
-    RawGamepadTextInputMode(0);
-pub const GamepadTextInputMode_EGamepadTextInputModePassword: RawGamepadTextInputMode =
-    RawGamepadTextInputMode(1);
-pub const GamepadTextInputMode_EGamepadTextInputModeSubmit: RawGamepadTextInputMode =
-    RawGamepadTextInputMode(2);
+impl error::Error for Invalid<MessageOverlayResponse> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of MessageOverlayResponse."
+    }
+}
 
+/// EGamepadTextInputMode.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum GamepadTextInputMode {
-    EGamepadTextInputModeNormal = 0,
-    EGamepadTextInputModePassword = 1,
-    EGamepadTextInputModeSubmit = 2,
+    /// EGamepadTextInputMode_k_EGamepadTextInputModeNormal = 0.
+    EgamepadTextInputModeNormal = sys::EGamepadTextInputMode_k_EGamepadTextInputModeNormal,
+    /// EGamepadTextInputMode_k_EGamepadTextInputModePassword = 1.
+    EgamepadTextInputModePassword = sys::EGamepadTextInputMode_k_EGamepadTextInputModePassword,
+    /// EGamepadTextInputMode_k_EGamepadTextInputModeSubmit = 2.
+    EgamepadTextInputModeSubmit = sys::EGamepadTextInputMode_k_EGamepadTextInputModeSubmit,
 }
 
-impl GamepadTextInputMode {
+impl Enum for GamepadTextInputMode {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawGamepadTextInputMode) -> Option<Self> {
-        match val {
-            GamepadTextInputMode_EGamepadTextInputModeNormal => {
-                Some(GamepadTextInputMode::EGamepadTextInputModeNormal)
-            }
-            GamepadTextInputMode_EGamepadTextInputModePassword => {
-                Some(GamepadTextInputMode::EGamepadTextInputModePassword)
-            }
-            GamepadTextInputMode_EGamepadTextInputModeSubmit => {
-                Some(GamepadTextInputMode::EGamepadTextInputModeSubmit)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EGamepadTextInputMode_k_EGamepadTextInputModeNormal => Ok(GamepadTextInputMode::EgamepadTextInputModeNormal),
+             sys::EGamepadTextInputMode_k_EGamepadTextInputModePassword => Ok(GamepadTextInputMode::EgamepadTextInputModePassword),
+             sys::EGamepadTextInputMode_k_EGamepadTextInputModeSubmit => Ok(GamepadTextInputMode::EgamepadTextInputModeSubmit),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawGamepadTextInputMode> for GamepadTextInputMode {
-    fn from(val: RawGamepadTextInputMode) -> Self {
-        GamepadTextInputMode::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for GamepadTextInputMode.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawGamepadTextInputLineMode(pub u32);
+impl fmt::Display for Invalid<GamepadTextInputMode> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of GamepadTextInputMode.", self.0)
+    }
+}
 
-pub const GamepadTextInputLineMode_EGamepadTextInputLineModeSingleLine:
-    RawGamepadTextInputLineMode = RawGamepadTextInputLineMode(0);
-pub const GamepadTextInputLineMode_EGamepadTextInputLineModeMultipleLines:
-    RawGamepadTextInputLineMode = RawGamepadTextInputLineMode(1);
+impl error::Error for Invalid<GamepadTextInputMode> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of GamepadTextInputMode."
+    }
+}
 
+/// EGamepadTextInputLineMode.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum GamepadTextInputLineMode {
-    EGamepadTextInputLineModeSingleLine = 0,
-    EGamepadTextInputLineModeMultipleLines = 1,
+    /// EGamepadTextInputLineMode_k_EGamepadTextInputLineModeSingleLine = 0.
+    EgamepadTextInputLineModeSingleLine = sys::EGamepadTextInputLineMode_k_EGamepadTextInputLineModeSingleLine,
+    /// EGamepadTextInputLineMode_k_EGamepadTextInputLineModeMultipleLines = 1.
+    EgamepadTextInputLineModeMultipleLine = sys::EGamepadTextInputLineMode_k_EGamepadTextInputLineModeMultipleLines,
 }
 
-impl GamepadTextInputLineMode {
+impl Enum for GamepadTextInputLineMode {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawGamepadTextInputLineMode) -> Option<Self> {
-        match val {
-            GamepadTextInputLineMode_EGamepadTextInputLineModeSingleLine => {
-                Some(GamepadTextInputLineMode::EGamepadTextInputLineModeSingleLine)
-            }
-            GamepadTextInputLineMode_EGamepadTextInputLineModeMultipleLines => {
-                Some(GamepadTextInputLineMode::EGamepadTextInputLineModeMultipleLines)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EGamepadTextInputLineMode_k_EGamepadTextInputLineModeSingleLine => Ok(GamepadTextInputLineMode::EgamepadTextInputLineModeSingleLine),
+             sys::EGamepadTextInputLineMode_k_EGamepadTextInputLineModeMultipleLines => Ok(GamepadTextInputLineMode::EgamepadTextInputLineModeMultipleLine),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawGamepadTextInputLineMode> for GamepadTextInputLineMode {
-    fn from(val: RawGamepadTextInputLineMode) -> Self {
-        GamepadTextInputLineMode::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for GamepadTextInputLineMode.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawOverlayDirection(pub u32);
+impl fmt::Display for Invalid<GamepadTextInputLineMode> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of GamepadTextInputLineMode.", self.0)
+    }
+}
 
-pub const OverlayDirection_Up: RawOverlayDirection = RawOverlayDirection(0);
-pub const OverlayDirection_Down: RawOverlayDirection = RawOverlayDirection(1);
-pub const OverlayDirection_Left: RawOverlayDirection = RawOverlayDirection(2);
-pub const OverlayDirection_Right: RawOverlayDirection = RawOverlayDirection(3);
-pub const OverlayDirection_Count: RawOverlayDirection = RawOverlayDirection(4);
+impl error::Error for Invalid<GamepadTextInputLineMode> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of GamepadTextInputLineMode."
+    }
+}
 
+/// EOverlayDirection.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OverlayDirection {
-    Up = 0,
-    Down = 1,
-    Left = 2,
-    Right = 3,
-    Count = 4,
+    /// EOverlayDirection_OverlayDirection_Up = 0.
+    Up = sys::EOverlayDirection_OverlayDirection_Up,
+    /// EOverlayDirection_OverlayDirection_Down = 1.
+    Down = sys::EOverlayDirection_OverlayDirection_Down,
+    /// EOverlayDirection_OverlayDirection_Left = 2.
+    Left = sys::EOverlayDirection_OverlayDirection_Left,
+    /// EOverlayDirection_OverlayDirection_Right = 3.
+    Right = sys::EOverlayDirection_OverlayDirection_Right,
+    /// EOverlayDirection_OverlayDirection_Count = 4.
+    Count = sys::EOverlayDirection_OverlayDirection_Count,
 }
 
-impl OverlayDirection {
+impl Enum for OverlayDirection {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawOverlayDirection) -> Option<Self> {
-        match val {
-            OverlayDirection_Up => Some(OverlayDirection::Up),
-            OverlayDirection_Down => Some(OverlayDirection::Down),
-            OverlayDirection_Left => Some(OverlayDirection::Left),
-            OverlayDirection_Right => Some(OverlayDirection::Right),
-            OverlayDirection_Count => Some(OverlayDirection::Count),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EOverlayDirection_OverlayDirection_Up => Ok(OverlayDirection::Up),
+             sys::EOverlayDirection_OverlayDirection_Down => Ok(OverlayDirection::Down),
+             sys::EOverlayDirection_OverlayDirection_Left => Ok(OverlayDirection::Left),
+             sys::EOverlayDirection_OverlayDirection_Right => Ok(OverlayDirection::Right),
+             sys::EOverlayDirection_OverlayDirection_Count => Ok(OverlayDirection::Count),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawOverlayDirection> for OverlayDirection {
-    fn from(val: RawOverlayDirection) -> Self {
-        OverlayDirection::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for OverlayDirection.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawOverlayIntersectionMaskPrimitiveType(pub u32);
+impl fmt::Display for Invalid<OverlayDirection> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of OverlayDirection.", self.0)
+    }
+}
 
-pub const OverlayIntersectionMaskPrimitiveType_Rectangle: RawOverlayIntersectionMaskPrimitiveType =
-    RawOverlayIntersectionMaskPrimitiveType(0);
-pub const OverlayIntersectionMaskPrimitiveType_Circle: RawOverlayIntersectionMaskPrimitiveType =
-    RawOverlayIntersectionMaskPrimitiveType(1);
+impl error::Error for Invalid<OverlayDirection> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of OverlayDirection."
+    }
+}
 
+/// EVROverlayIntersectionMaskPrimitiveType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum OverlayIntersectionMaskPrimitiveType {
-    Rectangle = 0,
-    Circle = 1,
+    /// EVROverlayIntersectionMaskPrimitiveType_OverlayIntersectionPrimitiveType_Rectangle = 0.
+    Rectangle = sys::EVROverlayIntersectionMaskPrimitiveType_OverlayIntersectionPrimitiveType_Rectangle,
+    /// EVROverlayIntersectionMaskPrimitiveType_OverlayIntersectionPrimitiveType_Circle = 1.
+    Circle = sys::EVROverlayIntersectionMaskPrimitiveType_OverlayIntersectionPrimitiveType_Circle,
 }
 
-impl OverlayIntersectionMaskPrimitiveType {
+impl Enum for OverlayIntersectionMaskPrimitiveType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawOverlayIntersectionMaskPrimitiveType) -> Option<Self> {
-        match val {
-            OverlayIntersectionMaskPrimitiveType_Rectangle => {
-                Some(OverlayIntersectionMaskPrimitiveType::Rectangle)
-            }
-            OverlayIntersectionMaskPrimitiveType_Circle => {
-                Some(OverlayIntersectionMaskPrimitiveType::Circle)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVROverlayIntersectionMaskPrimitiveType_OverlayIntersectionPrimitiveType_Rectangle => Ok(OverlayIntersectionMaskPrimitiveType::Rectangle),
+             sys::EVROverlayIntersectionMaskPrimitiveType_OverlayIntersectionPrimitiveType_Circle => Ok(OverlayIntersectionMaskPrimitiveType::Circle),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawOverlayIntersectionMaskPrimitiveType> for OverlayIntersectionMaskPrimitiveType {
-    fn from(val: RawOverlayIntersectionMaskPrimitiveType) -> Self {
-        OverlayIntersectionMaskPrimitiveType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for OverlayIntersectionMaskPrimitiveType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawRenderModelError(pub u32);
+impl fmt::Display for Invalid<OverlayIntersectionMaskPrimitiveType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of OverlayIntersectionMaskPrimitiveType.", self.0)
+    }
+}
 
-pub const RenderModelError_None: RawRenderModelError = RawRenderModelError(0);
-pub const RenderModelError_Loading: RawRenderModelError = RawRenderModelError(100);
-pub const RenderModelError_NotSupported: RawRenderModelError = RawRenderModelError(200);
-pub const RenderModelError_InvalidArg: RawRenderModelError = RawRenderModelError(300);
-pub const RenderModelError_InvalidModel: RawRenderModelError = RawRenderModelError(301);
-pub const RenderModelError_NoShapes: RawRenderModelError = RawRenderModelError(302);
-pub const RenderModelError_MultipleShapes: RawRenderModelError = RawRenderModelError(303);
-pub const RenderModelError_TooManyVertices: RawRenderModelError = RawRenderModelError(304);
-pub const RenderModelError_MultipleTextures: RawRenderModelError = RawRenderModelError(305);
-pub const RenderModelError_BufferTooSmall: RawRenderModelError = RawRenderModelError(306);
-pub const RenderModelError_NotEnoughNormals: RawRenderModelError = RawRenderModelError(307);
-pub const RenderModelError_NotEnoughTexCoords: RawRenderModelError = RawRenderModelError(308);
-pub const RenderModelError_InvalidTexture: RawRenderModelError = RawRenderModelError(400);
+impl error::Error for Invalid<OverlayIntersectionMaskPrimitiveType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of OverlayIntersectionMaskPrimitiveType."
+    }
+}
 
+/// EVRRenderModelError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum RenderModelError {
-    None = 0,
-    Loading = 100,
-    NotSupported = 200,
-    InvalidArg = 300,
-    InvalidModel = 301,
-    NoShapes = 302,
-    MultipleShapes = 303,
-    TooManyVertices = 304,
-    MultipleTextures = 305,
-    BufferTooSmall = 306,
-    NotEnoughNormals = 307,
-    NotEnoughTexCoords = 308,
-    InvalidTexture = 400,
+    /// EVRRenderModelError_VRRenderModelError_None = 0.
+    None = sys::EVRRenderModelError_VRRenderModelError_None,
+    /// EVRRenderModelError_VRRenderModelError_Loading = 100.
+    Loading = sys::EVRRenderModelError_VRRenderModelError_Loading,
+    /// EVRRenderModelError_VRRenderModelError_NotSupported = 200.
+    NotSupported = sys::EVRRenderModelError_VRRenderModelError_NotSupported,
+    /// EVRRenderModelError_VRRenderModelError_InvalidArg = 300.
+    InvalidArg = sys::EVRRenderModelError_VRRenderModelError_InvalidArg,
+    /// EVRRenderModelError_VRRenderModelError_InvalidModel = 301.
+    InvalidModel = sys::EVRRenderModelError_VRRenderModelError_InvalidModel,
+    /// EVRRenderModelError_VRRenderModelError_NoShapes = 302.
+    NoShape = sys::EVRRenderModelError_VRRenderModelError_NoShapes,
+    /// EVRRenderModelError_VRRenderModelError_MultipleShapes = 303.
+    MultipleShape = sys::EVRRenderModelError_VRRenderModelError_MultipleShapes,
+    /// EVRRenderModelError_VRRenderModelError_TooManyVertices = 304.
+    TooManyVertice = sys::EVRRenderModelError_VRRenderModelError_TooManyVertices,
+    /// EVRRenderModelError_VRRenderModelError_MultipleTextures = 305.
+    MultipleTexture = sys::EVRRenderModelError_VRRenderModelError_MultipleTextures,
+    /// EVRRenderModelError_VRRenderModelError_BufferTooSmall = 306.
+    BufferTooSmall = sys::EVRRenderModelError_VRRenderModelError_BufferTooSmall,
+    /// EVRRenderModelError_VRRenderModelError_NotEnoughNormals = 307.
+    NotEnoughNormal = sys::EVRRenderModelError_VRRenderModelError_NotEnoughNormals,
+    /// EVRRenderModelError_VRRenderModelError_NotEnoughTexCoords = 308.
+    NotEnoughTexCoord = sys::EVRRenderModelError_VRRenderModelError_NotEnoughTexCoords,
+    /// EVRRenderModelError_VRRenderModelError_InvalidTexture = 400.
+    InvalidTexture = sys::EVRRenderModelError_VRRenderModelError_InvalidTexture,
 }
 
-impl RenderModelError {
+impl Enum for RenderModelError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawRenderModelError) -> Option<Self> {
-        match val {
-            RenderModelError_None => Some(RenderModelError::None),
-            RenderModelError_Loading => Some(RenderModelError::Loading),
-            RenderModelError_NotSupported => Some(RenderModelError::NotSupported),
-            RenderModelError_InvalidArg => Some(RenderModelError::InvalidArg),
-            RenderModelError_InvalidModel => Some(RenderModelError::InvalidModel),
-            RenderModelError_NoShapes => Some(RenderModelError::NoShapes),
-            RenderModelError_MultipleShapes => Some(RenderModelError::MultipleShapes),
-            RenderModelError_TooManyVertices => Some(RenderModelError::TooManyVertices),
-            RenderModelError_MultipleTextures => Some(RenderModelError::MultipleTextures),
-            RenderModelError_BufferTooSmall => Some(RenderModelError::BufferTooSmall),
-            RenderModelError_NotEnoughNormals => Some(RenderModelError::NotEnoughNormals),
-            RenderModelError_NotEnoughTexCoords => Some(RenderModelError::NotEnoughTexCoords),
-            RenderModelError_InvalidTexture => Some(RenderModelError::InvalidTexture),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRRenderModelError_VRRenderModelError_None => Ok(RenderModelError::None),
+             sys::EVRRenderModelError_VRRenderModelError_Loading => Ok(RenderModelError::Loading),
+             sys::EVRRenderModelError_VRRenderModelError_NotSupported => Ok(RenderModelError::NotSupported),
+             sys::EVRRenderModelError_VRRenderModelError_InvalidArg => Ok(RenderModelError::InvalidArg),
+             sys::EVRRenderModelError_VRRenderModelError_InvalidModel => Ok(RenderModelError::InvalidModel),
+             sys::EVRRenderModelError_VRRenderModelError_NoShapes => Ok(RenderModelError::NoShape),
+             sys::EVRRenderModelError_VRRenderModelError_MultipleShapes => Ok(RenderModelError::MultipleShape),
+             sys::EVRRenderModelError_VRRenderModelError_TooManyVertices => Ok(RenderModelError::TooManyVertice),
+             sys::EVRRenderModelError_VRRenderModelError_MultipleTextures => Ok(RenderModelError::MultipleTexture),
+             sys::EVRRenderModelError_VRRenderModelError_BufferTooSmall => Ok(RenderModelError::BufferTooSmall),
+             sys::EVRRenderModelError_VRRenderModelError_NotEnoughNormals => Ok(RenderModelError::NotEnoughNormal),
+             sys::EVRRenderModelError_VRRenderModelError_NotEnoughTexCoords => Ok(RenderModelError::NotEnoughTexCoord),
+             sys::EVRRenderModelError_VRRenderModelError_InvalidTexture => Ok(RenderModelError::InvalidTexture),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawRenderModelError> for RenderModelError {
-    fn from(val: RawRenderModelError) -> Self {
-        RenderModelError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for RenderModelError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawComponentProperty(pub u32);
+impl fmt::Display for Invalid<RenderModelError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of RenderModelError.", self.0)
+    }
+}
 
-pub const ComponentProperty_IsStatic: RawComponentProperty = RawComponentProperty(1);
-pub const ComponentProperty_IsVisible: RawComponentProperty = RawComponentProperty(2);
-pub const ComponentProperty_IsTouched: RawComponentProperty = RawComponentProperty(4);
-pub const ComponentProperty_IsPressed: RawComponentProperty = RawComponentProperty(8);
-pub const ComponentProperty_IsScrolled: RawComponentProperty = RawComponentProperty(16);
+impl error::Error for Invalid<RenderModelError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of RenderModelError."
+    }
+}
 
+/// EVRComponentProperty.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ComponentProperty {
-    IsStatic = 1,
-    IsVisible = 2,
-    IsTouched = 4,
-    IsPressed = 8,
-    IsScrolled = 16,
+    /// EVRComponentProperty_VRComponentProperty_IsStatic = 1.
+    IsStatic = sys::EVRComponentProperty_VRComponentProperty_IsStatic,
+    /// EVRComponentProperty_VRComponentProperty_IsVisible = 2.
+    IsVisible = sys::EVRComponentProperty_VRComponentProperty_IsVisible,
+    /// EVRComponentProperty_VRComponentProperty_IsTouched = 4.
+    IsTouched = sys::EVRComponentProperty_VRComponentProperty_IsTouched,
+    /// EVRComponentProperty_VRComponentProperty_IsPressed = 8.
+    IsPressed = sys::EVRComponentProperty_VRComponentProperty_IsPressed,
+    /// EVRComponentProperty_VRComponentProperty_IsScrolled = 16.
+    IsScrolled = sys::EVRComponentProperty_VRComponentProperty_IsScrolled,
 }
 
-impl ComponentProperty {
+impl Enum for ComponentProperty {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawComponentProperty) -> Option<Self> {
-        match val {
-            ComponentProperty_IsStatic => Some(ComponentProperty::IsStatic),
-            ComponentProperty_IsVisible => Some(ComponentProperty::IsVisible),
-            ComponentProperty_IsTouched => Some(ComponentProperty::IsTouched),
-            ComponentProperty_IsPressed => Some(ComponentProperty::IsPressed),
-            ComponentProperty_IsScrolled => Some(ComponentProperty::IsScrolled),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRComponentProperty_VRComponentProperty_IsStatic => Ok(ComponentProperty::IsStatic),
+             sys::EVRComponentProperty_VRComponentProperty_IsVisible => Ok(ComponentProperty::IsVisible),
+             sys::EVRComponentProperty_VRComponentProperty_IsTouched => Ok(ComponentProperty::IsTouched),
+             sys::EVRComponentProperty_VRComponentProperty_IsPressed => Ok(ComponentProperty::IsPressed),
+             sys::EVRComponentProperty_VRComponentProperty_IsScrolled => Ok(ComponentProperty::IsScrolled),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawComponentProperty> for ComponentProperty {
-    fn from(val: RawComponentProperty) -> Self {
-        ComponentProperty::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ComponentProperty.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawNotificationType(pub u32);
+impl fmt::Display for Invalid<ComponentProperty> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ComponentProperty.", self.0)
+    }
+}
 
-pub const NotificationType_Transient: RawNotificationType = RawNotificationType(0);
-pub const NotificationType_Persistent: RawNotificationType = RawNotificationType(1);
-pub const NotificationType_Transient_SystemWithUserValue: RawNotificationType =
-    RawNotificationType(2);
+impl error::Error for Invalid<ComponentProperty> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ComponentProperty."
+    }
+}
 
+/// EVRNotificationType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NotificationType {
-    Transient = 0,
-    Persistent = 1,
-    Transient_SystemWithUserValue = 2,
+    /// EVRNotificationType_Transient = 0.
+    Transient = sys::EVRNotificationType_Transient,
+    /// EVRNotificationType_Persistent = 1.
+    Persistent = sys::EVRNotificationType_Persistent,
+    /// EVRNotificationType_Transient_SystemWithUserValue = 2.
+    TransientSystemWithUserValue = sys::EVRNotificationType_Transient_SystemWithUserValue,
 }
 
-impl NotificationType {
+impl Enum for NotificationType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawNotificationType) -> Option<Self> {
-        match val {
-            NotificationType_Transient => Some(NotificationType::Transient),
-            NotificationType_Persistent => Some(NotificationType::Persistent),
-            NotificationType_Transient_SystemWithUserValue => {
-                Some(NotificationType::Transient_SystemWithUserValue)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRNotificationType_Transient => Ok(NotificationType::Transient),
+             sys::EVRNotificationType_Persistent => Ok(NotificationType::Persistent),
+             sys::EVRNotificationType_Transient_SystemWithUserValue => Ok(NotificationType::TransientSystemWithUserValue),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawNotificationType> for NotificationType {
-    fn from(val: RawNotificationType) -> Self {
-        NotificationType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for NotificationType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawNotificationStyle(pub u32);
+impl fmt::Display for Invalid<NotificationType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of NotificationType.", self.0)
+    }
+}
 
-pub const NotificationStyle_None: RawNotificationStyle = RawNotificationStyle(0);
-pub const NotificationStyle_Application: RawNotificationStyle = RawNotificationStyle(100);
-pub const NotificationStyle_Contact_Disabled: RawNotificationStyle = RawNotificationStyle(200);
-pub const NotificationStyle_Contact_Enabled: RawNotificationStyle = RawNotificationStyle(201);
-pub const NotificationStyle_Contact_Active: RawNotificationStyle = RawNotificationStyle(202);
+impl error::Error for Invalid<NotificationType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of NotificationType."
+    }
+}
 
+/// EVRNotificationStyle.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NotificationStyle {
-    None = 0,
-    Application = 100,
-    Contact_Disabled = 200,
-    Contact_Enabled = 201,
-    Contact_Active = 202,
+    /// EVRNotificationStyle_None = 0.
+    None = sys::EVRNotificationStyle_None,
+    /// EVRNotificationStyle_Application = 100.
+    Application = sys::EVRNotificationStyle_Application,
+    /// EVRNotificationStyle_Contact_Disabled = 200.
+    ContactDisabled = sys::EVRNotificationStyle_Contact_Disabled,
+    /// EVRNotificationStyle_Contact_Enabled = 201.
+    ContactEnabled = sys::EVRNotificationStyle_Contact_Enabled,
+    /// EVRNotificationStyle_Contact_Active = 202.
+    ContactActive = sys::EVRNotificationStyle_Contact_Active,
 }
 
-impl NotificationStyle {
+impl Enum for NotificationStyle {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawNotificationStyle) -> Option<Self> {
-        match val {
-            NotificationStyle_None => Some(NotificationStyle::None),
-            NotificationStyle_Application => Some(NotificationStyle::Application),
-            NotificationStyle_Contact_Disabled => Some(NotificationStyle::Contact_Disabled),
-            NotificationStyle_Contact_Enabled => Some(NotificationStyle::Contact_Enabled),
-            NotificationStyle_Contact_Active => Some(NotificationStyle::Contact_Active),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRNotificationStyle_None => Ok(NotificationStyle::None),
+             sys::EVRNotificationStyle_Application => Ok(NotificationStyle::Application),
+             sys::EVRNotificationStyle_Contact_Disabled => Ok(NotificationStyle::ContactDisabled),
+             sys::EVRNotificationStyle_Contact_Enabled => Ok(NotificationStyle::ContactEnabled),
+             sys::EVRNotificationStyle_Contact_Active => Ok(NotificationStyle::ContactActive),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawNotificationStyle> for NotificationStyle {
-    fn from(val: RawNotificationStyle) -> Self {
-        NotificationStyle::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for NotificationStyle.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSettingsError(pub u32);
+impl fmt::Display for Invalid<NotificationStyle> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of NotificationStyle.", self.0)
+    }
+}
 
-pub const SettingsError_None: RawSettingsError = RawSettingsError(0);
-pub const SettingsError_IPCFailed: RawSettingsError = RawSettingsError(1);
-pub const SettingsError_WriteFailed: RawSettingsError = RawSettingsError(2);
-pub const SettingsError_ReadFailed: RawSettingsError = RawSettingsError(3);
-pub const SettingsError_JsonParseFailed: RawSettingsError = RawSettingsError(4);
-pub const SettingsError_UnsetSettingHasNoDefault: RawSettingsError = RawSettingsError(5);
+impl error::Error for Invalid<NotificationStyle> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of NotificationStyle."
+    }
+}
 
+/// EVRSettingsError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum SettingsError {
-    None = 0,
-    IPCFailed = 1,
-    WriteFailed = 2,
-    ReadFailed = 3,
-    JsonParseFailed = 4,
-    UnsetSettingHasNoDefault = 5,
+    /// EVRSettingsError_VRSettingsError_None = 0.
+    None = sys::EVRSettingsError_VRSettingsError_None,
+    /// EVRSettingsError_VRSettingsError_IPCFailed = 1.
+    Ipcfailed = sys::EVRSettingsError_VRSettingsError_IPCFailed,
+    /// EVRSettingsError_VRSettingsError_WriteFailed = 2.
+    WriteFailed = sys::EVRSettingsError_VRSettingsError_WriteFailed,
+    /// EVRSettingsError_VRSettingsError_ReadFailed = 3.
+    ReadFailed = sys::EVRSettingsError_VRSettingsError_ReadFailed,
+    /// EVRSettingsError_VRSettingsError_JsonParseFailed = 4.
+    JsonParseFailed = sys::EVRSettingsError_VRSettingsError_JsonParseFailed,
+    /// EVRSettingsError_VRSettingsError_UnsetSettingHasNoDefault = 5.
+    UnsetSettingHasNoDefault = sys::EVRSettingsError_VRSettingsError_UnsetSettingHasNoDefault,
 }
 
-impl SettingsError {
+impl Enum for SettingsError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSettingsError) -> Option<Self> {
-        match val {
-            SettingsError_None => Some(SettingsError::None),
-            SettingsError_IPCFailed => Some(SettingsError::IPCFailed),
-            SettingsError_WriteFailed => Some(SettingsError::WriteFailed),
-            SettingsError_ReadFailed => Some(SettingsError::ReadFailed),
-            SettingsError_JsonParseFailed => Some(SettingsError::JsonParseFailed),
-            SettingsError_UnsetSettingHasNoDefault => Some(SettingsError::UnsetSettingHasNoDefault),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSettingsError_VRSettingsError_None => Ok(SettingsError::None),
+             sys::EVRSettingsError_VRSettingsError_IPCFailed => Ok(SettingsError::Ipcfailed),
+             sys::EVRSettingsError_VRSettingsError_WriteFailed => Ok(SettingsError::WriteFailed),
+             sys::EVRSettingsError_VRSettingsError_ReadFailed => Ok(SettingsError::ReadFailed),
+             sys::EVRSettingsError_VRSettingsError_JsonParseFailed => Ok(SettingsError::JsonParseFailed),
+             sys::EVRSettingsError_VRSettingsError_UnsetSettingHasNoDefault => Ok(SettingsError::UnsetSettingHasNoDefault),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSettingsError> for SettingsError {
-    fn from(val: RawSettingsError) -> Self {
-        SettingsError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SettingsError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawScreenshotError(pub u32);
+impl fmt::Display for Invalid<SettingsError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SettingsError.", self.0)
+    }
+}
 
-pub const ScreenshotError_None: RawScreenshotError = RawScreenshotError(0);
-pub const ScreenshotError_RequestFailed: RawScreenshotError = RawScreenshotError(1);
-pub const ScreenshotError_IncompatibleVersion: RawScreenshotError = RawScreenshotError(100);
-pub const ScreenshotError_NotFound: RawScreenshotError = RawScreenshotError(101);
-pub const ScreenshotError_BufferTooSmall: RawScreenshotError = RawScreenshotError(102);
-pub const ScreenshotError_ScreenshotAlreadyInProgress: RawScreenshotError = RawScreenshotError(108);
+impl error::Error for Invalid<SettingsError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SettingsError."
+    }
+}
 
+/// EVRScreenshotError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum ScreenshotError {
-    None = 0,
-    RequestFailed = 1,
-    IncompatibleVersion = 100,
-    NotFound = 101,
-    BufferTooSmall = 102,
-    ScreenshotAlreadyInProgress = 108,
+    /// EVRScreenshotError_VRScreenshotError_None = 0.
+    None = sys::EVRScreenshotError_VRScreenshotError_None,
+    /// EVRScreenshotError_VRScreenshotError_RequestFailed = 1.
+    RequestFailed = sys::EVRScreenshotError_VRScreenshotError_RequestFailed,
+    /// EVRScreenshotError_VRScreenshotError_IncompatibleVersion = 100.
+    IncompatibleVersion = sys::EVRScreenshotError_VRScreenshotError_IncompatibleVersion,
+    /// EVRScreenshotError_VRScreenshotError_NotFound = 101.
+    NotFound = sys::EVRScreenshotError_VRScreenshotError_NotFound,
+    /// EVRScreenshotError_VRScreenshotError_BufferTooSmall = 102.
+    BufferTooSmall = sys::EVRScreenshotError_VRScreenshotError_BufferTooSmall,
+    /// EVRScreenshotError_VRScreenshotError_ScreenshotAlreadyInProgress = 108.
+    ScreenshotAlreadyInProgress = sys::EVRScreenshotError_VRScreenshotError_ScreenshotAlreadyInProgress,
 }
 
-impl ScreenshotError {
+impl Enum for ScreenshotError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawScreenshotError) -> Option<Self> {
-        match val {
-            ScreenshotError_None => Some(ScreenshotError::None),
-            ScreenshotError_RequestFailed => Some(ScreenshotError::RequestFailed),
-            ScreenshotError_IncompatibleVersion => Some(ScreenshotError::IncompatibleVersion),
-            ScreenshotError_NotFound => Some(ScreenshotError::NotFound),
-            ScreenshotError_BufferTooSmall => Some(ScreenshotError::BufferTooSmall),
-            ScreenshotError_ScreenshotAlreadyInProgress => {
-                Some(ScreenshotError::ScreenshotAlreadyInProgress)
-            }
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRScreenshotError_VRScreenshotError_None => Ok(ScreenshotError::None),
+             sys::EVRScreenshotError_VRScreenshotError_RequestFailed => Ok(ScreenshotError::RequestFailed),
+             sys::EVRScreenshotError_VRScreenshotError_IncompatibleVersion => Ok(ScreenshotError::IncompatibleVersion),
+             sys::EVRScreenshotError_VRScreenshotError_NotFound => Ok(ScreenshotError::NotFound),
+             sys::EVRScreenshotError_VRScreenshotError_BufferTooSmall => Ok(ScreenshotError::BufferTooSmall),
+             sys::EVRScreenshotError_VRScreenshotError_ScreenshotAlreadyInProgress => Ok(ScreenshotError::ScreenshotAlreadyInProgress),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawScreenshotError> for ScreenshotError {
-    fn from(val: RawScreenshotError) -> Self {
-        ScreenshotError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for ScreenshotError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSkeletalTransformSpace(pub u32);
+impl fmt::Display for Invalid<ScreenshotError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of ScreenshotError.", self.0)
+    }
+}
 
-pub const SkeletalTransformSpace_Model: RawSkeletalTransformSpace = RawSkeletalTransformSpace(0);
-pub const SkeletalTransformSpace_Parent: RawSkeletalTransformSpace = RawSkeletalTransformSpace(1);
+impl error::Error for Invalid<ScreenshotError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of ScreenshotError."
+    }
+}
 
+/// EVRSkeletalTransformSpace.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum SkeletalTransformSpace {
-    Model = 0,
-    Parent = 1,
+    /// EVRSkeletalTransformSpace_VRSkeletalTransformSpace_Model = 0.
+    Model = sys::EVRSkeletalTransformSpace_VRSkeletalTransformSpace_Model,
+    /// EVRSkeletalTransformSpace_VRSkeletalTransformSpace_Parent = 1.
+    Parent = sys::EVRSkeletalTransformSpace_VRSkeletalTransformSpace_Parent,
 }
 
-impl SkeletalTransformSpace {
+impl Enum for SkeletalTransformSpace {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSkeletalTransformSpace) -> Option<Self> {
-        match val {
-            SkeletalTransformSpace_Model => Some(SkeletalTransformSpace::Model),
-            SkeletalTransformSpace_Parent => Some(SkeletalTransformSpace::Parent),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSkeletalTransformSpace_VRSkeletalTransformSpace_Model => Ok(SkeletalTransformSpace::Model),
+             sys::EVRSkeletalTransformSpace_VRSkeletalTransformSpace_Parent => Ok(SkeletalTransformSpace::Parent),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSkeletalTransformSpace> for SkeletalTransformSpace {
-    fn from(val: RawSkeletalTransformSpace) -> Self {
-        SkeletalTransformSpace::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SkeletalTransformSpace.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawSkeletalReferencePose(pub u32);
+impl fmt::Display for Invalid<SkeletalTransformSpace> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SkeletalTransformSpace.", self.0)
+    }
+}
 
-pub const SkeletalReferencePose_BindPose: RawSkeletalReferencePose = RawSkeletalReferencePose(0);
-pub const SkeletalReferencePose_OpenHand: RawSkeletalReferencePose = RawSkeletalReferencePose(1);
-pub const SkeletalReferencePose_Fist: RawSkeletalReferencePose = RawSkeletalReferencePose(2);
-pub const SkeletalReferencePose_GripLimit: RawSkeletalReferencePose = RawSkeletalReferencePose(3);
+impl error::Error for Invalid<SkeletalTransformSpace> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SkeletalTransformSpace."
+    }
+}
 
+/// EVRSkeletalReferencePose.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum SkeletalReferencePose {
-    BindPose = 0,
-    OpenHand = 1,
-    Fist = 2,
-    GripLimit = 3,
+    /// EVRSkeletalReferencePose_VRSkeletalReferencePose_BindPose = 0.
+    BindPose = sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_BindPose,
+    /// EVRSkeletalReferencePose_VRSkeletalReferencePose_OpenHand = 1.
+    OpenHand = sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_OpenHand,
+    /// EVRSkeletalReferencePose_VRSkeletalReferencePose_Fist = 2.
+    Fist = sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_Fist,
+    /// EVRSkeletalReferencePose_VRSkeletalReferencePose_GripLimit = 3.
+    GripLimit = sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_GripLimit,
 }
 
-impl SkeletalReferencePose {
+impl Enum for SkeletalReferencePose {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawSkeletalReferencePose) -> Option<Self> {
-        match val {
-            SkeletalReferencePose_BindPose => Some(SkeletalReferencePose::BindPose),
-            SkeletalReferencePose_OpenHand => Some(SkeletalReferencePose::OpenHand),
-            SkeletalReferencePose_Fist => Some(SkeletalReferencePose::Fist),
-            SkeletalReferencePose_GripLimit => Some(SkeletalReferencePose::GripLimit),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_BindPose => Ok(SkeletalReferencePose::BindPose),
+             sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_OpenHand => Ok(SkeletalReferencePose::OpenHand),
+             sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_Fist => Ok(SkeletalReferencePose::Fist),
+             sys::EVRSkeletalReferencePose_VRSkeletalReferencePose_GripLimit => Ok(SkeletalReferencePose::GripLimit),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawSkeletalReferencePose> for SkeletalReferencePose {
-    fn from(val: RawSkeletalReferencePose) -> Self {
-        SkeletalReferencePose::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for SkeletalReferencePose.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawFinger(pub u32);
+impl fmt::Display for Invalid<SkeletalReferencePose> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of SkeletalReferencePose.", self.0)
+    }
+}
 
-pub const Finger_Thumb: RawFinger = RawFinger(0);
-pub const Finger_Index: RawFinger = RawFinger(1);
-pub const Finger_Middle: RawFinger = RawFinger(2);
-pub const Finger_Ring: RawFinger = RawFinger(3);
-pub const Finger_Pinky: RawFinger = RawFinger(4);
-pub const Finger_Count: RawFinger = RawFinger(5);
+impl error::Error for Invalid<SkeletalReferencePose> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of SkeletalReferencePose."
+    }
+}
 
+/// EVRFinger.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Finger {
-    Thumb = 0,
-    Index = 1,
-    Middle = 2,
-    Ring = 3,
-    Pinky = 4,
-    Count = 5,
+    /// EVRFinger_VRFinger_Thumb = 0.
+    Thumb = sys::EVRFinger_VRFinger_Thumb,
+    /// EVRFinger_VRFinger_Index = 1.
+    Index = sys::EVRFinger_VRFinger_Index,
+    /// EVRFinger_VRFinger_Middle = 2.
+    Middle = sys::EVRFinger_VRFinger_Middle,
+    /// EVRFinger_VRFinger_Ring = 3.
+    Ring = sys::EVRFinger_VRFinger_Ring,
+    /// EVRFinger_VRFinger_Pinky = 4.
+    Pinky = sys::EVRFinger_VRFinger_Pinky,
+    /// EVRFinger_VRFinger_Count = 5.
+    Count = sys::EVRFinger_VRFinger_Count,
 }
 
-impl Finger {
+impl Enum for Finger {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawFinger) -> Option<Self> {
-        match val {
-            Finger_Thumb => Some(Finger::Thumb),
-            Finger_Index => Some(Finger::Index),
-            Finger_Middle => Some(Finger::Middle),
-            Finger_Ring => Some(Finger::Ring),
-            Finger_Pinky => Some(Finger::Pinky),
-            Finger_Count => Some(Finger::Count),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRFinger_VRFinger_Thumb => Ok(Finger::Thumb),
+             sys::EVRFinger_VRFinger_Index => Ok(Finger::Index),
+             sys::EVRFinger_VRFinger_Middle => Ok(Finger::Middle),
+             sys::EVRFinger_VRFinger_Ring => Ok(Finger::Ring),
+             sys::EVRFinger_VRFinger_Pinky => Ok(Finger::Pinky),
+             sys::EVRFinger_VRFinger_Count => Ok(Finger::Count),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawFinger> for Finger {
-    fn from(val: RawFinger) -> Self {
-        Finger::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for Finger.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawFingerSplay(pub u32);
+impl fmt::Display for Invalid<Finger> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of Finger.", self.0)
+    }
+}
 
-pub const FingerSplay_Thumb_Index: RawFingerSplay = RawFingerSplay(0);
-pub const FingerSplay_Index_Middle: RawFingerSplay = RawFingerSplay(1);
-pub const FingerSplay_Middle_Ring: RawFingerSplay = RawFingerSplay(2);
-pub const FingerSplay_Ring_Pinky: RawFingerSplay = RawFingerSplay(3);
-pub const FingerSplay_Count: RawFingerSplay = RawFingerSplay(4);
+impl error::Error for Invalid<Finger> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of Finger."
+    }
+}
 
+/// EVRFingerSplay.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum FingerSplay {
-    Thumb_Index = 0,
-    Index_Middle = 1,
-    Middle_Ring = 2,
-    Ring_Pinky = 3,
-    Count = 4,
+    /// EVRFingerSplay_VRFingerSplay_Thumb_Index = 0.
+    ThumbIndex = sys::EVRFingerSplay_VRFingerSplay_Thumb_Index,
+    /// EVRFingerSplay_VRFingerSplay_Index_Middle = 1.
+    IndexMiddle = sys::EVRFingerSplay_VRFingerSplay_Index_Middle,
+    /// EVRFingerSplay_VRFingerSplay_Middle_Ring = 2.
+    MiddleRing = sys::EVRFingerSplay_VRFingerSplay_Middle_Ring,
+    /// EVRFingerSplay_VRFingerSplay_Ring_Pinky = 3.
+    RingPinky = sys::EVRFingerSplay_VRFingerSplay_Ring_Pinky,
+    /// EVRFingerSplay_VRFingerSplay_Count = 4.
+    Count = sys::EVRFingerSplay_VRFingerSplay_Count,
 }
 
-impl FingerSplay {
+impl Enum for FingerSplay {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawFingerSplay) -> Option<Self> {
-        match val {
-            FingerSplay_Thumb_Index => Some(FingerSplay::Thumb_Index),
-            FingerSplay_Index_Middle => Some(FingerSplay::Index_Middle),
-            FingerSplay_Middle_Ring => Some(FingerSplay::Middle_Ring),
-            FingerSplay_Ring_Pinky => Some(FingerSplay::Ring_Pinky),
-            FingerSplay_Count => Some(FingerSplay::Count),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRFingerSplay_VRFingerSplay_Thumb_Index => Ok(FingerSplay::ThumbIndex),
+             sys::EVRFingerSplay_VRFingerSplay_Index_Middle => Ok(FingerSplay::IndexMiddle),
+             sys::EVRFingerSplay_VRFingerSplay_Middle_Ring => Ok(FingerSplay::MiddleRing),
+             sys::EVRFingerSplay_VRFingerSplay_Ring_Pinky => Ok(FingerSplay::RingPinky),
+             sys::EVRFingerSplay_VRFingerSplay_Count => Ok(FingerSplay::Count),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawFingerSplay> for FingerSplay {
-    fn from(val: RawFingerSplay) -> Self {
-        FingerSplay::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for FingerSplay.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawInputFilterCancelType(pub u32);
+impl fmt::Display for Invalid<FingerSplay> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of FingerSplay.", self.0)
+    }
+}
 
-pub const InputFilterCancelType_Timers: RawInputFilterCancelType = RawInputFilterCancelType(0);
-pub const InputFilterCancelType_Momentum: RawInputFilterCancelType = RawInputFilterCancelType(1);
+impl error::Error for Invalid<FingerSplay> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of FingerSplay."
+    }
+}
 
+/// EVRInputFilterCancelType.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum InputFilterCancelType {
-    Timers = 0,
-    Momentum = 1,
+    /// EVRInputFilterCancelType_VRInputFilterCancel_Timers = 0.
+    Timer = sys::EVRInputFilterCancelType_VRInputFilterCancel_Timers,
+    /// EVRInputFilterCancelType_VRInputFilterCancel_Momentum = 1.
+    Momentum = sys::EVRInputFilterCancelType_VRInputFilterCancel_Momentum,
 }
 
-impl InputFilterCancelType {
+impl Enum for InputFilterCancelType {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawInputFilterCancelType) -> Option<Self> {
-        match val {
-            InputFilterCancelType_Timers => Some(InputFilterCancelType::Timers),
-            InputFilterCancelType_Momentum => Some(InputFilterCancelType::Momentum),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRInputFilterCancelType_VRInputFilterCancel_Timers => Ok(InputFilterCancelType::Timer),
+             sys::EVRInputFilterCancelType_VRInputFilterCancel_Momentum => Ok(InputFilterCancelType::Momentum),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawInputFilterCancelType> for InputFilterCancelType {
-    fn from(val: RawInputFilterCancelType) -> Self {
-        InputFilterCancelType::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for InputFilterCancelType.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
+impl fmt::Display for Invalid<InputFilterCancelType> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of InputFilterCancelType.", self.0)
+    }
+}
+
+impl error::Error for Invalid<InputFilterCancelType> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of InputFilterCancelType."
+    }
+}
+
+/// EVRInputStringBits.
+#[repr(i32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawInputStringBits(pub u32);
+pub enum InputStringBit {
+    /// EVRInputStringBits_VRInputString_Hand = 1.
+    Hand = sys::EVRInputStringBits_VRInputString_Hand,
+    /// EVRInputStringBits_VRInputString_ControllerType = 2.
+    ControllerType = sys::EVRInputStringBits_VRInputString_ControllerType,
+    /// EVRInputStringBits_VRInputString_InputSource = 4.
+    InputSource = sys::EVRInputStringBits_VRInputString_InputSource,
+    /// EVRInputStringBits_VRInputString_All = -1.
+    All = sys::EVRInputStringBits_VRInputString_All,
+}
 
-pub const InputStringBits_Hand: RawInputStringBits = RawInputStringBits(1);
-pub const InputStringBits_ControllerType: RawInputStringBits = RawInputStringBits(2);
-pub const InputStringBits_InputSource: RawInputStringBits = RawInputStringBits(4);
-pub const InputStringBits_All: RawInputStringBits = RawInputStringBits(::std::u32::MAX);
+impl Enum for InputStringBit {
+    type Raw = i32;
 
+    #[inline]
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EVRInputStringBits_VRInputString_Hand => Ok(InputStringBit::Hand),
+             sys::EVRInputStringBits_VRInputString_ControllerType => Ok(InputStringBit::ControllerType),
+             sys::EVRInputStringBits_VRInputString_InputSource => Ok(InputStringBit::InputSource),
+             sys::EVRInputStringBits_VRInputString_All => Ok(InputStringBit::All),
+            _ => Err(Invalid(raw)),
+        }
+    }
+
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
+    }
+}
+
+impl fmt::Display for Invalid<InputStringBit> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of InputStringBit.", self.0)
+    }
+}
+
+impl error::Error for Invalid<InputStringBit> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of InputStringBit."
+    }
+}
+
+/// EIOBufferError.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum InputStringBits {
-    Hand = 1,
-    ControllerType = 2,
-    InputSource = 4,
-    All = ::std::u32::MAX,
+pub enum IobufferError {
+    /// EIOBufferError_IOBuffer_Success = 0.
+    Success = sys::EIOBufferError_IOBuffer_Success,
+    /// EIOBufferError_IOBuffer_OperationFailed = 100.
+    OperationFailed = sys::EIOBufferError_IOBuffer_OperationFailed,
+    /// EIOBufferError_IOBuffer_InvalidHandle = 101.
+    InvalidHandle = sys::EIOBufferError_IOBuffer_InvalidHandle,
+    /// EIOBufferError_IOBuffer_InvalidArgument = 102.
+    InvalidArgument = sys::EIOBufferError_IOBuffer_InvalidArgument,
+    /// EIOBufferError_IOBuffer_PathExists = 103.
+    PathExist = sys::EIOBufferError_IOBuffer_PathExists,
+    /// EIOBufferError_IOBuffer_PathDoesNotExist = 104.
+    PathDoesNotExist = sys::EIOBufferError_IOBuffer_PathDoesNotExist,
+    /// EIOBufferError_IOBuffer_Permission = 105.
+    Permission = sys::EIOBufferError_IOBuffer_Permission,
 }
 
-impl InputStringBits {
+impl Enum for IobufferError {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawInputStringBits) -> Option<Self> {
-        match val {
-            InputStringBits_Hand => Some(InputStringBits::Hand),
-            InputStringBits_ControllerType => Some(InputStringBits::ControllerType),
-            InputStringBits_InputSource => Some(InputStringBits::InputSource),
-            InputStringBits_All => Some(InputStringBits::All),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EIOBufferError_IOBuffer_Success => Ok(IobufferError::Success),
+             sys::EIOBufferError_IOBuffer_OperationFailed => Ok(IobufferError::OperationFailed),
+             sys::EIOBufferError_IOBuffer_InvalidHandle => Ok(IobufferError::InvalidHandle),
+             sys::EIOBufferError_IOBuffer_InvalidArgument => Ok(IobufferError::InvalidArgument),
+             sys::EIOBufferError_IOBuffer_PathExists => Ok(IobufferError::PathExist),
+             sys::EIOBufferError_IOBuffer_PathDoesNotExist => Ok(IobufferError::PathDoesNotExist),
+             sys::EIOBufferError_IOBuffer_Permission => Ok(IobufferError::Permission),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawInputStringBits> for InputStringBits {
-    fn from(val: RawInputStringBits) -> Self {
-        InputStringBits::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for InputStringBits.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawIOBufferError(pub u32);
+impl fmt::Display for Invalid<IobufferError> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of IobufferError.", self.0)
+    }
+}
 
-pub const IOBufferError_Success: RawIOBufferError = RawIOBufferError(0);
-pub const IOBufferError_OperationFailed: RawIOBufferError = RawIOBufferError(100);
-pub const IOBufferError_InvalidHandle: RawIOBufferError = RawIOBufferError(101);
-pub const IOBufferError_InvalidArgument: RawIOBufferError = RawIOBufferError(102);
-pub const IOBufferError_PathExists: RawIOBufferError = RawIOBufferError(103);
-pub const IOBufferError_PathDoesNotExist: RawIOBufferError = RawIOBufferError(104);
-pub const IOBufferError_Permission: RawIOBufferError = RawIOBufferError(105);
+impl error::Error for Invalid<IobufferError> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of IobufferError."
+    }
+}
 
+/// EIOBufferMode.
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum IOBufferError {
-    Success = 0,
-    OperationFailed = 100,
-    InvalidHandle = 101,
-    InvalidArgument = 102,
-    PathExists = 103,
-    PathDoesNotExist = 104,
-    Permission = 105,
+pub enum IobufferMode {
+    /// EIOBufferMode_IOBufferMode_Read = 1.
+    Read = sys::EIOBufferMode_IOBufferMode_Read,
+    /// EIOBufferMode_IOBufferMode_Write = 2.
+    Write = sys::EIOBufferMode_IOBufferMode_Write,
+    /// EIOBufferMode_IOBufferMode_Create = 512.
+    Create = sys::EIOBufferMode_IOBufferMode_Create,
 }
 
-impl IOBufferError {
+impl Enum for IobufferMode {
+    type Raw = u32;
+
     #[inline]
-    fn from_raw(val: RawIOBufferError) -> Option<Self> {
-        match val {
-            IOBufferError_Success => Some(IOBufferError::Success),
-            IOBufferError_OperationFailed => Some(IOBufferError::OperationFailed),
-            IOBufferError_InvalidHandle => Some(IOBufferError::InvalidHandle),
-            IOBufferError_InvalidArgument => Some(IOBufferError::InvalidArgument),
-            IOBufferError_PathExists => Some(IOBufferError::PathExists),
-            IOBufferError_PathDoesNotExist => Some(IOBufferError::PathDoesNotExist),
-            IOBufferError_Permission => Some(IOBufferError::Permission),
-            _ => None,
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {
+        let raw = val.0;
+        match raw {
+             sys::EIOBufferMode_IOBufferMode_Read => Ok(IobufferMode::Read),
+             sys::EIOBufferMode_IOBufferMode_Write => Ok(IobufferMode::Write),
+             sys::EIOBufferMode_IOBufferMode_Create => Ok(IobufferMode::Create),
+            _ => Err(Invalid(raw)),
         }
     }
-}
 
-impl From<RawIOBufferError> for IOBufferError {
-    fn from(val: RawIOBufferError) -> Self {
-        IOBufferError::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for IOBufferError.");
-        })
+    fn into_unchecked(self) -> Unchecked<Self> {
+        Unchecked(self as Self::Raw)
     }
 }
 
-#[repr(transparent)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct RawIOBufferMode(pub u32);
-
-pub const IOBufferMode_Read: RawIOBufferMode = RawIOBufferMode(1);
-pub const IOBufferMode_Write: RawIOBufferMode = RawIOBufferMode(2);
-pub const IOBufferMode_Create: RawIOBufferMode = RawIOBufferMode(512);
-
-#[repr(u32)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum IOBufferMode {
-    Read = 1,
-    Write = 2,
-    Create = 512,
-}
-
-impl IOBufferMode {
-    #[inline]
-    fn from_raw(val: RawIOBufferMode) -> Option<Self> {
-        match val {
-            IOBufferMode_Read => Some(IOBufferMode::Read),
-            IOBufferMode_Write => Some(IOBufferMode::Write),
-            IOBufferMode_Create => Some(IOBufferMode::Create),
-            _ => None,
-        }
+impl fmt::Display for Invalid<IobufferMode> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The value {} does not represent any variant of IobufferMode.", self.0)
     }
 }
 
-impl From<RawIOBufferMode> for IOBufferMode {
-    fn from(val: RawIOBufferMode) -> Self {
-        IOBufferMode::from_raw(val).unwrap_or_else(|| {
-            panic!("Invalid value {} for IOBufferMode.");
-        })
+impl error::Error for Invalid<IobufferMode> {
+    fn description(&self) -> &str {
+        "Value does not represent any variant of IobufferMode."
     }
 }
+
