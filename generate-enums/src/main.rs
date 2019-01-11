@@ -180,24 +180,4 @@ impl error::Error for Invalid<{enum_id}> {{
             .unwrap();
         }
     }
-
-    let mut rustfmt_cmd = std::process::Command::new("rustfmt");
-
-    rustfmt_cmd
-        .arg("--emit")
-        .arg("files")
-        .arg(&output_file_path);
-
-    println!("Running {:?}", &rustfmt_cmd);
-
-    match rustfmt_cmd.status() {
-        Ok(status) => {
-            if !status.success() {
-                println!("rustfmt failed.");
-            }
-        }
-        Err(error) => {
-            eprintln!("Failed to spawn rustfmt process: {}", error);
-        }
-    }
 }
