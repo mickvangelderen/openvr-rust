@@ -4,13 +4,12 @@ mod types;
 
 use self::types::*;
 
+use inflector::cases::classcase::to_class_case;
 use regex::Regex;
 use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use inflector::cases::screamingsnakecase::to_screaming_snake_case;
-use inflector::cases::classcase::to_class_case;
 
 fn main() {
     let input_file_path = Path::new("input/openvr_api.json");
@@ -25,9 +24,30 @@ fn main() {
         let enum_name_regex = Regex::new(r"^vr::E?(?:VR)?(\w+)$").unwrap();
         let vari_name_regex = Regex::new(r"^[^_]*_(.*)$").unwrap();
 
-        writeln!(out, "use openvr_sys as sys;").unwrap();
+        writeln!(
+            out,
+            r#"use openvr_sys as sys;
+use std::error;
+use std::fmt;
 
-        writeln!(out).unwrap();
+pub trait Enum: Sized {{
+    type Raw: fmt::Display;
+
+    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>>;
+    fn into_unchecked(self) -> Unchecked<Self>;
+}}
+
+#[repr(transparent)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub struct Invalid<E: Enum>(pub(crate) E::Raw);
+
+#[repr(transparent)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub struct Unchecked<E: Enum>(pub(crate) E::Raw);
+
+"#
+        )
+        .unwrap();
 
         for enum_ in data.enums.iter() {
             let enum_id = if let Some(caps) = enum_name_regex.captures(&enum_.id) {
@@ -38,7 +58,6 @@ fn main() {
 
             struct Vari {
                 sys_id: String,
-                const_id: String,
                 vari_id: String,
                 lit: String,
             }
@@ -50,85 +69,85 @@ fn main() {
                 .variants
                 .iter()
                 .map(|vari| {
-                    let vari_id = to_class_case(if let Some(caps) = vari_name_regex.captures(&vari.id) {
-                        caps.get(1).unwrap().as_str()
-                    } else {
-                        vari.id.as_str()
-                    });
+                    let vari_id =
+                        to_class_case(if let Some(caps) = vari_name_regex.captures(&vari.id) {
+                            caps.get(1).unwrap().as_str()
+                        } else {
+                            vari.id.as_str()
+                        });
 
                     Vari {
-                    sys_id: vari.id.clone(),
-                    const_id: to_screaming_snake_case(&format!("{}_{}", enum_id, vari_id)),
-                    vari_id,
-                    lit: if vari.lit == "-1" {
-                        "::std::u32::MAX"
-                    } else {
-                        vari.lit.as_str()
+                        sys_id: vari.id.clone(),
+                        vari_id,
+                        lit: if vari.lit == "-1" {
+                            "::std::u32::MAX"
+                        } else {
+                            vari.lit.as_str()
+                        }
+                        .to_string(),
                     }
-                    .to_string(),
-                    }})
+                })
                 .collect();
-
-            writeln!(out, "#[repr(transparent)]").unwrap();
-            writeln!(out, "#[derive(Debug, Eq, PartialEq, Copy, Clone)]").unwrap();
-            writeln!(out, "pub struct Raw{}(pub u32);\n", enum_id).unwrap();
-
-            writeln!(out).unwrap();
-
-            for vari in variants.iter() {
-                writeln!(
-                    out,
-                    "pub const {0}: Raw{1} = Raw{1}(sys::{2}); // {3}",
-                    vari.const_id, enum_id, vari.sys_id, vari.lit
-                )
-                .unwrap();
-            }
-
-            writeln!(out).unwrap();
 
             writeln!(out, "#[repr(u32)]").unwrap();
             writeln!(out, "#[derive(Debug, Eq, PartialEq, Copy, Clone)]").unwrap();
             writeln!(out, "pub enum {} {{", enum_id).unwrap();
             for vari in variants.iter() {
-                writeln!(out, "    {} = sys::{}, // {}", vari.vari_id, vari.sys_id, vari.lit).unwrap();
-            }
-            writeln!(out, "}}").unwrap();
-
-            writeln!(out).unwrap();
-
-            writeln!(out, "impl {} {{", enum_id).unwrap();
-            writeln!(out, "    #[inline]").unwrap();
-            writeln!(out, "    fn from_raw(val: Raw{}) -> Option<Self> {{", enum_id).unwrap();
-            writeln!(out, "         match val {{").unwrap();
-            for vari in variants.iter() {
                 writeln!(
                     out,
-                    "             {0} => Some({1}::{2}),",
-                    vari.const_id, enum_id, vari.vari_id
+                    "    {} = sys::{}, // {}",
+                    vari.vari_id, vari.sys_id, vari.lit
                 )
                 .unwrap();
             }
-            writeln!(out, "             _ => None,").unwrap();
-            writeln!(out, "         }}").unwrap();
-            writeln!(out, "    }}").unwrap();
             writeln!(out, "}}").unwrap();
 
             writeln!(out).unwrap();
 
-            writeln!(out, "impl From<Raw{0}> for {0} {{", enum_id).unwrap();
-            writeln!(out, "    fn from(val: Raw{}) -> Self {{", enum_id).unwrap();
-            writeln!(out, "        {}::from_raw(val).unwrap_or_else(|| {{", enum_id).unwrap();
+            writeln!(out, "impl Enum for {} {{", enum_id).unwrap();
+            writeln!(out, "    #[inline]").unwrap();
             writeln!(
                 out,
-                "            panic!(\"Invalid value {{}} for {}.\");",
-                enum_id
+                "    fn from_unchecked(val: Unchecked<Self>) -> Result<Self, Invalid<Self>> {{",
             )
             .unwrap();
-            writeln!(out, "        }})").unwrap();
+
+            writeln!(out, "         let raw = val.0;").unwrap();
+            writeln!(out, "         match raw {{").unwrap();
+            for vari in variants.iter() {
+                writeln!(
+                    out,
+                    "             sys::{0} => Ok({1}::{2}),",
+                    vari.sys_id, enum_id, vari.vari_id
+                )
+                .unwrap();
+            }
+            writeln!(out, "             _ => Err(Invalid(raw)),").unwrap();
+            writeln!(out, "         }}").unwrap();
+            writeln!(out, "    }}").unwrap();
+
+            writeln!(out).unwrap();
+
+            writeln!(out, "    fn into_unchecked(self) -> Unchecked<Self> {{",).unwrap();
+            writeln!(out, "         Unchecked(self as Self::Raw)").unwrap();
             writeln!(out, "    }}").unwrap();
             writeln!(out, "}}").unwrap();
 
             writeln!(out).unwrap();
+
+            writeln!(out, r#"
+impl fmt::Display for Invalid<{enum_id}> {{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {{
+        write!(f, "The value {{}} does not represent any variant of {enum_id}.", self.0)
+    }}
+}}
+
+impl error::Error for Invalid<{enum_id}> {{
+    fn description(&self) -> &str {{
+        "Value does not represent any variant of {enum_id}."
+    }}
+}}
+"#, enum_id = enum_id).unwrap();
         }
     }
 
