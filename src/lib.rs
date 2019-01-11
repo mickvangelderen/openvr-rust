@@ -4,10 +4,11 @@ pub mod types;
 pub use self::enums::*;
 pub use self::types::*;
 
-use openvr_sys as sys;
+pub use openvr_sys as sys;
 
 use std::marker::PhantomData;
 use std::mem;
+use std::ptr;
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
@@ -130,6 +131,53 @@ impl<'context> Compositor<'context> {
                     },
                     _context: phantom_data(context),
                 })
+            } else {
+                Err(error)
+            }
+        }
+    }
+
+    pub fn wait_get_poses(
+        &self,
+        poses: &mut [sys::TrackedDevicePose_t],
+        predicted_poses: Option<&mut [sys::TrackedDevicePose_t]>,
+    ) -> Result<(), Unchecked<CompositorError>> {
+        unsafe {
+            let (pp_ptr, pp_len) = if let Some(pp) = predicted_poses {
+                (pp.as_mut_ptr(), pp.len())
+            } else {
+                (std::ptr::null_mut(), 0)
+            };
+            let error = Unchecked(self.fn_table.WaitGetPoses.unwrap()(
+                poses.as_mut_ptr(),
+                poses.len() as u32,
+                pp_ptr,
+                pp_len as u32,
+            ));
+            if error == CompositorError::None.into_unchecked() {
+                Ok(())
+            } else {
+                Err(error)
+            }
+        }
+    }
+
+    pub fn submit(
+        &self,
+        eye: Eye,
+        texture: &mut sys::Texture_t,
+        bounds: Option<&mut sys::VRTextureBounds_t>,
+        flags: SubmitFlag,
+    ) -> Result<(), Unchecked<CompositorError>> {
+        unsafe {
+            let error = Unchecked(self.fn_table.Submit.unwrap()(
+                eye as sys::EVREye,
+                texture,
+                if let Some(p) = bounds { p } else { ptr::null_mut() },
+                flags as sys::EVRSubmitFlags,
+            ));
+            if error == CompositorError::None.into_unchecked() {
+                Ok(())
             } else {
                 Err(error)
             }

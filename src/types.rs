@@ -7,7 +7,7 @@ pub struct Event {
 // pub enum EventData {
 // }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Dimensions {
     pub width: u32,
     pub height: u32,
