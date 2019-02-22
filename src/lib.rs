@@ -6,20 +6,17 @@ pub use self::types::*;
 
 pub use openvr_sys as sys;
 
-use std::marker::PhantomData;
 use std::mem;
 use std::ptr;
 use std::os::raw::c_char;
-use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
+use std::sync::atomic::{AtomicBool, Ordering};
 
-#[inline]
-fn phantom_data<T>(_: T) -> PhantomData<T> {
-    PhantomData
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
+
+pub struct Context {
+    system: System,
+    compositor: Compositor,
 }
-
-static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
-
-pub struct Context {}
 
 impl Context {
     pub fn new(ty: ApplicationType) -> Result<Self, Unchecked<InitError>> {
@@ -34,11 +31,24 @@ impl Context {
         };
 
         if error == InitError::None.into_unchecked() {
-            Ok(Context {})
+            Ok(Context {
+                system: System::new().unwrap(),
+                compositor: Compositor::new().unwrap(),
+            })
         } else {
             INITIALIZED.store(false, Ordering::Release);
             Err(error)
         }
+    }
+
+    #[inline]
+    pub fn system(&self) -> &System {
+        &self.system
+    }
+
+    #[inline]
+    pub fn compositor(&self) -> &Compositor {
+        &self.compositor
     }
 }
 
@@ -51,13 +61,12 @@ impl Drop for Context {
     }
 }
 
-pub struct System<'context> {
+pub struct System {
     fn_table: sys::VR_IVRSystem_FnTable,
-    _context: PhantomData<&'context Context>,
 }
 
-impl<'context> System<'context> {
-    pub fn new(context: &'context Context) -> Result<Self, Unchecked<InitError>> {
+impl System {
+    fn new() -> Result<Self, Unchecked<InitError>> {
         let mut magic = Vec::from(b"FnTable:".as_ref());
         magic.extend(sys::IVRSystem_Version.as_ref());
 
@@ -74,7 +83,6 @@ impl<'context> System<'context> {
                         }
                         *fn_table
                     },
-                    _context: phantom_data(context),
                 })
             } else {
                 Err(error)
@@ -106,13 +114,12 @@ impl<'context> System<'context> {
     }
 }
 
-pub struct Compositor<'context> {
+pub struct Compositor {
     pub fn_table: sys::VR_IVRCompositor_FnTable,
-    _context: PhantomData<&'context Context>,
 }
 
-impl<'context> Compositor<'context> {
-    pub fn new(context: &'context Context) -> Result<Self, Unchecked<InitError>> {
+impl Compositor {
+    fn new() -> Result<Self, Unchecked<InitError>> {
         let mut magic = Vec::from(b"FnTable:".as_ref());
         magic.extend(sys::IVRCompositor_Version.as_ref());
 
@@ -128,8 +135,7 @@ impl<'context> Compositor<'context> {
                             panic!("Unexpected null pointer.");
                         }
                         *fn_table
-                    },
-                    _context: phantom_data(context),
+                    }
                 })
             } else {
                 Err(error)
