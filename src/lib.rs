@@ -99,6 +99,18 @@ impl System {
         }
     }
 
+    pub fn get_projection_matrix(&self, eye: Eye, z_near: f32, z_far: f32) -> [[f32; 4]; 4] {
+        unsafe {
+            self.fn_table.GetProjectionMatrix.unwrap()(eye as u32, z_near, z_far).m
+        }
+    }
+
+    pub fn get_eye_to_head_transform(&self, eye: Eye) -> [[f32; 4]; 3] {
+        unsafe {
+            self.fn_table.GetEyeToHeadTransform.unwrap()(eye as u32).m
+        }
+    }
+
     pub fn poll_next_event(&self) -> Option<Event> {
         unsafe {
             let mut event: sys::VREvent_t = mem::uninitialized();
