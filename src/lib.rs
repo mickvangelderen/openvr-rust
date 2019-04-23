@@ -105,6 +105,14 @@ impl System {
         }
     }
 
+    pub fn get_projection_raw(&self, eye: Eye) -> [f32; 4] {
+        unsafe {
+            let mut out: [f32; 4] = mem::uninitialized();
+            self.fn_table.GetProjectionRaw.unwrap()(eye as u32, &mut out[0], &mut out[1], &mut out[2], &mut out[3]);
+            out
+        }
+    }
+
     pub fn get_eye_to_head_transform(&self, eye: Eye) -> [[f32; 4]; 3] {
         unsafe {
             self.fn_table.GetEyeToHeadTransform.unwrap()(eye as u32).m
