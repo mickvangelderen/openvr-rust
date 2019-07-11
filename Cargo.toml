@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 openvr-sys = { git = "https://github.com/mickvangelderen/openvr-sys-rust", branch = "0.1.x" }
+bitflags = "1.1.0"

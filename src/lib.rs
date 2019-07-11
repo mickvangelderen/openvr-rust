@@ -1,15 +1,16 @@
-pub mod enums;
-pub mod types;
-
-pub use self::enums::*;
-pub use self::types::*;
 
 pub use openvr_sys as sys;
 
-use std::mem;
+mod types;
+mod enums;
+
+pub use self::types::*;
+pub use self::enums::*;
+
 use std::ptr;
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::mem::MaybeUninit;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -19,26 +20,24 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(ty: ApplicationType) -> Result<Self, Unchecked<InitError>> {
+    pub fn new(ty: ApplicationType) -> Result<Self, InitError> {
         if INITIALIZED.compare_and_swap(false, true, Ordering::Acquire) {
             panic!("OpenVR can only be initialized once.");
         }
 
-        let error = unsafe {
+        unsafe {
             let mut error = sys::EVRInitError_VRInitError_None;
             sys::VR_InitInternal(&mut error, ty as sys::EVRApplicationType);
-            Unchecked(error)
+            if let Some(error) = InitError::from_sys(error) {
+                INITIALIZED.store(false, Ordering::Release);
+                return Err(error);
+            }
         };
 
-        if error == InitError::None.into_unchecked() {
-            Ok(Context {
-                system: System::new().unwrap(),
-                compositor: Compositor::new().unwrap(),
-            })
-        } else {
-            INITIALIZED.store(false, Ordering::Release);
-            Err(error)
-        }
+        Ok(Context {
+            system: System::new().unwrap(),
+            compositor: Compositor::new().unwrap(),
+        })
     }
 
     #[inline]
@@ -65,8 +64,16 @@ pub struct System {
     fn_table: sys::VR_IVRSystem_FnTable,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct RawProjection {
+    left: f32,
+    right: f32,
+    bottom: f32,
+    top: f32,
+}
+
 impl System {
-    fn new() -> Result<Self, Unchecked<InitError>> {
+    fn new() -> Result<Self, InitError> {
         let mut magic = Vec::from(b"FnTable:".as_ref());
         magic.extend(sys::IVRSystem_Version.as_ref());
 
@@ -74,55 +81,63 @@ impl System {
             let mut error = sys::EVRInitError_VRInitError_None;
             let fn_table = sys::VR_GetGenericInterface(magic.as_ptr() as *const c_char, &mut error)
                 as *const sys::VR_IVRSystem_FnTable;
-            let error = Unchecked(error);
-            if error == InitError::None.into_unchecked() {
-                Ok(System {
-                    fn_table: {
-                        if fn_table.is_null() {
-                            panic!("Unexpected null pointer.");
-                        }
-                        *fn_table
-                    },
-                })
-            } else {
-                Err(error)
+            if let Some(error) = InitError::from_sys(error) {
+                return Err(error);
             }
+            Ok(System {
+                fn_table: {
+                    if fn_table.is_null() {
+                        panic!("Unexpected null pointer.");
+                    }
+                    *fn_table
+                },
+            })
         }
     }
 
     pub fn get_recommended_render_target_size(&self) -> Dimensions {
         unsafe {
-            let mut width: u32 = mem::uninitialized();
-            let mut height: u32 = mem::uninitialized();
-            self.fn_table.GetRecommendedRenderTargetSize.unwrap()(&mut width, &mut height);
-            Dimensions { width, height }
+            let mut width = MaybeUninit::<u32>::uninit();
+            let mut height = MaybeUninit::<u32>::uninit();
+            self.fn_table.GetRecommendedRenderTargetSize.unwrap()(width.as_mut_ptr(), height.as_mut_ptr());
+            Dimensions { width: width.assume_init(), height: height.assume_init() }
         }
     }
 
     pub fn get_projection_matrix(&self, eye: Eye, z_near: f32, z_far: f32) -> [[f32; 4]; 4] {
         unsafe {
-            self.fn_table.GetProjectionMatrix.unwrap()(eye as u32, z_near, z_far).m
+            self.fn_table.GetProjectionMatrix.unwrap()(eye.into_sys(), z_near, z_far).m
         }
     }
 
-    pub fn get_projection_raw(&self, eye: Eye) -> [f32; 4] {
+    pub fn get_projection_raw(&self, eye: Eye) -> RawProjection {
         unsafe {
-            let mut out: [f32; 4] = mem::uninitialized();
-            self.fn_table.GetProjectionRaw.unwrap()(eye as u32, &mut out[0], &mut out[1], &mut out[2], &mut out[3]);
-            out
+            let mut l = MaybeUninit::<f32>::uninit();
+            let mut r = MaybeUninit::<f32>::uninit();
+            let mut b = MaybeUninit::<f32>::uninit();
+            let mut t = MaybeUninit::<f32>::uninit();
+            self.fn_table.GetProjectionRaw.unwrap()(eye.into_sys(), l.as_mut_ptr(), r.as_mut_ptr(), b.as_mut_ptr(), t.as_mut_ptr());
+            RawProjection {
+                left: l.assume_init(),
+                right: r.assume_init(),
+                bottom: b.assume_init(),
+                top: t.assume_init(),
+            }
         }
     }
 
     pub fn get_eye_to_head_transform(&self, eye: Eye) -> [[f32; 4]; 3] {
         unsafe {
-            self.fn_table.GetEyeToHeadTransform.unwrap()(eye as u32).m
+            self.fn_table.GetEyeToHeadTransform.unwrap()(eye.into_sys()).m
         }
     }
 
     pub fn poll_next_event(&self) -> Option<Event> {
         unsafe {
-            let mut event: sys::VREvent_t = mem::uninitialized();
-            if self.fn_table.PollNextEvent.unwrap()(&mut event, mem::size_of_val(&event) as u32) {
+            let mut event = MaybeUninit::<sys::VREvent_t>::uninit();
+            
+            if self.fn_table.PollNextEvent.unwrap()(event.as_mut_ptr(), std::mem::size_of::<sys::VREvent_t>() as u32) {
+                let event = event.assume_init();
                 Some(Event {
                     tracked_device_index: event.trackedDeviceIndex,
                     event_age_seconds: event.eventAgeSeconds,
@@ -139,7 +154,7 @@ pub struct Compositor {
 }
 
 impl Compositor {
-    fn new() -> Result<Self, Unchecked<InitError>> {
+    fn new() -> Result<Self, InitError> {
         let mut magic = Vec::from(b"FnTable:".as_ref());
         magic.extend(sys::IVRCompositor_Version.as_ref());
 
@@ -147,19 +162,17 @@ impl Compositor {
             let mut error = sys::EVRInitError_VRInitError_None;
             let fn_table = sys::VR_GetGenericInterface(magic.as_ptr() as *const c_char, &mut error)
                 as *const sys::VR_IVRCompositor_FnTable;
-            let error = Unchecked(error);
-            if error == InitError::None.into_unchecked() {
-                Ok(Compositor {
-                    fn_table: {
-                        if fn_table.is_null() {
-                            panic!("Unexpected null pointer.");
-                        }
-                        *fn_table
-                    }
-                })
-            } else {
-                Err(error)
+            if let Some(error) = InitError::from_sys(error) {
+                return Err(error);
             }
+            Ok(Compositor {
+                fn_table: {
+                    if fn_table.is_null() {
+                        panic!("Unexpected null pointer.");
+                    }
+                    *fn_table
+                }
+            })
         }
     }
 
@@ -167,23 +180,22 @@ impl Compositor {
         &self,
         poses: &mut [sys::TrackedDevicePose_t],
         predicted_poses: Option<&mut [sys::TrackedDevicePose_t]>,
-    ) -> Result<(), Unchecked<CompositorError>> {
+    ) -> Result<(), CompositorError> {
         unsafe {
             let (pp_ptr, pp_len) = if let Some(pp) = predicted_poses {
                 (pp.as_mut_ptr(), pp.len())
             } else {
                 (std::ptr::null_mut(), 0)
             };
-            let error = Unchecked(self.fn_table.WaitGetPoses.unwrap()(
+            
+            match CompositorError::from_sys(self.fn_table.WaitGetPoses.unwrap()(
                 poses.as_mut_ptr(),
                 poses.len() as u32,
                 pp_ptr,
                 pp_len as u32,
-            ));
-            if error == CompositorError::None.into_unchecked() {
-                Ok(())
-            } else {
-                Err(error)
+            )) {
+                Some(error) => Err(error),
+                None => Ok(()),
             }
         }
     }
@@ -194,18 +206,16 @@ impl Compositor {
         texture: &mut sys::Texture_t,
         bounds: Option<&mut sys::VRTextureBounds_t>,
         flags: SubmitFlag,
-    ) -> Result<(), Unchecked<CompositorError>> {
+    ) -> Result<(), CompositorError> {
         unsafe {
-            let error = Unchecked(self.fn_table.Submit.unwrap()(
+            match CompositorError::from_sys(self.fn_table.Submit.unwrap()(
                 eye as sys::EVREye,
                 texture,
                 if let Some(p) = bounds { p } else { ptr::null_mut() },
-                flags as sys::EVRSubmitFlags,
-            ));
-            if error == CompositorError::None.into_unchecked() {
-                Ok(())
-            } else {
-                Err(error)
+                flags.bits(),
+            )) {
+                Some(error) => Err(error),
+                None => Ok(()),
             }
         }
     }
