@@ -66,10 +66,10 @@ pub struct System {
 
 #[derive(Debug, Copy, Clone)]
 pub struct RawProjection {
-    left: f32,
-    right: f32,
-    bottom: f32,
-    top: f32,
+    pub l: f32,
+    pub r: f32,
+    pub b: f32,
+    pub t: f32,
 }
 
 impl System {
@@ -118,10 +118,10 @@ impl System {
             let mut t = MaybeUninit::<f32>::uninit();
             self.fn_table.GetProjectionRaw.unwrap()(eye.into_sys(), l.as_mut_ptr(), r.as_mut_ptr(), b.as_mut_ptr(), t.as_mut_ptr());
             RawProjection {
-                left: l.assume_init(),
-                right: r.assume_init(),
-                bottom: b.assume_init(),
-                top: t.assume_init(),
+                l: l.assume_init(),
+                r: r.assume_init(),
+                b: b.assume_init(),
+                t: t.assume_init(),
             }
         }
     }
