@@ -104,12 +104,12 @@ impl_enum!(Eye, sys::EVREye, InvalidEye {
 });
 
 bitflags::bitflags! {
-    pub struct SubmitFlag: i32 {
-        const DEFAULT = sys::EVRSubmitFlags_Submit_Default;
-        const LENS_DISTORTION_ALREADY_APPLIED = sys::EVRSubmitFlags_Submit_LensDistortionAlreadyApplied;
-        const GL_RENDERBUFFER = sys::EVRSubmitFlags_Submit_GlRenderBuffer;
-        const TEXTURE_WITH_POSE = sys::EVRSubmitFlags_Submit_TextureWithPose;
-        const TEXTURE_WITH_DEPTH = sys::EVRSubmitFlags_Submit_TextureWithDepth;
+    pub struct SubmitFlag: u32 {
+        const DEFAULT = sys::EVRSubmitFlags_Submit_Default as u32;
+        const LENS_DISTORTION_ALREADY_APPLIED = sys::EVRSubmitFlags_Submit_LensDistortionAlreadyApplied as u32;
+        const GL_RENDERBUFFER = sys::EVRSubmitFlags_Submit_GlRenderBuffer as u32;
+        const TEXTURE_WITH_POSE = sys::EVRSubmitFlags_Submit_TextureWithPose as u32;
+        const TEXTURE_WITH_DEPTH = sys::EVRSubmitFlags_Submit_TextureWithDepth as u32;
     }
 }
 
