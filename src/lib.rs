@@ -212,7 +212,7 @@ impl Compositor {
                 eye as sys::EVREye,
                 texture,
                 if let Some(p) = bounds { p } else { ptr::null_mut() },
-                flags.bits(),
+                flags.bits() as i32,
             )) {
                 Some(error) => Err(error),
                 None => Ok(()),
